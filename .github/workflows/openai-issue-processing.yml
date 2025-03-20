@@ -23,6 +23,6 @@ jobs:
 
       - name: Process Issue via OpenAI
         run: |
-          python githubai/create_sub_issue.py \
+          python create_sub_issue.py \
             --repo "${{ github.repository }}" \
             --parent-issue-number "${{ github.event.issue.number }}"
