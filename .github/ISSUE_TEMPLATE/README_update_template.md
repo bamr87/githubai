@@ -1,14 +1,15 @@
 ---
-name: README Update Functional Requirements
+name: README Update
 about: AI-generated README updates based on initial request
-title: "[README Update Functional Requirements]: "
+title: "[README Update]: "
 labels: readme-update-detailed
 prompt: |
-  Generate structured README update details based on the original request and provided file contents.
+  Generate a structured README file based on the original README file provided and any additional information provided.
 
 include_files:
   - README.md
-  - src/example.py
+  - src/githubai/README.md
+  - src/readmeai/README.md
 ---
 
 ## Summary
@@ -28,3 +29,8 @@ List any additional considerations, potential impacts, or dependencies.
 
 ## Attachments
 Include any diagrams, mockups, or screenshots, if necessary.
+
+## Final README File
+```md
+<!-- Final README content will be generated here based on the provided information. -->
+```
