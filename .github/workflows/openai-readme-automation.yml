@@ -1,0 +1,31 @@
+name: OpenAI README Automation
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  process-readme-update:
+    if: contains(github.event.issue.labels.*.name, 'README-update')
+    runs-on: ubuntu-latest
+
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r openai_integration/requirements.txt
+      - name: Run README Update Processor
+        run: |
+          python openai_integration/create_readme_update.py \
+            --repo "${{ github.repository }}" \
+            --issue-number "${{ github.event.issue.number }}"
