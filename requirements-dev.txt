@@ -1,0 +1,23 @@
+-r src/requirements.txt
+
+# Global Requirements
+
+# Cookiecutter Support
+cruft
+pip-tools
+
+# Testing Tools
+pytest
+pytest-playwright
+coverage
+pytest-cov
+axe-playwright-python
+selenium
+beautifulsoup4
+requests
+
+# Linters
+ruff
+
+# Documentation
+-r docs/requirements.txt

@@ -1,0 +1,28 @@
+name: OpenAI Unified Issue Processing
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  process-issue:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_ORG_ID: ${{ secrets.OPENAI_ORG_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r githubai/requirements.txt
+
+      - name: Process Issue via OpenAI
+        run: |
+          python githubai/create_sub_issue.py \
+            --repo "${{ github.repository }}" \
+            --parent-issue-number "${{ github.event.issue.number }}"
