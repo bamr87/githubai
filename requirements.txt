@@ -1,0 +1,5 @@
+-r src/requirements.txt
+
+requests
+openai
+pyyaml

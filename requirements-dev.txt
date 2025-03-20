@@ -1,4 +1,4 @@
--r src/requirements.txt
+-r requirements.txt
 
 # Global Requirements
 
