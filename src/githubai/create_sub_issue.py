@@ -17,6 +17,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo", required=True)
     parser.add_argument("--parent-issue-number", required=True)
+    parser.add_argument("--file-refs", nargs='*', default=[], help="Optional file references")
     return parser.parse_args()
 
 def fetch_issue(repo, issue_number):
@@ -45,7 +46,7 @@ def load_template(template_name):
 
     return prompt, template_body, issue_title_prefix
 
-def call_openai(prompt, parent_issue_content, template_body):
+def call_openai(prompt, parent_issue_content, template_body, file_contents=None):
     full_prompt = (
         f"{prompt}\n\n"
         f"Original Issue:\n{parent_issue_content}\n\n"
@@ -53,6 +54,10 @@ def call_openai(prompt, parent_issue_content, template_body):
         f"{template_body}\n\n"
         f"Fill out all sections completely."
     )
+
+    if file_contents:
+        file_content_str = '\n\n'.join([f"File: {path}\n{content}" for path, content in file_contents.items()])
+        full_prompt += f"\n\nAdditional file contents:\n{file_content_str}"
 
     response = client.chat.completions.create(
         model="gpt-4-turbo",
@@ -84,7 +89,13 @@ def main():
     template_name = extract_template_name(parent_body)
     prompt, template_body, issue_title_prefix = load_template(template_name)
 
-    ai_generated_body = call_openai(prompt, parent_body, template_body)
+    file_refs_content = {}
+    for file_path in args.file_refs:
+        if os.path.exists(file_path):
+            with open(file_path, 'r') as f:
+                file_refs_content[file_path] = f.read()
+
+    ai_generated_body = call_openai(prompt, parent_body, template_body, file_refs_content)
 
     new_issue = create_sub_issue(
         args.repo,

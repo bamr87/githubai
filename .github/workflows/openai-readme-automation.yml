@@ -23,9 +23,10 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install dependencies
-        run: pip install -r openai_integration/requirements.txt
+        run: pip install -r requirements.txt
+
       - name: Run README Update Processor
         run: |
-          python openai_integration/create_readme_update.py \
+          python src/readmeai/create_readme_update.py \
             --repo "${{ github.repository }}" \
             --issue-number "${{ github.event.issue.number }}"
