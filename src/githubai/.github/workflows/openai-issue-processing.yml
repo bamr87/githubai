@@ -4,6 +4,9 @@ on:
   issues:
     types: [opened]
 
+permissions:
+  issues: write # explicitly allow issue creation and updates
+
 jobs:
   process-issue:
     runs-on: ubuntu-latest
