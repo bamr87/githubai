@@ -6,6 +6,9 @@ from openai import OpenAI
 import argparse
 import yaml
 import re
+from utils.openai_utils import call_openai_chat
+from utils.github_api_utils import fetch_issue, create_github_issue
+from utils.template_utils import load_template_from_path
 
 GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')
 HEADERS = {'Authorization': f'token {GITHUB_TOKEN}'}
@@ -20,11 +23,6 @@ def parse_args():
     parser.add_argument("--file-refs", nargs='*', default=[], help="Optional file references")
     return parser.parse_args()
 
-def fetch_issue(repo, issue_number):
-    res = requests.get(f"https://api.github.com/repos/{repo}/issues/{issue_number}", headers=HEADERS)
-    res.raise_for_status()
-    return res.json()
-
 def extract_template_name(issue_body):
     match = re.search(r'<!-- template:\s*(.+\.md)\s*-->', issue_body)
     if match:
@@ -33,17 +31,9 @@ def extract_template_name(issue_body):
 
 def load_template(template_name):
     path = f".github/ISSUE_TEMPLATE/{template_name}"
-    with open(path, 'r') as file:
-        content = file.read()
-    front_matter_match = re.search(r'^---(.*?)---', content, re.DOTALL)
-    if not front_matter_match:
-        raise ValueError("YAML front matter not found in template.")
-
-    yaml_content = yaml.safe_load(front_matter_match.group(1))
-    prompt = yaml_content.get('prompt', '').strip()
-    template_body = content[front_matter_match.end():].strip()
-    issue_title_prefix = yaml_content.get('title', '[Structured]: ')
-
+    yaml_config, template_body = load_template_from_path(path)
+    prompt = yaml_config.get('prompt','').strip()
+    issue_title_prefix = yaml_config.get('title','[Structured]: ')
     return prompt, template_body, issue_title_prefix
 
 def call_openai(prompt, parent_issue_content, template_body, file_contents=None):
@@ -59,27 +49,14 @@ def call_openai(prompt, parent_issue_content, template_body, file_contents=None)
         file_content_str = '\n\n'.join([f"File: {path}\n{content}" for path, content in file_contents.items()])
         full_prompt += f"\n\nAdditional file contents:\n{file_content_str}"
 
-    response = client.chat.completions.create(
-        model="gpt-4-turbo",
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": full_prompt}
-        ],
-        temperature=0.2,
-        max_tokens=2500
-    )
-
-    return response.choices[0].message.content.strip()
+    messages = [
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": full_prompt}
+    ]
+    return call_openai_chat(messages)
 
 def create_sub_issue(repo, title, body, parent_issue_number, labels):
-    data = {
-        "title": title,
-        "body": body + f"\n\n_Parent Issue: #{parent_issue_number}_",
-        "labels": labels
-    }
-    res = requests.post(f"https://api.github.com/repos/{repo}/issues", headers=HEADERS, json=data)
-    res.raise_for_status()
-    return res.json()
+    return create_github_issue(repo, title, body, parent_issue_number, labels)
 
 def main():
     args = parse_args()

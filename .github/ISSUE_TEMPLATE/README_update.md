@@ -12,7 +12,6 @@ include_files:
   - src/githubai/README.md
   - src/readmeai/README.md
 ---
-<!-- template: README_update_template.md -->
 
 ## What specific information or section do you want to add or modify in the README?
 

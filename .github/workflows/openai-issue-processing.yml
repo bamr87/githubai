@@ -6,17 +6,19 @@ on:
 
 permissions:
   issues: write # explicitly allow issue creation and updates
+  contents: read
 
 jobs:
   process-issue:
+    if: contains(github.event.issue.labels.*.name, 'ai-assist')
     runs-on: ubuntu-latest
+
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      OPENAI_ORG_ID: ${{ secrets.OPENAI_ORG_ID }}
+
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"

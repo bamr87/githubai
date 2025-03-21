@@ -38,22 +38,32 @@ def main():
     args = parser.parse_args()
 
     issue = fetch_issue(args.repo, args.issue_number)
-    yaml_config, template_body = load_template()
+    yaml_config, _ = load_template()
 
-    include_files = yaml_config.get('include_files', [])
-    include_files_additional = yaml_config.get('include_files_additional', [])
-    all_files = include_files + include_files_additional
+    # Load included_files from front matter
+    front_matter_files = ""
+    for file in yaml_config.get('include_files', []):
+        front_matter_files += f"\n\n--- {file} content ---\n"
+        front_matter_files += fetch_file_contents(args.repo, file)
 
-    included_files_content = ""
-    for file in all_files:
-        included_files_content += f"\n\n--- {file} content ---\n"
-        included_files_content += fetch_file_contents(args.repo, file)
+    # Load additional include files from main body
+    additional_files = ""
+    for file in yaml_config.get('include_files_additional', []):
+        additional_files += f"\n\n--- {file} content ---\n"
+        additional_files += fetch_file_contents(args.repo, file)
+
+    # Load structure from the template file referenced in front matter
+    template_filename = yaml_config.get('template')
+    template_path = os.path.join(os.path.dirname(".github/ISSUE_TEMPLATE/README_update.md"), template_filename)
+    with open(template_path, 'r') as f:
+        structure = f.read()
 
     full_prompt = (
         f"{yaml_config['prompt']}\n\n"
         f"Original Request:\n{issue['body']}\n\n"
-        f"Included Files:{included_files_content}\n\n"
-        f"Structure:\n{template_body}"
+        f"Structure:\n{structure}\n\n"
+        f"Included Files:\n{front_matter_files}\n\n"
+        f"Additional Files:\n{additional_files}\n\n"
     )
 
     ai_content = call_openai(full_prompt)
