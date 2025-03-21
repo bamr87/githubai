@@ -5,6 +5,7 @@ import requests
 import argparse
 import re
 import base64
+import yaml
 from utils.github_api_utils import fetch_issue, create_github_issue
 from utils.template_utils import load_template_from_path
 from utils.openai_utils import call_openai_chat
@@ -19,11 +20,23 @@ def fetch_file_contents(repo, filepath):
     return base64.b64decode(res.json()['content']).decode('utf-8')
 
 def extract_template_name(issue_body):
-    """Extract template name from issue body."""
+    """Extract template name from issue body's YAML front matter."""
+    front_matter_match = re.search(r'^---(.*?)---', issue_body, re.DOTALL)
+    if front_matter_match:
+        yaml_content = front_matter_match.group(1)
+        try:
+            yaml_data = yaml.safe_load(yaml_content)
+            if yaml_data and 'template' in yaml_data:
+                return yaml_data['template']
+        except yaml.YAMLError:
+            pass
+
+    # Fallback to the old comment format for backward compatibility
     match = re.search(r'<!-- template:\s*(.+\.md)\s*-->', issue_body)
     if match:
         return match.group(1).strip()
-    raise ValueError("Template name comment not found in issue body.")
+
+    raise ValueError("Template name not found in issue body's front matter or comment.")
 
 def load_template(template_name):
     """Load template from repository."""
