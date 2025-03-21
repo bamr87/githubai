@@ -2,7 +2,7 @@
 name: Feature Request
 about: Request a new feature (generic)
 title: "[Feature Request]: "
-labels: feature-request
+labels: ai-assist
 ---
 <!-- template: feature_request_functional_requirements.md -->
 
