@@ -6,9 +6,10 @@ from openai import OpenAI
 import argparse
 import yaml
 import re
-from utils.openai_utils import call_openai_chat
-from utils.github_api_utils import fetch_issue, create_github_issue
-from utils.template_utils import load_template_from_path
+from githubai.utils.openai_utils import call_openai_chat
+from githubai.utils.github_api_utils import fetch_issue, create_github_issue
+from githubai.utils.template_utils import load_template_from_path
+from githubai.create_issue import main as create_issue_main
 
 GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')
 HEADERS = {'Authorization': f'token {GITHUB_TOKEN}'}
@@ -17,9 +18,10 @@ HEADERS = {'Authorization': f'token {GITHUB_TOKEN}'}
 client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
 def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--repo", required=True)
-    parser.add_argument("--parent-issue-number", required=True)
+    """Parse arguments specifically for sub-issue creation."""
+    parser = argparse.ArgumentParser(description="Create GitHub sub-issues with AI-generated content")
+    parser.add_argument("--repo", required=True, help="GitHub repository in format 'owner/repo'")
+    parser.add_argument("--parent-issue-number", required=True, help="Parent issue number")
     parser.add_argument("--file-refs", nargs='*', default=[], help="Optional file references")
     return parser.parse_args()
 
@@ -59,30 +61,19 @@ def create_sub_issue(repo, title, body, parent_issue_number, labels):
     return create_github_issue(repo, title, body, parent_issue_number, labels)
 
 def main():
+    """Entry point for creating sub-issues. Delegates to the unified implementation."""
     args = parse_args()
-    parent_issue = fetch_issue(args.repo, args.parent_issue_number)
-    parent_body = parent_issue['body']
+    # Call the main function from create_issue.py with appropriate args
+    import sys
+    sys.argv = [
+        sys.argv[0],
+        "--repo", args.repo,
+        "--parent-issue-number", args.parent_issue_number
+    ]
+    if args.file_refs:
+        sys.argv.extend(["--file-refs"] + args.file_refs)
 
-    template_name = extract_template_name(parent_body)
-    prompt, template_body, issue_title_prefix = load_template(template_name)
-
-    file_refs_content = {}
-    for file_path in args.file_refs:
-        if os.path.exists(file_path):
-            with open(file_path, 'r') as f:
-                file_refs_content[file_path] = f.read()
-
-    ai_generated_body = call_openai(prompt, parent_body, template_body, file_refs_content)
-
-    new_issue = create_sub_issue(
-        args.repo,
-        title=f"{issue_title_prefix}{parent_issue['title']}",
-        body=ai_generated_body,
-        parent_issue_number=args.parent_issue_number,
-        labels=["ai-generated"]
-    )
-
-    print(f"Structured sub-issue created: {new_issue['html_url']}")
+    create_issue_main()
 
 if __name__ == "__main__":
     main()

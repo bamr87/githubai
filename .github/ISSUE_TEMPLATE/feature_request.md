@@ -2,9 +2,13 @@
 name: Feature Request
 about: Request a new feature (generic)
 title: "[Feature Request]: "
+prompt: |
+  Generate a structured feature request based on the original feature request provided.
+template: feature_request_functional_requirements.md
+include_files:
+  - README.md
 labels: ai-assist
 ---
-<!-- template: feature_request_functional_requirements.md -->
 
 ## Describe your feature request clearly.
 
