@@ -1,0 +1,41 @@
+name: OpenAI Issue Processing
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  process-issue:
+    if: contains(github.event.issue.labels.*.name, 'ai-assist') || contains(github.event.issue.labels.*.name, 'README-update')
+    runs-on: ubuntu-latest
+
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Process README Update Issue
+        if: contains(github.event.issue.labels.*.name, 'README-update')
+        run: |
+          python src/githubai/create_issue.py \
+            --repo "${{ github.repository }}" \
+            --issue-number "${{ github.event.issue.number }}"
+
+      - name: Process AI Assist Issue
+        if: contains(github.event.issue.labels.*.name, 'ai-assist')
+        run: |
+          python src/githubai/create_issue.py \
+            --repo "${{ github.repository }}" \
+            --parent-issue-number "${{ github.event.issue.number }}"

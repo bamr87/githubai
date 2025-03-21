@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import requests
 import argparse
@@ -147,24 +149,46 @@ def run_create_issue(repo, issue_number=None, parent_issue_number=None, file_ref
 
     return new_issue['html_url']
 
+def parse_args_for_sub_issue():
+    """Parse arguments specifically for sub-issue creation."""
+    parser = argparse.ArgumentParser(description="Create GitHub sub-issues with AI-generated content")
+    parser.add_argument("--repo", required=True, help="GitHub repository in format 'owner/repo'")
+    parser.add_argument("--parent-issue-number", required=True, help="Parent issue number")
+    parser.add_argument("--file-refs", nargs='*', default=[], help="Optional file references")
+    return parser.parse_args()
+
 def main():
     """Main entry point for the script."""
-    parser = argparse.ArgumentParser(description="Create GitHub issues with AI-generated content")
-    parser.add_argument("--repo", required=True, help="GitHub repository in format 'owner/repo'")
-    parser.add_argument("--issue-number", help="Issue number for README updates")
-    parser.add_argument("--parent-issue-number", help="Parent issue number for creating sub-issues")
-    parser.add_argument("--file-refs", nargs='*', default=[], help="Optional file references")
-    args = parser.parse_args()
+    # Determine if this is being called as a sub-issue creator
+    import sys
+    script_name = os.path.basename(sys.argv[0])
 
-    if not args.issue_number and not args.parent_issue_number:
-        parser.error("Either --issue-number or --parent-issue-number must be specified")
+    if 'create_sub_issue' in script_name:
+        args = parse_args_for_sub_issue()
+        url = run_create_issue(
+            repo=args.repo,
+            parent_issue_number=args.parent_issue_number,
+            file_refs=args.file_refs
+        )
+    else:
+        # Standard argument parsing for the main script
+        parser = argparse.ArgumentParser(description="Create GitHub issues with AI-generated content")
+        parser.add_argument("--repo", required=True, help="GitHub repository in format 'owner/repo'")
+        parser.add_argument("--issue-number", help="Issue number for README updates")
+        parser.add_argument("--parent-issue-number", help="Parent issue number for creating sub-issues")
+        parser.add_argument("--file-refs", nargs='*', default=[], help="Optional file references")
+        args = parser.parse_args()
 
-    url = run_create_issue(
-        repo=args.repo,
-        issue_number=args.issue_number,
-        parent_issue_number=args.parent_issue_number,
-        file_refs=args.file_refs
-    )
+        if not args.issue_number and not args.parent_issue_number:
+            parser.error("Either --issue-number or --parent-issue-number must be specified")
+
+        url = run_create_issue(
+            repo=args.repo,
+            issue_number=args.issue_number,
+            parent_issue_number=args.parent_issue_number,
+            file_refs=args.file_refs
+        )
+
     print(f"Created issue: {url}")
 
 if __name__ == "__main__":
