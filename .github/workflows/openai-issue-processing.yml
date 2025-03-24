@@ -26,13 +26,6 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Process README Update Issue
-        if: contains(github.event.issue.labels.*.name, 'README-update')
-        run: |
-          python src/githubai/create_issue.py \
-            --repo "${{ github.repository }}" \
-            --issue-number "${{ github.event.issue.number }}"
-
       - name: Process AI Assist Issue
         if: contains(github.event.issue.labels.*.name, 'ai-assist')
         run: |
