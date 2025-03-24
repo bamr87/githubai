@@ -140,3 +140,30 @@ Detailed documentation and troubleshooting guides are available in the project's
 
 MIT © Your Name or Organization
 
+## Installation
+
+To install the project, follow these steps:
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/yourproject.git
+   cd yourproject
+   ```
+
+2. Create a virtual environment (recommended):
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+   ```
+
+3. Install the required packages:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. (Optional) If you want to run the script to create an issue on GitHub, ensure you have the necessary permissions and run:
+   ```bash
+   python src/githubai/create_issue.py
+   ```
+
+5. You are now ready to use the project!
