@@ -1,14 +1,15 @@
 from __future__ import annotations
 
-import os
-import requests
 import argparse
-import re
 import base64
-import openai
-from utils.github_api_utils import fetch_issue, create_github_issue
-from utils.template_utils import load_template_from_path
-from utils.openai_utils import call_openai_chat
+import os
+import re
+
+import requests
+
+from githubai.utils.github_api_utils import create_github_issue, fetch_issue
+from githubai.utils.openai_utils import call_openai_chat
+from githubai.utils.template_utils import load_template_from_path
 
 GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')
 HEADERS = {'Authorization': f'token {GITHUB_TOKEN}'}
@@ -35,6 +36,20 @@ def load_template(template_name):
     return yaml_config, template_body, prompt, issue_title_prefix
 
 def generate_prompt(prompt_text, issue_content, template_body, file_contents=None):
+    """
+    Generate a formatted prompt string for interacting with OpenAI.
+
+    Args:
+        prompt_text (str): A short textual prompt describing the context or request.
+        issue_content (str): The text from the original issue for reference.
+        template_body (str): A template structure to be used for styling the output.
+        file_contents (Optional[Union[dict, str]]): Additional file content(s), provided as a
+            dictionary with file paths as keys and content as values, or simply a string.
+
+    Returns:
+        str: A concatenated string containing the original prompt, issue, and template
+        information, optionally including extra file contents.
+    """
     """Generate a prompt for OpenAI with all necessary context."""
     full_prompt = (
         f"{prompt_text}\n\n"
