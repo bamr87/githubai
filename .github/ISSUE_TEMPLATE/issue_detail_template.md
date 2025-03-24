@@ -1,7 +1,7 @@
 ---
-name: Issue Template
+name: Issue Templat Details
 about: Issue Template for the repository
-title: "[Issue Template]: "
+title: "[Issue Template Details]: "
 labels: ai-assist
 prompt: |
   You are tasked with elaborating this issue.
