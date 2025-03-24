@@ -139,11 +139,10 @@ def create_sub_issue_from_template(repo, parent_issue_number, file_refs=None):
 
     return new_issue
 
-def run_create_issue(repo, title, body, parent_issue_number, labels):
-    """Unified function to create either a README update or sub-issue."""
-    if issue_number:
-        new_issue = create_readme_update_issue(repo, issue_number)
-    elif parent_issue_number:
+def run_create_issue(repo, title, body, parent_issue_number, labels, file_refs=None):
+    """Unified function to create sub-issue."""
+
+    if parent_issue_number:
         new_issue = create_sub_issue_from_template(repo, parent_issue_number, file_refs)
     else:
         raise ValueError("Either issue_number or parent_issue_number must be provided")
@@ -171,7 +170,8 @@ def main():
             parent_issue_number=args.parent_issue_number,
             title="Sub-issue created by AI",
             body="This is a sub-issue created by AI based on the parent issue.",
-            labels=["ai-generated"]
+            labels=["ai-generated"],
+            file_refs=args.file_refs
         )
     else:
         # Standard argument parsing for the main script
