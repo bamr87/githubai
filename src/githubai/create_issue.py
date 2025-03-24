@@ -6,9 +6,9 @@ import argparse
 import re
 import base64
 import openai
-from .utils.github_api_utils import fetch_issue, create_github_issue
-from .utils.template_utils import load_template_from_path
-from .utils.openai_utils import call_openai_chat
+from utils.github_api_utils import fetch_issue, create_github_issue
+from utils.template_utils import load_template_from_path
+from utils.openai_utils import call_openai_chat
 
 GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')
 HEADERS = {'Authorization': f'token {GITHUB_TOKEN}'}
