@@ -9,7 +9,6 @@ include_files:
   - README.md
   - src/README.md
   - src/githubai/README.md
-  - src/readmeai/README.md
 base_template: README_update.md
 ---
 

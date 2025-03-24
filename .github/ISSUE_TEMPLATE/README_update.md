@@ -26,5 +26,4 @@ labels: ["README-update", "ai-assist"]
 ## Include additional files to consider in the update:
 
 include_files_additional:
-    - src/readmeai/create_readme_update.py
-    - src/githubai/create_sub_issue.py
+    - src/githubai/create_issue.py
