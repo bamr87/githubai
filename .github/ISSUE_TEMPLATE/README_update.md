@@ -2,9 +2,9 @@
 name: README Update Request
 about: Request an update to README (generic)
 title: "[README Update]: "
-labels: README-update
-
+labels: ["README-update", "ai-assist"]
 ---
+<!-- template: README_update_template.md -->
 
 ## What specific information or section do you want to add or modify in the README?
 
