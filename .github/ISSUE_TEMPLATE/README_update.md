@@ -3,14 +3,7 @@ name: README Update Request
 about: Request an update to README (generic)
 title: "[README Update]: "
 labels: README-update
-prompt: |
-  Generate a structured README file based on the original README file provided and any additional information provided.
-template: README_update_template.md
-include_files:
-  - README.md
-  - src/README.md
-  - src/githubai/README.md
-  - src/readmeai/README.md
+
 ---
 
 ## What specific information or section do you want to add or modify in the README?

@@ -3,6 +3,13 @@ name: README Update
 about: AI-generated README updates based on initial request
 title: "[README Update]: "
 labels: readme-update-detailed
+prompt: |
+  Generate a structured README file based on the original README file provided and any additional information provided.
+include_files:
+  - README.md
+  - src/README.md
+  - src/githubai/README.md
+  - src/readmeai/README.md
 ---
 
 ## Summary

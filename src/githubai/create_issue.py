@@ -5,9 +5,10 @@ import requests
 import argparse
 import re
 import base64
-from utils.github_api_utils import fetch_issue, create_github_issue
-from utils.template_utils import load_template_from_path
-from utils.openai_utils import call_openai_chat
+import openai
+from .utils.github_api_utils import fetch_issue, create_github_issue
+from .utils.template_utils import load_template_from_path
+from .utils.openai_utils import call_openai_chat
 
 GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')
 HEADERS = {'Authorization': f'token {GITHUB_TOKEN}'}
@@ -138,7 +139,7 @@ def create_sub_issue_from_template(repo, parent_issue_number, file_refs=None):
 
     return new_issue
 
-def run_create_issue(repo, issue_number=None, parent_issue_number=None, file_refs=None):
+def run_create_issue(repo, title, body, parent_issue_number, labels):
     """Unified function to create either a README update or sub-issue."""
     if issue_number:
         new_issue = create_readme_update_issue(repo, issue_number)
@@ -163,12 +164,14 @@ def main():
     import sys
     script_name = os.path.basename(sys.argv[0])
 
-    if 'create_sub_issue' in script_name:
+    if 'create_issue' in script_name:
         args = parse_args_for_sub_issue()
         url = run_create_issue(
             repo=args.repo,
             parent_issue_number=args.parent_issue_number,
-            file_refs=args.file_refs
+            title="Sub-issue created by AI",
+            body="This is a sub-issue created by AI based on the parent issue.",
+            labels=["ai-generated"]
         )
     else:
         # Standard argument parsing for the main script
@@ -184,9 +187,10 @@ def main():
 
         url = run_create_issue(
             repo=args.repo,
-            issue_number=args.issue_number,
+            title="Sub-issue created by AI",
+            body="This is a sub-issue created by AI based on the parent issue.",
             parent_issue_number=args.parent_issue_number,
-            file_refs=args.file_refs
+            labels=["ai-generated"]
         )
 
     print(f"Created issue: {url}")

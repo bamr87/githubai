@@ -2,16 +2,9 @@
 name: Issue Template
 about: Issue Template for the repository
 title: "[Issue Template]: "
-labels: functional-requirements
-prompt: |
-  You are tasked with elaborating this issue.
-
-  Original Issue Request:
-  {parent_issue_content}
-
-  Structured Functional Requirements:
-  {issue_template.md}
+labels: ai-assist
 ---
+<!-- template: issue_detail_template.md -->
 
 ## Summary
 Provide a brief summary of the issue.
