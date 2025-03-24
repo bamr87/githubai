@@ -7,9 +7,9 @@ import re
 
 import requests
 
-from .utils.github_api_utils import create_github_issue, fetch_issue
-from .utils.openai_utils import call_openai_chat
-from .utils.template_utils import load_template_from_path
+from utils.github_api_utils import create_github_issue, fetch_issue
+from utils.openai_utils import call_openai_chat
+from utils.template_utils import load_template_from_path
 
 GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')
 HEADERS = {'Authorization': f'token {GITHUB_TOKEN}'}
