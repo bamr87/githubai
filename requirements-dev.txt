@@ -1,4 +1,4 @@
--r requirements.txt
+-r src/requirements.txt
 
 # Global Requirements
 
@@ -20,4 +20,4 @@ requests
 ruff
 
 # Documentation
--r docs/requirements.txt
+# -r docs/requirements.txt
