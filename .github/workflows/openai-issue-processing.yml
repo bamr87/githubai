@@ -32,3 +32,7 @@ jobs:
           python src/githubai/create_issue.py \
             --repo "${{ github.repository }}" \
             --parent-issue-number "${{ github.event.issue.number }}"
+
+      - name: Display Log File
+        if: always()
+        run: cat openai_api.log
