@@ -117,3 +117,23 @@ def test_main(mocker):
         labels=['ai-generated'],
         file_refs=[]
     )
+
+def test_logging_of_prompt_and_files(mocker):
+    mock_logging = mocker.patch('src.githubai.utils.openai_utils.logging')
+    mock_call_openai_chat = mocker.patch('src.githubai.utils.openai_utils.call_openai_chat')
+    mock_call_openai_chat.return_value = 'AI response'
+
+    prompt = "Test prompt"
+    messages = [
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": prompt}
+    ]
+
+    from src.githubai.utils.openai_utils import call_openai_chat
+    call_openai_chat(messages)
+
+    assert mock_logging.info.called
+    log_args = mock_logging.info.call_args[0][0]
+    assert "Test prompt" in log_args
+    assert "unknown_user" in log_args
+    assert "timestamps" in log_args
