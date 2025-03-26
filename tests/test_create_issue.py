@@ -49,6 +49,21 @@ def test_generate_prompt():
     assert "content1" in result
     assert "content2" in result
 
+def test_generate_prompt_with_file_contents():
+    prompt_text = "Test prompt"
+    issue_content = "Issue content"
+    template_body = "Template body"
+    file_contents = {'file1': 'content1', 'file2': 'content2'}
+
+    result = generate_prompt(prompt_text, issue_content, template_body, file_contents)
+    assert "Test prompt" in result
+    assert "Issue content" in result
+    assert "Template body" in result
+    assert "File: file1" in result
+    assert "content1" in result
+    assert "File: file2" in result
+    assert "content2" in result
+
 def test_call_openai_with_prompt(mocker):
     mock_call_openai_chat = mocker.patch('src.githubai.create_issue.call_openai_chat')
     mock_call_openai_chat.return_value = 'AI response'
@@ -81,6 +96,22 @@ def test_create_sub_issue_from_template(mocker):
 
     mock_fetch_issue.return_value = {'body': 'Issue body', 'title': 'Issue title'}
     mock_load_template.return_value = ({'prompt': 'Test prompt'}, 'Template body', 'Test prompt', '[Structured]: ')
+    mock_generate_prompt.return_value = 'Generated prompt'
+    mock_call_openai_with_prompt.return_value = 'AI response'
+    mock_create_github_issue.return_value = {'html_url': 'http://example.com'}
+
+    result = create_sub_issue_from_template('repo', 1)
+    assert result == 'http://example.com'
+
+def test_create_sub_issue_from_template_with_file_extraction(mocker):
+    mock_fetch_issue = mocker.patch('src.githubai.create_issue.fetch_issue')
+    mock_load_template = mocker.patch('src.githubai.create_issue.load_template')
+    mock_generate_prompt = mocker.patch('src.githubai.create_issue.generate_prompt')
+    mock_call_openai_with_prompt = mocker.patch('src.githubai.create_issue.call_openai_with_prompt')
+    mock_create_github_issue = mocker.patch('src.githubai.create_issue.create_github_issue')
+
+    mock_fetch_issue.return_value = {'body': 'Issue body with include_files_additional: - file1\n- file2', 'title': 'Issue title'}
+    mock_load_template.return_value = ({'prompt': 'Test prompt', 'include_files': ['file3']}, 'Template body', 'Test prompt', '[Structured]: ')
     mock_generate_prompt.return_value = 'Generated prompt'
     mock_call_openai_with_prompt.return_value = 'AI response'
     mock_create_github_issue.return_value = {'html_url': 'http://example.com'}
