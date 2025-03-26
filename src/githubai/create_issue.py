@@ -139,6 +139,20 @@ def create_sub_issue_from_template(repo, parent_issue_number, file_refs=None):
                 with open(file_path, 'r') as f:
                     file_refs_content[file_path] = f.read()
 
+    # Extract file paths from the issue body
+    issue_file_paths = re.findall(r'include_files_additional:\s*-\s*(.*?)\s*$', parent_body, re.MULTILINE)
+    for file_path in issue_file_paths:
+        if os.path.exists(file_path):
+            with open(file_path, 'r') as f:
+                file_refs_content[file_path] = f.read()
+
+    # Extract file paths from the template frontmatter
+    template_file_paths = yaml_config.get('include_files', [])
+    for file_path in template_file_paths:
+        if os.path.exists(file_path):
+            with open(file_path, 'r') as f:
+                file_refs_content[file_path] = f.read()
+
     # Generate prompt and call OpenAI
     full_prompt = generate_prompt(prompt, parent_body, template_body, file_refs_content)
     ai_generated_body = call_openai_with_prompt(full_prompt)
