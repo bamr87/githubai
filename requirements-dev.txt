@@ -1,4 +1,4 @@
--r src/requirements.txt
+-r src/githubai/requirements.txt
 
 # Global Requirements
 
