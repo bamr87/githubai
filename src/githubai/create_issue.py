@@ -10,6 +10,8 @@ import requests
 from utils.github_api_utils import create_github_issue, fetch_issue
 from utils.openai_utils import call_openai_chat
 from utils.template_utils import load_template_from_path
+from docgen import main as docgen_main  # Import the new docgen module
+
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 HEADERS = {"Authorization": f"token {GITHUB_TOKEN}"}
@@ -246,6 +248,12 @@ def main():
             labels=["ai-generated"],
             file_refs=args.file_refs,
         )
+    elif "generate_docs" in script_name:  # Add a new CLI command to generate documentation
+        if len(sys.argv) < 2:
+            print("Usage: generate_docs <file_path>")
+            sys.exit(1)
+        file_path = sys.argv[1]
+        docgen_main(file_path)  # Call the main function from the docgen module
     else:
         # Standard argument parsing for the main script
         parser = argparse.ArgumentParser(
