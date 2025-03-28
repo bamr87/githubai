@@ -17,9 +17,6 @@ ReadmeAI is a powerful Python-based application integrated seamlessly with GitHu
 - **Unified Approach**: Single workflow handles various issue types without additional setup.
 - **Scalable and Maintainable**: Add new issue types or templates easily.
 - **Collaborative Updates:** Standardize README improvements across teams for consistency and clarity.
-
-### Additional Features from ReadmeAI
-
 - **AI-Driven README Updates:** Automatically generate structured README content using GPT-4.
 - **Dynamic Contextualization:** Utilize multiple repository files as context.
 - **GitHub Integration:** Seamless integration through GitHub Actions.
@@ -78,7 +75,6 @@ Copy GitHub Actions workflow YAML files (`openai-issue-processing.yml` and `read
 Add provided templates into `.github/ISSUE_TEMPLATE/`, customizing prompts as needed.
 
 Example (`feature_functional_requirements.md`):
-
 ```md
 ---
 name: Feature Functional Requirements
@@ -86,10 +82,9 @@ about: AI-generated functional requirements based on feature request
 title: "[Functional Requirement]"
 labels: ["functional requirements", "auto-generated"]
 ---
-<!-- TEMPLATE: feature_functional_requirements.md -->
+
 
 ## Functional Requirements
-
 ```
 
 #### Step 5: Set Up GitHub Secrets
