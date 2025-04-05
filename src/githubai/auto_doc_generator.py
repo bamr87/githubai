@@ -22,17 +22,13 @@ for diff in diff_data:
         except Exception:
             continue
 
-prompt = f"""
-Given the following commit message and diff, generate:
-1. A changelog entry suitable for CHANGELOG.md
-2. A short documentation summary of what was changed or added
-
-Commit Message:
-{commit_message}
-
-Diff:
-{'\n\n'.join(diff_texts)}
-"""
+prompt = (
+    "Given the following commit message and diff, generate:\n"
+    "1. A changelog entry suitable for CHANGELOG.md\n"
+    "2. A short documentation summary of what was changed or added\n\n"
+    f"Commit Message:\n{commit_message}\n\n"
+    f"Diff:\n{chr(10).join(diff_texts)}"
+)
 
 response = openai.ChatCompletion.create(
     model="gpt-4",
