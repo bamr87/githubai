@@ -3,6 +3,7 @@ import openai
 from github import Github
 from git import Repo
 import subprocess
+from utils.openai_utils import call_openai_chat
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 github_token = os.getenv("GITHUB_TOKEN")
@@ -22,6 +23,7 @@ for diff in diff_data:
         except Exception:
             continue
 
+# Generate OpenAI prompt
 prompt = (
     "Given the following commit message and diff, generate:\n"
     "1. A changelog entry suitable for CHANGELOG.md\n"
@@ -30,22 +32,20 @@ prompt = (
     f"Diff:\n{chr(10).join(diff_texts)}"
 )
 
-response = openai.ChatCompletion.create(
-    model="gpt-4",
-    messages=[
-        {"role": "system", "content": "You are an expert software documenter."},
-        {"role": "user", "content": prompt},
-    ],
-    temperature=0.5,
-)
+# Use call_openai_chat to get the response
+messages = [
+    {"role": "system", "content": "You are an expert software documenter."},
+    {"role": "user", "content": prompt},
+]
+response_content = call_openai_chat(messages, model="gpt-4", temperature=0.5)
 
-output = response["choices"][0]["message"]["content"]
-print("\n--- AI Generated Output ---\n")
-print(output)
+if response_content:
+    print("\n--- AI Generated Output ---\n")
+    print(response_content)
 
-# Optionally save to files
-with open("CHANGELOG_AI.md", "a") as f:
-    f.write(f"\n## {head_commit.hexsha[:7]}\n{output}\n")
+    # Optionally save to files
+    with open("CHANGELOG_AI.md", "a") as f:
+        f.write(f"\n## {head_commit.hexsha[:7]}\n{response_content}\n")
 
 # Push changes to 'feature-documentation' branch
 feature_branch = "feature-documentation"
