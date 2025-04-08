@@ -23,6 +23,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install openai pygithub gitpython
 
+      - name: Configure Git
+        run: |
+          git config --global user.name "Docubot"
+          git config --global user.email "amr@bash-365.com"
+
       - name: Run AI Doc Generator
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
