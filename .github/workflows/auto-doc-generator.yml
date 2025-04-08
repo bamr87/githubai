@@ -12,6 +12,9 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -25,8 +28,8 @@ jobs:
 
       - name: Configure Git
         run: |
-          git config --global user.name "Docubot"
-          git config --global user.email "amr@bash-365.com"
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
       - name: Run AI Doc Generator
         env:
@@ -34,19 +37,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python src/githubai/auto_doc_generator.py
-          # Push changes to 'feature-documentation' branch
-          import subprocess
 
-          feature_branch = "feature-documentation"
-
-          # Create a new branch based on main
-          subprocess.run(["git", "checkout", "-b", feature_branch], check=True)
-
-          # Stage the updated changelog
-          subprocess.run(["git", "add", "CHANGELOG_AI.md"], check=True)
-
-          # Commit with a message
-          subprocess.run(["git", "commit", "-m", "Add AI-generated changelog and documentation summary"], check=True)
-
-          # Push the branch
-          subprocess.run(["git", "push", "-u", "origin", feature_branch], check=True)
+      - name: Create and push documentation branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git checkout -b feature-documentation
+          git add CHANGELOG_AI.md
+          git commit -m "Add AI-generated changelog and documentation summary"
+          git push -u origin feature-documentation

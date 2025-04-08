@@ -2,7 +2,6 @@ import os
 import openai
 from github import Github
 from git import Repo
-import subprocess
 from utils.openai_utils import call_openai_chat
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -43,24 +42,6 @@ if response_content:
     print("\n--- AI Generated Output ---\n")
     print(response_content)
 
-    # Optionally save to files
+    # Save to changelog file
     with open("CHANGELOG_AI.md", "a") as f:
         f.write(f"\n## {head_commit.hexsha[:7]}\n{response_content}\n")
-
-# Push changes to 'feature-documentation' branch
-feature_branch = "feature-documentation"
-
-# Create a new branch based on main
-subprocess.run(["git", "checkout", "-b", feature_branch], check=True)
-
-# Stage the updated changelog
-subprocess.run(["git", "add", "CHANGELOG_AI.md"], check=True)
-
-# Commit with a message
-subprocess.run(
-    ["git", "commit", "-m", "Add AI-generated changelog and documentation summary"],
-    check=True,
-)
-
-# Push the branch
-subprocess.run(["git", "push", "-u", "origin", feature_branch], check=True)
