@@ -3,7 +3,7 @@ name: AI-Powered Documentation & Release
 on:
   push:
     branches:
-      - main
+      - doc-feature
 
 jobs:
   generate-docs:
