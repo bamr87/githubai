@@ -34,13 +34,13 @@ jobs:
       - name: Run AI Doc Generator
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUBAI_TOKEN }}
         run: |
           python src/githubai/auto_doc_generator.py
 
       - name: Create and push documentation branch
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUBAI_TOKEN }}
         run: |
           git checkout -b feature-documentation
           git add CHANGELOG_AI.md
