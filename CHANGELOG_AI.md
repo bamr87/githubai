@@ -57,3 +57,26 @@ src/githubai/auto_doc_generator.py
 A new GitHub Actions workflow has been added, specifically designed to handle pull requests to the 'feature-documentation' branch. This workflow is triggered by `pull_request` events and includes several steps, namely checking out the repository, setting up Python, installing dependencies, configuring Git, running the AI Doc Generator, and logging outputs.
 
 Additionally, modifications have been made to the `auto_doc_generator.py` script. It can now handle pull request events and generate documentation updates accordingly. Logging capabilities have also been added, which record the inputs and outputs of the AI, allowing for review and regeneration if necessary.
+
+## 9ec84ea
+```diff
++## [Unreleased]
++
++### Added
++- AI-generated changelog and documentation summary functionality
+```
+
+---
+
+**Changelog Entry:**
+
+## [Unreleased]
+
+### Added
+- AI-generated changelog and documentation summary functionality (#66)
+
+---
+
+**Documentation Summary:**
+
+This update introduces a new feature - AI-generated changelog and documentation summary. This functionality will automate the process of generating changelog entries and documentation summaries, thereby saving time and improving efficiency.
