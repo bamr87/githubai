@@ -45,4 +45,6 @@ jobs:
           git checkout -b feature-documentation
           git add CHANGELOG_AI.md
           git commit -m "Add AI-generated changelog and documentation summary"
+          # Ensure the branch is up-to-date before pushing
+          git pull --rebase origin feature-documentation || true
           git push -u origin feature-documentation
