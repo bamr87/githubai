@@ -18,7 +18,12 @@ diff_texts = []
 for diff in diff_data:
     if diff.change_type != "D":  # Exclude deleted files
         try:
-            diff_texts.append(diff.diff.decode("utf-8"))
+            diffContent = diff.diff
+            if diffContent is not None:
+                if isinstance(diffContent, bytes):
+                    diff_texts.append(diffContent.decode("utf-8"))
+                else:
+                    diff_texts.append(diffContent)
         except Exception:
             continue
 
@@ -45,6 +50,7 @@ if response_content:
     # Save to changelog file
     with open("CHANGELOG_AI.md", "a") as f:
         f.write(f"\n## {head_commit.hexsha[:7]}\n{response_content}\n")
+
 
 # Handle pull request events
 def handle_pull_request_event():
@@ -84,6 +90,7 @@ def handle_pull_request_event():
         # Save to changelog file
         with open("CHANGELOG_AI_PR.md", "a") as f:
             f.write(f"\n## PR {pr_number}\n{pr_response_content}\n")
+
 
 # Check if the script is running in a pull request context
 if os.getenv("GITHUB_EVENT_NAME") == "pull_request":
