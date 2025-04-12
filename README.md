@@ -1,107 +1,67 @@
 # Automated Versioning with GitHub Actions
 
-This repository includes a GitHub Actions workflow to automate the versioning of Python packages based on commit message tags. The workflow follows Semantic Versioning (SemVer) standards and uses `bumpversion` to manage version increments.
+This repository includes workflows and tools to automate versioning, documentation, and issue management for Python projects. It leverages GitHub Actions and OpenAI to streamline development processes.
 
-## How It Works
+## Key Features
 
-The GitHub Actions workflow is triggered on pushes to the `main` branch. It scans commit messages for specific tags to determine the type of version increment:
+### 1. AI-Powered Documentation Generation
+- Automatically generates changelogs and documentation summaries using OpenAI.
+- Includes a workflow (`auto-doc-generator.yml`) that triggers on pushes to the `main` branch.
+- Supports pull request-specific documentation updates via `auto-doc-generator-pr.yml`.
 
-- `[major]`: Increments the major version.
-- `[minor]`: Increments the minor version.
-- `[patch]`: Increments the patch version (default if no tags are present).
+### 2. Enhanced Issue Management
+- AI-driven issue templates for feature requests, bug reports, and README updates.
+- Automatically generates structured sub-issues and README updates based on user input.
+- Templates are YAML-driven for consistency and customization.
 
-The workflow then updates the version, commits the changes, tags the release in Git, and optionally publishes the new version to PyPI.
+### 3. Automated Versioning
+- Semantic versioning based on commit message tags (`[major]`, `[minor]`, `[patch]`).
+- Workflow (`versioning.yml`) updates the version, creates Git tags, and optionally publishes to PyPI.
 
 ## Setup Instructions
 
 ### Prerequisites
-
 - A GitHub repository with a Python project.
 - GitHub Actions enabled for the repository.
-- `bumpversion` installed in your Python environment.
+- OpenAI API access ([Get your API key here](https://platform.openai.com/api-keys)).
 
-### Step-by-Step Guide
+### Installation & Setup
 
-1. **Create the Workflow File**:
-   Add a new file named `versioning.yml` in the `.github/workflows/` directory of your repository with the following content:
+#### Step 1: Clone Repository
+```bash
+git clone https://github.com/yourusername/yourproject.git
+cd yourproject
+```
 
-   ```yaml
-   name: Automated Versioning
+#### Step 2: Set Up Python Environment
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+pip install -r requirements.txt
+```
 
-   on:
-     push:
-       branches:
-         - main
+#### Step 3: Configure GitHub Actions
+Copy the provided workflows (`versioning.yml`, `auto-doc-generator.yml`, `openai-issue-processing.yml`) into `.github/workflows/`.
 
-   jobs:
-     versioning:
-       runs-on: ubuntu-latest
+#### Step 4: Define Issue Templates
+Add the provided templates into `.github/ISSUE_TEMPLATE/`, customizing prompts as needed.
 
-       steps:
-         - name: Checkout repository
-           uses: actions/checkout@v2
+#### Step 5: Set Up GitHub Secrets
+Navigate to `Settings → Secrets and variables → Actions`, then add:
+- `OPENAI_API_KEY`: Your OpenAI API Key.
+- `GITHUB_TOKEN`: Your GitHub token.
 
-         - name: Set up Python
-           uses: actions/setup-python@v2
-           with:
-             python-version: '3.x'
+## Usage
 
-         - name: Install dependencies
-           run: |
-             python -m pip install --upgrade pip
-             pip install bumpversion
+### Automated Documentation
+- Push changes to the `main` branch to trigger documentation updates.
+- For pull requests, use the `feature-documentation` branch to generate PR-specific documentation.
 
-         - name: Determine version bump
-           id: version-bump
-           run: |
-             if git log -1 --pretty=%B | grep -q '\[major\]'; then
-               echo "::set-output name=version::major"
-             elif git log -1 --pretty=%B | grep -q '\[minor\]'; then
-               echo "::set-output name=version::minor"
-             else
-               echo "::set-output name=version::patch"
-             fi
+### Issue Management
+- Create issues using the provided templates to trigger AI-driven content generation.
 
-         - name: Bump version
-           run: |
-             bumpversion --current-version $(cat VERSION) ${{ steps.version-bump.outputs.version }}
-             git push --follow-tags
-
-         - name: Commit and push changes
-           run: |
-             git config --global user.name 'github-actions[bot]'
-             git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-             git add .
-             git commit -m "Bump version to $(cat VERSION)"
-             git push
-
-         - name: Create Git tag
-           run: |
-             git tag v$(cat VERSION)
-             git push origin v$(cat VERSION)
-   ```
-
-2. **Configure `bumpversion`**:
-   Ensure that `bumpversion` is configured in your project. Create a `.bumpversion.cfg` file in the root of your repository with the following content:
-
-   ```ini
-   [bumpversion]
-   current_version = 0.1.0
-   commit = True
-   tag = True
-
-   [bumpversion:file:VERSION]
-   ```
-
-3. **Add a `VERSION` File**:
-   Create a `VERSION` file in the root of your repository and set the initial version:
-
-   ```
-   0.1.0
-   ```
-
-4. **Push Changes**:
-   Commit and push the changes to your repository. The workflow will automatically trigger on pushes to the `main` branch and handle versioning based on commit message tags.
+### Versioning
+- Use commit messages with `[major]`, `[minor]`, or `[patch]` tags to control version increments.
 
 ## Example Commit Messages
 
@@ -122,4 +82,4 @@ The workflow then updates the version, commits the changes, tags the release in 
 
 ## Conclusion
 
-By following these instructions, you can automate the versioning of your Python packages using GitHub Actions and `bumpversion`. This will streamline your development workflow and ensure consistent version management based on Semantic Versioning standards.
+This repository provides a comprehensive solution for automating versioning, documentation, and issue management, enhancing productivity and consistency in Python projects.
