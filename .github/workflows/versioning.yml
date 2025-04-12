@@ -23,21 +23,62 @@ jobs:
           python -m pip install --upgrade pip
           pip install bumpversion
 
+      - name: Validate commit messages
+        run: |
+          if ! git log -1 --pretty=%B | grep -Eq '\[major\]|\[minor\]|\[patch\]'; then
+            echo "No valid versioning tag found in the commit message. Defaulting to patch version."
+          fi
+
+      - name: Handle version conflicts
+        run: |
+          git fetch --tags
+          # Check if any tags exist
+          if git rev-list --tags --max-count=1 &>/dev/null; then
+            latest_tag=$(git describe --tags $(git rev-list --tags --max-count=1) | sed 's/^v//')
+            if [ "$(cat VERSION)" != "$latest_tag" ]; then
+              echo "Version conflict detected. Updating local version to match the latest tag."
+              echo "$latest_tag" > VERSION
+            fi
+          else
+            echo "No existing tags found. Using VERSION file as source of truth."
+          fi
+
       - name: Determine version bump
         id: version-bump
         run: |
           if git log -1 --pretty=%B | grep -q '\[major\]'; then
-            echo "::set-output name=version::major"
+            echo "version=major" >> $GITHUB_OUTPUT
           elif git log -1 --pretty=%B | grep -q '\[minor\]'; then
-            echo "::set-output name=version::minor"
+            echo "version=minor" >> $GITHUB_OUTPUT
           else
-            echo "::set-output name=version::patch"
+            echo "version=patch" >> $GITHUB_OUTPUT
           fi
 
       - name: Bump version
         run: |
-          bumpversion --current-version $(cat VERSION) ${{ steps.version-bump.outputs.version }}
-          git push --follow-tags
+          # Get current version from VERSION file
+          CURRENT_VERSION=$(cat VERSION)
+
+          # Determine new version based on bump type
+          if [ "${{ steps.version-bump.outputs.version }}" == "major" ]; then
+            MAJOR=$(echo $CURRENT_VERSION | cut -d. -f1)
+            NEW_VERSION="$((MAJOR+1)).0.0"
+          elif [ "${{ steps.version-bump.outputs.version }}" == "minor" ]; then
+            MAJOR=$(echo $CURRENT_VERSION | cut -d. -f1)
+            MINOR=$(echo $CURRENT_VERSION | cut -d. -f2)
+            NEW_VERSION="$MAJOR.$((MINOR+1)).0"
+          else
+            MAJOR=$(echo $CURRENT_VERSION | cut -d. -f1)
+            MINOR=$(echo $CURRENT_VERSION | cut -d. -f2)
+            PATCH=$(echo $CURRENT_VERSION | cut -d. -f3)
+            NEW_VERSION="$MAJOR.$MINOR.$((PATCH+1))"
+          fi
+
+          # Update VERSION file
+          echo $NEW_VERSION > VERSION
+
+          # Update Python package version
+          sed -i "s/__version__ = \".*\"/__version__ = \"$NEW_VERSION\"/" src/githubai/__init__.py
 
       - name: Commit and push changes
         run: |

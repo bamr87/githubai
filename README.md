@@ -18,6 +18,14 @@ This repository includes workflows and tools to automate versioning, documentati
 - Semantic versioning based on commit message tags (`[major]`, `[minor]`, `[patch]`).
 - Workflow (`versioning.yml`) updates the version, creates Git tags, and optionally publishes to PyPI.
 
+### Enhanced Versioning Workflow
+
+The versioning workflow has been updated to include additional safeguards:
+
+1. **Commit Message Validation**: Ensures that commit messages contain valid versioning tags (`[major]`, `[minor]`, `[patch]`). If no tag is found, the workflow defaults to a patch version.
+
+2. **Version Conflict Handling**: Automatically syncs the local version file with the latest Git tag to prevent conflicts when multiple commits are pushed in quick succession.
+
 ## Setup Instructions
 
 ### Prerequisites
@@ -63,11 +71,11 @@ Navigate to `Settings → Secrets and variables → Actions`, then add:
 ### Versioning
 - Use commit messages with `[major]`, `[minor]`, or `[patch]` tags to control version increments.
 
-## Example Commit Messages
+### Example Usage
 
 - To increment the major version:
   ```
-  feat: Add new feature [major]
+  feat: Add breaking change [major]
   ```
 
 - To increment the minor version:
@@ -77,7 +85,7 @@ Navigate to `Settings → Secrets and variables → Actions`, then add:
 
 - To increment the patch version (default):
   ```
-  fix: Fix a bug [patch]
+  fix: Resolve minor bug [patch]
   ```
 
 ## Conclusion
