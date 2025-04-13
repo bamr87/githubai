@@ -25,3 +25,12 @@ jobs:
 
       - name: Run versioning script
         run: python scripts/versioning.py
+
+      - name: Publish to PyPI
+        if: github.event_name == 'push'
+        env:
+          TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+        run: |
+          python -m pip install --upgrade twine
+          twine upload dist/*
