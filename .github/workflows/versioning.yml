@@ -21,11 +21,14 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install bumpversion
+          pip install bumpversion build twine
 
       - name: Run versioning script
         run: python scripts/versioning.py
 
+      - name: Build distribution
+        run: python -m build
+        
       - name: Publish to PyPI
         if: github.event_name == 'push'
         env:
