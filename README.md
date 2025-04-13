@@ -59,6 +59,18 @@ Navigate to `Settings → Secrets and variables → Actions`, then add:
 - `OPENAI_API_KEY`: Your OpenAI API Key.
 - `GITHUB_TOKEN`: Your GitHub token.
 
+### Publishing to PyPI
+
+To enable automatic publishing to PyPI, follow these steps:
+
+1. Add the following secrets to your GitHub repository:
+   - `TWINE_USERNAME`: Your PyPI username.
+   - `TWINE_PASSWORD`: Your PyPI password or token.
+
+2. Ensure your project includes a `setup.py` file and a `dist/` directory is generated during the build process.
+
+3. The workflow will automatically publish the package to PyPI when changes are pushed to the `main` branch.
+
 ## Usage
 
 ### Automated Documentation
