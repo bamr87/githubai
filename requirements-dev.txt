@@ -21,3 +21,7 @@ ruff
 
 # Documentation
 # -r docs/requirements.txt
+
+# Build and Release
+build
+twine
