@@ -1,0 +1,27 @@
+# AI-Seed Development Environment Overrides
+version: '3.8'
+
+services:
+  frontend:
+    environment:
+      - LOG_LEVEL=DEBUG
+      - HOT_RELOAD=true
+    volumes:
+      - ./src/frontend:/app/src/frontend:rw
+    command: ["npm", "run", "dev", "--prefix", "src/frontend"]
+
+  api:
+    environment:
+      - LOG_LEVEL=DEBUG
+      - API_DEBUG=true
+    volumes:
+      - ./src/api:/app/src/api:rw
+    command: ["npm", "run", "dev", "--prefix", "src/api"]
+
+  ai-engine:
+    environment:
+      - LOG_LEVEL=DEBUG
+      - FLASK_DEBUG=true
+    volumes:
+      - ./src/ai:/app:rw
+    command: ["python", "main.py", "--debug"]

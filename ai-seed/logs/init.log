@@ -1,0 +1,67 @@
+[2025-07-21 02:55:20] [INFO] Validating environment prerequisites...
+[2025-07-21 02:55:20] [INFO] ✓ Found required tool: docker
+[2025-07-21 02:55:20] [ERROR] Required tool not found: docker-compose
+[2025-07-21 02:55:20] [ERROR] Environment validation failed
+[2025-07-21 02:56:02] [INFO] Validating environment prerequisites...
+[2025-07-21 02:56:02] [INFO] ✓ Found required tool: docker
+[2025-07-21 02:56:02] [INFO] ✓ Found required tool: git
+[2025-07-21 02:56:02] [INFO] ✓ Found required tool: curl
+[2025-07-21 02:56:02] [INFO] ✓ Found Docker Compose v2
+[2025-07-21 02:56:02] [INFO] ✓ Docker daemon is running
+[2025-07-21 02:56:02] [INFO] ✓ Sufficient disk space: 27GB available
+[2025-07-21 02:56:02] [SUCCESS] Environment validation completed
+[2025-07-21 02:56:02] [INFO] Initializing AI-Seed project structure...
+[2025-07-21 02:56:02] [INFO] ✓ Created directory: /home/runner/work/ai-seed/ai-seed/src
+[2025-07-21 02:56:02] [INFO] ✓ Created directory: /home/runner/work/ai-seed/ai-seed/src/frontend
+[2025-07-21 02:56:02] [INFO] ✓ Created directory: /home/runner/work/ai-seed/ai-seed/src/api
+[2025-07-21 02:56:02] [INFO] ✓ Created directory: /home/runner/work/ai-seed/ai-seed/src/ai
+[2025-07-21 02:56:02] [INFO] ✓ Created directory: /home/runner/work/ai-seed/ai-seed/src/data
+[2025-07-21 02:56:02] [INFO] ✓ Created directory: /home/runner/work/ai-seed/ai-seed/tests
+[2025-07-21 02:56:02] [INFO] ✓ Created directory: /home/runner/work/ai-seed/ai-seed/tests/unit
+[2025-07-21 02:56:02] [INFO] ✓ Created directory: /home/runner/work/ai-seed/ai-seed/tests/integration
+[2025-07-21 02:56:02] [INFO] ✓ Created directory: /home/runner/work/ai-seed/ai-seed/tests/e2e
+[2025-07-21 02:56:02] [INFO] ✓ Created directory: /home/runner/work/ai-seed/ai-seed/docs
+[2025-07-21 02:56:02] [INFO] ✓ Created directory: /home/runner/work/ai-seed/ai-seed/docs/architecture
+[2025-07-21 02:56:02] [INFO] ✓ Created directory: /home/runner/work/ai-seed/ai-seed/docs/guides
+[2025-07-21 02:56:02] [INFO] ✓ Created directory: /home/runner/work/ai-seed/ai-seed/docs/api
+[2025-07-21 02:56:02] [INFO] ✓ Created directory: /home/runner/work/ai-seed/ai-seed/config/environments
+[2025-07-21 02:56:02] [INFO] ✓ Created directory: /home/runner/work/ai-seed/ai-seed/scripts/build
+[2025-07-21 02:56:02] [INFO] ✓ Created directory: /home/runner/work/ai-seed/ai-seed/scripts/deploy
+[2025-07-21 02:56:02] [INFO] ✓ Created directory: /home/runner/work/ai-seed/ai-seed/scripts/maintenance
+[2025-07-21 02:56:02] [SUCCESS] Project structure initialization completed
+[2025-07-21 02:56:02] [INFO] Creating default configuration files...
+[2025-07-21 02:56:02] [INFO] ✓ Created development environment configuration
+[2025-07-21 02:56:02] [INFO] ✓ Created Docker Compose development override
+[2025-07-21 02:56:02] [INFO] ✓ Created Nginx configuration for path monitoring
+[2025-07-21 02:56:02] [SUCCESS] Configuration files created successfully
+[2025-07-21 02:56:02] [INFO] Setting up Git hooks for path-based development...
+[2025-07-21 02:56:02] [INFO] ✓ Created pre-commit hook for path validation
+[2025-07-21 02:56:02] [SUCCESS] Git hooks setup completed
+[2025-07-21 02:56:02] [INFO] Verifying AI-Seed installation...
+[2025-07-21 02:56:02] [INFO] ✓ Directory structure: src
+[2025-07-21 02:56:02] [INFO] ✓ Directory structure: scripts
+[2025-07-21 02:56:02] [INFO] ✓ Directory structure: config
+[2025-07-21 02:56:02] [INFO] ✓ Directory structure: docs
+[2025-07-21 02:56:02] [INFO] ✓ Directory structure: tests
+[2025-07-21 02:56:02] [INFO] ✓ Configuration file: config/.env.development
+[2025-07-21 02:56:02] [INFO] ✓ Configuration file: docker/docker-compose.yml
+[2025-07-21 02:56:02] [INFO] ✓ Configuration file: config/nginx.conf
+[2025-07-21 02:56:02] [SUCCESS] Installation verification completed successfully
+[2025-07-21 02:56:02] [SUCCESS] AI-Seed environment initialized successfully in 0 seconds
+[2025-07-21 04:26:30] [INFO] Validating environment prerequisites...
+[2025-07-21 04:26:30] [INFO] ✓ Found required tool: docker
+[2025-07-21 04:26:30] [INFO] ✓ Found required tool: git
+[2025-07-21 04:26:30] [INFO] ✓ Found required tool: curl
+[2025-07-21 04:26:30] [INFO] ✓ Found Docker Compose v2
+[2025-07-21 04:26:30] [INFO] ✓ Docker daemon is running
+[2025-07-21 04:26:30] [INFO] ✓ Sufficient disk space: 27GB available
+[2025-07-21 04:26:30] [SUCCESS] Environment validation completed
+[2025-07-21 04:26:30] [INFO] Initializing AI-Seed project structure...
+[2025-07-21 04:26:30] [INFO] ✓ Created directory: /home/runner/work/ai-seed/ai-seed/tests
+[2025-07-21 04:26:30] [INFO] ✓ Created directory: /home/runner/work/ai-seed/ai-seed/tests/unit
+[2025-07-21 04:26:30] [INFO] ✓ Created directory: /home/runner/work/ai-seed/ai-seed/tests/integration
+[2025-07-21 04:26:30] [INFO] ✓ Created directory: /home/runner/work/ai-seed/ai-seed/tests/e2e
+[2025-07-21 04:26:30] [INFO] ✓ Created directory: /home/runner/work/ai-seed/ai-seed/docs/guides
+[2025-07-21 04:26:30] [INFO] ✓ Created directory: /home/runner/work/ai-seed/ai-seed/docs/api
+[2025-07-21 04:26:30] [INFO] ✓ Created directory: /home/runner/work/ai-seed/ai-seed/config/environments
+[2025-07-21 04:26:30] [INFO] ✓ Created directory: /home/runner/work/ai-seed/ai-seed/scripts/build
