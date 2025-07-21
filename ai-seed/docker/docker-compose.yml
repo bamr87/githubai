@@ -1,0 +1,177 @@
+# AI-Seed Container Orchestration
+# Path-based service communication and evolution engine
+
+version: '3.8'
+
+services:
+  # Frontend Application - User Interface Path
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: development
+    container_name: ai-seed-frontend
+    environment:
+      - NODE_ENV=development
+      - AI_SEED_ENV=development
+      - API_URL=http://api:8000
+      - AI_ENGINE_URL=http://ai-engine:5000
+    volumes:
+      - ../src:/app/src:rw
+      - ../scripts:/app/scripts:rw
+      - frontend_node_modules:/app/src/node_modules
+    ports:
+      - "3000:3000"
+    networks:
+      - ai-seed-network
+    depends_on:
+      - api
+      - ai-engine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # API Service - Backend Logic Path
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: development
+    container_name: ai-seed-api
+    environment:
+      - NODE_ENV=development
+      - AI_SEED_ENV=development
+      - DATABASE_URL=postgresql://ai_seed:ai_seed_pass@database:5432/ai_seed_dev
+      - REDIS_URL=redis://cache:6379/0
+      - AI_ENGINE_URL=http://ai-engine:5000
+    volumes:
+      - ../src:/app/src:rw
+      - api_logs:/app/logs
+    ports:
+      - "8000:8000"
+    networks:
+      - ai-seed-network
+    depends_on:
+      - database
+      - cache
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # AI Evolution Engine - Intelligence Path
+  ai-engine:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: ai-engine
+    container_name: ai-seed-ai-engine
+    environment:
+      - AI_SEED_ENV=development
+      - DATABASE_URL=postgresql://ai_seed:ai_seed_pass@database:5432/ai_seed_dev
+      - REDIS_URL=redis://cache:6379/1
+    volumes:
+      - ../src/ai:/app:rw
+      - ai_models:/app/models
+      - ai_logs:/app/logs
+    ports:
+      - "5000:5000"
+    networks:
+      - ai-seed-network
+    depends_on:
+      - database
+      - cache
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Database - Data Persistence Path
+  database:
+    image: postgres:15-alpine
+    container_name: ai-seed-database
+    environment:
+      - POSTGRES_DB=ai_seed_dev
+      - POSTGRES_USER=ai_seed
+      - POSTGRES_PASSWORD=ai_seed_pass
+      - POSTGRES_HOST_AUTH_METHOD=md5
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../src/data/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - ai-seed-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ai_seed -d ai_seed_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Cache - Fast Data Access Path
+  cache:
+    image: redis:7-alpine
+    container_name: ai-seed-cache
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - ai-seed-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # Path Monitor - Analytics and Metrics Path
+  monitor:
+    image: nginx:alpine
+    container_name: ai-seed-monitor
+    volumes:
+      - ../config/nginx.conf:/etc/nginx/nginx.conf:ro
+      - monitor_logs:/var/log/nginx
+    ports:
+      - "8080:80"
+    networks:
+      - ai-seed-network
+    depends_on:
+      - frontend
+      - api
+      - ai-engine
+    restart: unless-stopped
+
+# Persistent storage volumes
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  frontend_node_modules:
+    driver: local
+  ai_models:
+    driver: local
+  ai_logs:
+    driver: local
+  api_logs:
+    driver: local
+  monitor_logs:
+    driver: local
+
+# Service communication network
+networks:
+  ai-seed-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

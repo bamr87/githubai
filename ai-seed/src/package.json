@@ -1,0 +1,47 @@
+{
+  "name": "ai-seed",
+  "version": "1.0.0",
+  "description": "AI-Seed: Evolutionary development ecosystem with path-based architecture",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "npm run dev:frontend & npm run dev:api",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:api": "npm run dev --prefix api",
+    "build": "npm run build:frontend && npm run build:api",
+    "build:frontend": "npm run build --prefix frontend",
+    "build:api": "npm run build --prefix api",
+    "start": "npm run start:frontend & npm run start:api",
+    "start:frontend": "npm start --prefix frontend",
+    "start:api": "npm start --prefix api",
+    "test": "npm run test:frontend && npm run test:api",
+    "test:frontend": "npm test --prefix frontend",
+    "test:api": "npm test --prefix api",
+    "lint": "npm run lint:frontend && npm run lint:api",
+    "lint:frontend": "npm run lint --prefix frontend",
+    "lint:api": "npm run lint --prefix api"
+  },
+  "keywords": [
+    "ai",
+    "evolution",
+    "container-first",
+    "path-based",
+    "development",
+    "automation"
+  ],
+  "author": "AI-Seed Team",
+  "license": "MIT",
+  "workspaces": [
+    "frontend",
+    "api"
+  ],
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "eslint": "^8.54.0",
+    "prettier": "^3.1.0"
+  }
+}
