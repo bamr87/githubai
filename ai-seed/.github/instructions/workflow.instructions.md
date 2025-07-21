@@ -20,6 +20,8 @@ dependencies:
     description: Shell scripting standards for workflow execution
   - file: project.instructions.md
     description: Project-specific context and requirements
+  - file: mcp.instructions.md
+    description: Model Context Protocol integration and server automation
 
 containerRequirements:
   baseImage: ubuntu-latest
@@ -55,6 +57,12 @@ paths:
     - test_execution
     - result_validation
     - artifact_storage
+  mcp_integration_path:
+    - server_discovery
+    - capability_analysis
+    - configuration_generation
+    - integration_testing
+    - deployment_validation
 
 changelog:
   - date: "2025-07-20"
@@ -582,6 +590,597 @@ jobs:
 - Log key decision points and execution paths
 - Store artifacts for debugging and analysis
 - Implement health checks for critical operations
+
+## MCP Integration Workflows
+
+### MCP Server Deployment and Testing Workflow
+
+#### Automated MCP Server Discovery
+```yaml
+name: MCP Server Discovery and Configuration
+
+on:
+  schedule:
+    - cron: '0 6 * * *'  # Daily at 6 AM UTC
+  workflow_dispatch:
+    inputs:
+      force_reconfiguration:
+        description: 'Force reconfiguration of all MCP servers'
+        required: false
+        default: false
+        type: boolean
+      server_filter:
+        description: 'Filter servers by type (filesystem, database, api, all)'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - 'all'
+          - 'filesystem'
+          - 'database'
+          - 'api'
+
+env:
+  EVOLUTION_VERSION: "0.3.0"
+  WORKFLOW_TYPE: "mcp_integration"
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  mcp-discovery:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 🌱 Prepare MCP Environment
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.PAT_TOKEN_TOKEN }}
+    
+    - name: 🛠️ Setup Environment
+      run: |
+        set -euo pipefail
+        chmod +x ./scripts/setup-environment.sh
+        ./scripts/setup-environment.sh
+    
+    - name: 🔍 Validate MCP Prerequisites
+      run: |
+        set -euo pipefail
+        
+        # Validate required tools
+        required_tools=("docker" "docker-compose" "jq" "python3")
+        for tool in "${required_tools[@]}"; do
+          if ! command -v "$tool" >/dev/null 2>&1; then
+            echo "❌ Required tool missing: $tool"
+            exit 1
+          fi
+        done
+        
+        # Validate MCP server containers are available
+        if ! docker-compose -f docker-compose.mcp.yml config >/dev/null 2>&1; then
+          echo "❌ MCP Docker Compose configuration is invalid"
+          exit 1
+        fi
+        
+        echo "✅ All MCP prerequisites validated"
+    
+    - name: 🚀 Deploy MCP Servers
+      run: |
+        set -euo pipefail
+        
+        echo "🚀 Deploying MCP servers..."
+        
+        # Start MCP server infrastructure
+        docker-compose -f docker-compose.mcp.yml up -d
+        
+        # Wait for servers to be ready
+        sleep 30
+        
+        # Verify server health
+        ./scripts/mcp/monitor-servers.sh --health-check-all
+    
+    - name: 🧬 Discover and Configure MCP Servers
+      run: |
+        set -euo pipefail
+        
+        chmod +x ./scripts/mcp/discover-servers.sh
+        ./scripts/mcp/discover-servers.sh
+        
+        # Validate configuration files were generated
+        if [ ! -f "config/mcp/client_config.json" ]; then
+          echo "❌ MCP client configuration not generated"
+          exit 1
+        fi
+        
+        if [ ! -f "config/mcp/validation_report.json" ]; then
+          echo "❌ MCP validation report not generated"
+          exit 1
+        fi
+    
+    - name: 🧪 Test MCP Integrations
+      run: |
+        set -euo pipefail
+        
+        echo "🧪 Testing MCP integrations..."
+        
+        # Run comprehensive integration tests
+        chmod +x ./scripts/mcp/test-integrations.sh
+        ./scripts/mcp/test-integrations.sh --comprehensive
+        
+        # Generate test results summary
+        python3 -c "
+        import json
+        with open('config/mcp/validation_report.json', 'r') as f:
+            report = json.load(f)
+        
+        success_rate = report['summary']['success_rate']
+        total_servers = report['summary']['total_servers']
+        healthy_servers = report['summary']['healthy_servers']
+        
+        print(f'MCP Integration Test Results:')
+        print(f'- Total Servers: {total_servers}')
+        print(f'- Healthy Servers: {healthy_servers}')
+        print(f'- Success Rate: {success_rate}%')
+        
+        if success_rate < 80:
+            print('❌ MCP integration test failed - success rate below 80%')
+            exit(1)
+        else:
+            print('✅ MCP integration test passed')
+        "
+    
+    - name: 📝 Generate MCP Documentation
+      run: |
+        set -euo pipefail
+        
+        echo "📝 Generating MCP integration documentation..."
+        
+        # Generate updated documentation
+        python3 scripts/generate-mcp-docs.py
+        
+        # Validate documentation was generated
+        if [ ! -f "docs/mcp-integration-guide.md" ]; then
+          echo "❌ MCP documentation not generated"
+          exit 1
+        fi
+    
+    - name: 🔄 Create Configuration Update PR
+      if: github.event_name == 'schedule' || inputs.force_reconfiguration == true
+      run: |
+        set -euo pipefail
+        
+        # Check if there are changes to commit
+        if git diff --quiet && git diff --cached --quiet; then
+          echo "No MCP configuration changes to commit"
+          exit 0
+        fi
+        
+        # Create branch for MCP updates
+        branch_name="automated/mcp-config-update-$(date +%Y%m%d-%H%M%S)"
+        git checkout -b "$branch_name"
+        
+        # Stage and commit changes
+        git add config/mcp/ docs/mcp-*.md
+        git commit -m "feat: automated MCP server configuration update
+        
+        - Updated MCP server discovery and configuration
+        - Refreshed client configuration
+        - Updated integration documentation
+        - Validated server health and capabilities
+        
+        Generated by: ${{ github.workflow }} workflow
+        Trigger: ${{ github.event_name }}
+        Timestamp: $(date -Iseconds)"
+        
+        # Push branch and create PR
+        git push origin "$branch_name"
+        
+        gh pr create \
+          --title "Automated MCP Configuration Update" \
+          --body "This PR contains automated updates to MCP server configurations and documentation.
+        
+        ## Changes Include:
+        - 🔄 Updated MCP server discovery results
+        - ⚙️ Refreshed client configuration files
+        - 📚 Updated integration documentation
+        - ✅ Validated server health and capabilities
+        
+        ## Test Results:
+        $(cat config/mcp/validation_report.json | jq -r '.summary | \"- Total Servers: \" + (.total_servers | tostring) + \"\n- Healthy Servers: \" + (.healthy_servers | tostring) + \"\n- Success Rate: \" + (.success_rate | tostring) + \"%\"')
+        
+        This PR was automatically generated by the MCP Discovery workflow." \
+          --assignee "${{ github.actor }}" \
+          --label "automated,mcp,configuration"
+      env:
+        GITHUB_TOKEN: ${{ secrets.PAT_TOKEN_TOKEN }}
+    
+    - name: 🧹 Cleanup MCP Test Environment
+      if: always()
+      run: |
+        set -euo pipefail
+        
+        echo "🧹 Cleaning up MCP test environment..."
+        
+        # Stop MCP servers if running
+        docker-compose -f docker-compose.mcp.yml down --remove-orphans || true
+        
+        # Clean up temporary files
+        rm -rf tmp/mcp-* || true
+        rm -rf tmp/test_mcp_* || true
+        
+        echo "✅ Cleanup completed"
+```
+
+#### MCP Server Health Monitoring Workflow
+```yaml
+name: MCP Server Health Monitoring
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'  # Every 15 minutes
+  workflow_dispatch:
+
+env:
+  EVOLUTION_VERSION: "0.3.0"
+  WORKFLOW_TYPE: "mcp_monitoring"
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  health-monitoring:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 🌱 Prepare Monitoring Environment
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+        token: ${{ secrets.PAT_TOKEN_TOKEN }}
+    
+    - name: 🛠️ Setup Monitoring Tools
+      run: |
+        set -euo pipefail
+        chmod +x ./scripts/setup-environment.sh
+        ./scripts/setup-environment.sh --monitoring-only
+    
+    - name: 🔍 Monitor MCP Server Health
+      run: |
+        set -euo pipefail
+        
+        echo "🔍 Monitoring MCP server health..."
+        
+        # Run health checks
+        chmod +x ./scripts/mcp/monitor-servers.sh
+        ./scripts/mcp/monitor-servers.sh --health-check-all --output-json > /tmp/health_report.json
+        
+        # Analyze health report
+        python3 -c "
+        import json
+        import sys
+        
+        with open('/tmp/health_report.json', 'r') as f:
+            health_data = json.load(f)
+        
+        unhealthy_servers = [
+            server for server, status in health_data.get('servers', {}).items()
+            if status.get('status') != 'healthy'
+        ]
+        
+        if unhealthy_servers:
+            print(f'❌ Unhealthy MCP servers detected: {unhealthy_servers}')
+            
+            # Create or update GitHub issue
+            import subprocess
+            import os
+            
+            issue_title = f'MCP Server Health Alert - {len(unhealthy_servers)} server(s) unhealthy'
+            issue_body = f'''
+# MCP Server Health Alert
+
+**Alert Time:** {health_data.get('timestamp', 'unknown')}
+**Unhealthy Servers:** {len(unhealthy_servers)}
+
+## Server Status Details:
+
+'''
+            
+            for server in unhealthy_servers:
+                status = health_data['servers'][server]
+                issue_body += f'''
+### {server}
+- **Status:** {status.get('status', 'unknown')}
+- **Error:** {status.get('error', 'No error details')}
+- **Last Check:** {status.get('last_check', 'unknown')}
+'''
+            
+            issue_body += '''
+## Recommended Actions:
+1. Check server container logs: `docker logs mcp-{server_name}`
+2. Restart unhealthy servers: `docker-compose -f docker-compose.mcp.yml restart`
+3. Review server configuration and dependencies
+4. Monitor for recovery in next health check cycle
+
+This issue was automatically generated by the MCP Health Monitoring workflow.
+'''
+            
+            # Check if existing health alert issue exists
+            result = subprocess.run([
+                'gh', 'issue', 'list', 
+                '--label', 'mcp-health-alert',
+                '--state', 'open',
+                '--json', 'number,title'
+            ], capture_output=True, text=True, env=dict(os.environ, GITHUB_TOKEN='${{ secrets.PAT_TOKEN_TOKEN }}'))
+            
+            if result.returncode == 0:
+                issues = json.loads(result.stdout)
+                if issues:
+                    # Update existing issue
+                    issue_number = issues[0]['number']
+                    subprocess.run([
+                        'gh', 'issue', 'edit', str(issue_number),
+                        '--title', issue_title,
+                        '--body', issue_body
+                    ], env=dict(os.environ, GITHUB_TOKEN='${{ secrets.PAT_TOKEN_TOKEN }}'))
+                    print(f'Updated existing health alert issue #{issue_number}')
+                else:
+                    # Create new issue
+                    subprocess.run([
+                        'gh', 'issue', 'create',
+                        '--title', issue_title,
+                        '--body', issue_body,
+                        '--label', 'mcp-health-alert,bug,automated'
+                    ], env=dict(os.environ, GITHUB_TOKEN='${{ secrets.PAT_TOKEN_TOKEN }}'))
+                    print('Created new health alert issue')
+            
+            sys.exit(1)
+        else:
+            print('✅ All MCP servers are healthy')
+            
+            # Close any existing health alert issues
+            result = subprocess.run([
+                'gh', 'issue', 'list', 
+                '--label', 'mcp-health-alert',
+                '--state', 'open',
+                '--json', 'number'
+            ], capture_output=True, text=True, env=dict(os.environ, GITHUB_TOKEN='${{ secrets.PAT_TOKEN_TOKEN }}'))
+            
+            if result.returncode == 0:
+                issues = json.loads(result.stdout)
+                for issue in issues:
+                    subprocess.run([
+                        'gh', 'issue', 'close', str(issue['number']),
+                        '--comment', 'MCP servers have recovered. All servers are now healthy. Auto-closing this alert.'
+                    ], env=dict(os.environ, GITHUB_TOKEN='${{ secrets.PAT_TOKEN_TOKEN }}'))
+                    print(f'Closed resolved health alert issue #{issue[\"number\"]}')
+        "
+      env:
+        GITHUB_TOKEN: ${{ secrets.PAT_TOKEN_TOKEN }}
+```
+
+### MCP-Enhanced Evolution Workflows
+
+#### Context-Aware Evolution with MCP
+```yaml
+name: MCP-Enhanced AI Evolution
+
+on:
+  workflow_dispatch:
+    inputs:
+      evolution_focus:
+        description: 'Focus area for evolution'
+        required: false
+        default: 'mcp_integration'
+        type: choice
+        options:
+          - 'mcp_integration'
+          - 'context_optimization'
+          - 'server_capabilities'
+          - 'client_improvements'
+      mcp_context_sources:
+        description: 'MCP context sources to utilize'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - 'all'
+          - 'filesystem'
+          - 'database'
+          - 'api'
+          - 'git'
+
+env:
+  EVOLUTION_VERSION: "0.3.0"
+  WORKFLOW_TYPE: "mcp_enhanced_evolution"
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  mcp-enhanced-evolution:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 🌱 Prepare MCP-Enhanced Evolution Environment
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.PAT_TOKEN_TOKEN }}
+    
+    - name: 🛠️ Setup MCP Environment
+      run: |
+        set -euo pipefail
+        chmod +x ./scripts/setup-environment.sh
+        ./scripts/setup-environment.sh --with-mcp
+        
+        # Start MCP servers for context collection
+        docker-compose -f docker-compose.mcp.yml up -d
+        sleep 30  # Allow servers to initialize
+    
+    - name: 📊 Collect MCP Context
+      run: |
+        set -euo pipefail
+        
+        echo "📊 Collecting comprehensive context via MCP servers..."
+        
+        # Collect context from specified sources
+        mkdir -p /tmp/mcp-context
+        
+        context_sources="${{ inputs.mcp_context_sources }}"
+        if [ "$context_sources" = "all" ]; then
+          context_sources="filesystem git docker"
+        fi
+        
+        for source in $context_sources; do
+          echo "Collecting $source context..."
+          ./scripts/lib/mcp_context.sh collect_mcp_context "$source" "/tmp/mcp-context/${source}_context.json"
+        done
+        
+        # Aggregate all context into comprehensive dataset
+        python3 -c "
+        import json
+        import glob
+        import os
+        
+        aggregated_context = {
+            'collection_timestamp': '$(date -Iseconds)',
+            'evolution_focus': '${{ inputs.evolution_focus }}',
+            'context_sources': '$context_sources'.split(),
+            'contexts': {}
+        }
+        
+        for context_file in glob.glob('/tmp/mcp-context/*_context.json'):
+            context_type = os.path.basename(context_file).replace('_context.json', '')
+            try:
+                with open(context_file, 'r') as f:
+                    context_data = json.load(f)
+                aggregated_context['contexts'][context_type] = context_data
+                print(f'✅ Loaded {context_type} context')
+            except Exception as e:
+                print(f'❌ Failed to load {context_type} context: {e}')
+        
+        with open('/tmp/mcp-evolution-context.json', 'w') as f:
+            json.dump(aggregated_context, f, indent=2)
+        
+        print(f'📋 Aggregated context from {len(aggregated_context[\"contexts\"])} sources')
+        "
+    
+    - name: 🧬 Execute MCP-Enhanced Evolution
+      run: |
+        set -euo pipefail
+        
+        echo "🧬 Executing MCP-enhanced evolution..."
+        
+        # Use MCP context for enhanced evolution
+        chmod +x ./scripts/evolution-engine.sh
+        
+        # Pass MCP context to evolution engine
+        export MCP_CONTEXT_FILE="/tmp/mcp-evolution-context.json"
+        export EVOLUTION_FOCUS="${{ inputs.evolution_focus }}"
+        
+        ./scripts/evolution-engine.sh \
+          --mode "mcp-enhanced" \
+          --focus "${{ inputs.evolution_focus }}" \
+          --context-file "/tmp/mcp-evolution-context.json"
+    
+    - name: 🔍 Validate MCP Integration Improvements
+      run: |
+        set -euo pipefail
+        
+        echo "🔍 Validating MCP integration improvements..."
+        
+        # Test that MCP integrations still work after evolution
+        ./scripts/mcp/test-integrations.sh --post-evolution
+        
+        # Validate any new MCP-related code
+        if find . -name "*.py" -path "*/mcp/*" -newer /tmp/evolution_start_time 2>/dev/null | head -1; then
+          echo "Found new MCP-related Python code, running validation..."
+          python3 -m py_compile $(find . -name "*.py" -path "*/mcp/*" -newer /tmp/evolution_start_time)
+        fi
+        
+        if find . -name "*.ts" -path "*/mcp/*" -newer /tmp/evolution_start_time 2>/dev/null | head -1; then
+          echo "Found new MCP-related TypeScript code, running validation..."
+          npx tsc --noEmit $(find . -name "*.ts" -path "*/mcp/*" -newer /tmp/evolution_start_time)
+        fi
+    
+    - name: 📈 Generate MCP Evolution Report
+      run: |
+        set -euo pipefail
+        
+        echo "📈 Generating MCP evolution report..."
+        
+        # Generate comprehensive evolution report
+        python3 -c "
+        import json
+        import os
+        from datetime import datetime
+        
+        # Load evolution results if available
+        evolution_results = {}
+        if os.path.exists('/tmp/evolution_response.json'):
+            with open('/tmp/evolution_response.json', 'r') as f:
+                evolution_results = json.load(f)
+        
+        # Load MCP context
+        mcp_context = {}
+        if os.path.exists('/tmp/mcp-evolution-context.json'):
+            with open('/tmp/mcp-evolution-context.json', 'r') as f:
+                mcp_context = json.load(f)
+        
+        # Generate report
+        report = {
+            'report_timestamp': datetime.now().isoformat(),
+            'evolution_focus': '${{ inputs.evolution_focus }}',
+            'mcp_context_sources': mcp_context.get('context_sources', []),
+            'evolution_summary': {
+                'total_changes': len(evolution_results.get('changes', [])),
+                'mcp_related_changes': len([
+                    change for change in evolution_results.get('changes', [])
+                    if 'mcp' in change.get('file', '').lower() or 'mcp' in change.get('description', '').lower()
+                ]),
+                'context_sources_used': len(mcp_context.get('contexts', {})),
+                'enhancement_areas': evolution_results.get('enhancement_areas', [])
+            },
+            'mcp_integration_status': 'enhanced' if evolution_results else 'unchanged',
+            'recommendations': evolution_results.get('recommendations', [])
+        }
+        
+        with open('/tmp/mcp-evolution-report.json', 'w') as f:
+            json.dump(report, f, indent=2)
+        
+        print('📋 MCP evolution report generated')
+        print(f'- Total changes: {report[\"evolution_summary\"][\"total_changes\"]}')
+        print(f'- MCP-related changes: {report[\"evolution_summary\"][\"mcp_related_changes\"]}')
+        print(f'- Context sources used: {report[\"evolution_summary\"][\"context_sources_used\"]}')
+        "
+    
+    - name: 🧹 Cleanup MCP Evolution Environment
+      if: always()
+      run: |
+        set -euo pipefail
+        
+        echo "🧹 Cleaning up MCP evolution environment..."
+        
+        # Archive evolution artifacts
+        mkdir -p artifacts/mcp-evolution
+        cp /tmp/mcp-evolution-context.json artifacts/mcp-evolution/ 2>/dev/null || true
+        cp /tmp/mcp-evolution-report.json artifacts/mcp-evolution/ 2>/dev/null || true
+        cp /tmp/evolution_response.json artifacts/mcp-evolution/ 2>/dev/null || true
+        
+        # Stop MCP servers
+        docker-compose -f docker-compose.mcp.yml down --remove-orphans || true
+        
+        # Clean temporary files
+        rm -rf /tmp/mcp-* || true
+        
+        echo "✅ MCP evolution cleanup completed"
+```
 
 ---
 

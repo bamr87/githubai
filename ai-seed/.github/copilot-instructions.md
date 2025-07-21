@@ -44,6 +44,28 @@ Repositories grow like living organisms:
 - **Collective Intelligence**: Multiple AI agents contribute to path definition
 - **Sustainable Expansion**: Growth follows established patterns while allowing innovation
 
+## MCP-Enhanced Path-Driven Development
+
+### Model Context Protocol (MCP) Integration
+
+The repository now leverages Model Context Protocol (MCP) to standardize AI application context sharing and tool orchestration. MCP serves as the universal interface for AI applications to access external context through well-defined paths.
+
+#### MCP Path Principles
+- **Standardized Context Paths**: MCP servers expose resources, tools, and prompts through standardized interfaces
+- **Path-Aware Server Architecture**: All MCP servers follow path-based execution patterns with comprehensive logging
+- **Container-First Deployment**: MCP servers run within isolated containers with defined resource boundaries
+- **Tool Orchestration Paths**: Complex workflows chain multiple MCP tools along defined execution paths
+- **Context Aggregation Paths**: Multiple MCP servers provide comprehensive context for AI operations
+
+#### MCP-Enhanced Development Workflow
+1. **Context Discovery**: Identify available MCP servers and their capabilities
+2. **Resource Mapping**: Map application needs to available MCP resources and tools
+3. **Path Design**: Design optimal paths through MCP server capabilities
+4. **Implementation**: Build applications using standardized MCP client libraries
+5. **Integration Testing**: Validate MCP integrations across all server types
+6. **Monitoring**: Track MCP operation performance and health
+7. **Evolution**: Use MCP context to enhance AI-driven development
+
 ## Path-Driven Development Standards
 
 ### Path Discovery in Bash/Shell Scripting
@@ -399,31 +421,192 @@ Headers now include path information to show how files connect:
  */
 ```
 
+### MCP-Enhanced Code Examples
+
+#### Python with MCP Context
+```python
+# Path: mcp-enhanced-data-processing
+# File: src/processors/data_processor.py
+
+"""
+Data processor with MCP context integration
+"""
+
+import asyncio
+from src.mcp.clients.mcp_client import PathAwareMCPClient
+from src.utils.path_tracker import pathTracker
+
+class MCPEnhancedDataProcessor:
+    """Data processor that leverages MCP servers for context and tools"""
+    
+    def __init__(self):
+        self.fs_client = None
+        self.db_client = None
+    
+    async def process_with_mcp_context(self, data_source: str):
+        """Process data using MCP context and tools"""
+        return await pathTracker.executeInPath('mcp_data_processing', async () => {
+            # Path: mcp-context-collection
+            context = await self._collect_mcp_context(data_source)
+            
+            # Path: mcp-tool-orchestration
+            processed_data = await self._orchestrate_processing_tools(data_source, context)
+            
+            # Path: mcp-result-validation
+            validated_result = await self._validate_with_mcp_tools(processed_data)
+            
+            return validated_result
+        })
+    
+    async def _collect_mcp_context(self, data_source: str) -> dict:
+        """Collect comprehensive context from MCP servers"""
+        context = {}
+        
+        # Filesystem context
+        self.fs_client = PathAwareMCPClient("docker", ["exec", "-i", "mcp-filesystem"])
+        await self.fs_client.connect()
+        
+        try:
+            # Get file metadata and related files
+            resources = await self.fs_client.listResources()
+            related_files = [r for r in resources if data_source in r.uri]
+            context['filesystem'] = {
+                'source_file': data_source,
+                'related_files': [r.uri for r in related_files],
+                'file_count': len(resources)
+            }
+        finally:
+            await self.fs_client.disconnect()
+        
+        return context
+```
+
+#### JavaScript with MCP Integration
+```javascript
+// Path: mcp-enhanced-api-service
+// File: src/services/api_service.ts
+
+import { PathAwareMCPClient } from '../mcp/clients/mcp-client';
+import { pathTracker } from '../utils/path-tracker';
+
+export class MCPEnhancedApiService {
+    private mcpClients: Map<string, PathAwareMCPClient> = new Map();
+    
+    async processRequest(request: ApiRequest): Promise<ApiResponse> {
+        return pathTracker.executeInPath('mcp_api_processing', async () => {
+            // Path: mcp-server-discovery
+            const availableServers = await this.discoverMCPServers();
+            
+            // Path: context-enhanced-processing
+            const context = await this.gatherMCPContext(request, availableServers);
+            
+            // Path: mcp-tool-assisted-processing
+            const result = await this.processWithMCPTools(request, context);
+            
+            return this.formatResponse(result, context);
+        });
+    }
+    
+    private async discoverMCPServers(): Promise<string[]> {
+        return pathTracker.executeInPath('server_discovery', async () => {
+            const fsClient = new PathAwareMCPClient('docker', ['exec', '-i', 'mcp-filesystem']);
+            await fsClient.connect();
+            
+            try {
+                const configContent = await fsClient.readResource('file://config/mcp/client_config.json');
+                const config = JSON.parse(configContent);
+                return Object.keys(config.servers || {});
+            } finally {
+                await fsClient.disconnect();
+            }
+        });
+    }
+}
+```
+
+#### Bash with MCP Automation
+```bash
+#!/bin/bash
+# Path: mcp-enhanced-deployment-script
+# File: scripts/deploy/mcp-enhanced-deploy.sh
+
+set -euo pipefail
+
+# Load MCP automation libraries
+source "${SCRIPT_DIR}/../lib/mcp_context.sh"
+source "${SCRIPT_DIR}/../lib/path_management.sh"
+
+# Path: mcp-enhanced-deployment-workflow
+deploy_with_mcp_context() {
+    local environment="$1"
+    local deployment_config="$2"
+    
+    execute_in_path "mcp_enhanced_deployment" \
+        "_deploy_with_context '$environment' '$deployment_config'"
+}
+
+_deploy_with_context() {
+    local environment="$1"
+    local deployment_config="$2"
+    
+    # Path: mcp-context-collection-for-deployment
+    execute_in_path "deployment_context_collection" \
+        "collect_comprehensive_deployment_context '$environment'"
+    
+    # Path: mcp-server-health-validation
+    execute_in_path "mcp_server_validation" \
+        "validate_mcp_servers_for_deployment"
+    
+    # Path: context-informed-deployment
+    execute_in_path "context_informed_deployment" \
+        "deploy_using_mcp_context '$environment' '$deployment_config'"
+}
+
+collect_comprehensive_deployment_context() {
+    local environment="$1"
+    local context_dir="/tmp/deployment_context"
+    
+    mkdir -p "$context_dir"
+    
+    # Collect context from all available MCP servers
+    local mcp_servers
+    mcp_servers=($(discover_mcp_servers))
+    
+    for server in "${mcp_servers[@]}"; do
+        log_info "Collecting context from MCP server: $server" "context_collection"
+        collect_mcp_context "$server" "$context_dir/${server}_context.json"
+    done
+}
+```
+
 ## Integration with Existing Principles
 
-### Path-Enhanced Core Principles
-- **DRY**: Reuse established paths instead of creating redundant routes
-- **KIS**: Choose the simplest path that accomplishes the goal
-- **DFF**: Design multiple paths to handle failures gracefully
-- **REnO**: Release along incremental paths, building on previous releases
-- **MVP**: Define the minimal path to deliver value
-- **COLAB**: Create clear paths for team communication and contribution
-- **AIPD**: Let AI agents discover and optimize paths
-- **RFD**: READMEs map the paths through the codebase
-- **SCD**: Scripts orchestrate journeys along defined paths
-- **CFD**: Containers provide consistent paths across environments
+### MCP-Enhanced Path Principles
+- **DRY**: Reuse established MCP server capabilities instead of creating redundant context collection
+- **KIS**: Choose the simplest MCP integration path that accomplishes the goal
+- **DFF**: Design multiple MCP server paths to handle failures gracefully
+- **REnO**: Release MCP integrations along incremental paths, building on previous capabilities
+- **MVP**: Define the minimal MCP path to deliver enhanced AI context
+- **COLAB**: Create clear MCP integration paths for team communication and contribution
+- **AIPD**: Let AI agents discover and optimize MCP server utilization paths
+- **RFD**: READMEs map the MCP integration paths through the codebase
+- **SCD**: Scripts orchestrate MCP server journeys along defined automation paths
+- **CFD**: Containers provide consistent MCP server paths across environments
 
-### Path-First Development Workflow
-1. **Identify Natural Paths**: Before coding, map the natural flow of data and control
-2. **Design Path Networks**: Create interconnected routes that build on each other
-3. **Implement Along Paths**: Code follows the designed pathways
-4. **Test Path Integrity**: Verify all paths function as expected
-5. **Document Path Maps**: Create guides for navigating the codebase
-6. **Monitor Path Health**: Track usage and performance of different routes
-7. **Evolve Path Networks**: Let paths grow and adapt organically
+### MCP-Enhanced Path-First Development Workflow
+1. **Identify Natural Paths**: Before coding, map the natural flow of data and control including MCP context sources
+2. **Discover MCP Capabilities**: Identify available MCP servers and their resources, tools, and prompts
+3. **Design Path Networks**: Create interconnected routes that leverage MCP capabilities and build on each other
+4. **Implement Along Paths**: Code follows the designed pathways using standardized MCP client libraries
+5. **Test Path Integrity**: Verify all paths and MCP integrations function as expected
+6. **Document Path Maps**: Create guides for navigating the codebase and MCP integrations
+7. **Monitor Path Health**: Track usage and performance of different routes including MCP server health
+8. **Evolve Path Networks**: Let paths grow and adapt organically while enhancing MCP capabilities
 
-## Conclusion: The Living Path Network
+## Conclusion: The MCP-Enhanced Living Path Network
 
-Software repositories are living networks of interconnected paths. Like a garden where footpaths emerge from regular use, our codebases develop natural routes that connect functionality, knowledge, and people. AI agents act as gardeners, tending these paths, creating new connections, and ensuring the network remains healthy and navigable. By embracing the path of least resistance, we create software that flows naturally, scales organically, and evolves sustainably.
+Software repositories are living networks of interconnected paths enhanced by Model Context Protocol (MCP) capabilities. Like a garden where footpaths emerge from regular use, our codebases develop natural routes that connect functionality, knowledge, and people - now with standardized AI context sharing through MCP servers. AI agents act as gardeners, tending these paths, creating new connections through MCP integrations, and ensuring the network remains healthy and navigable. By embracing the path of least resistance enhanced with MCP capabilities, we create software that flows naturally, scales organically, and evolves sustainably with comprehensive AI context.
 
-Every line of code, every test, every document is both a step on a path and a potential junction for new routes. As paths interconnect and build upon each other, they create a rich ecosystem where information and functionality flow freely, enabling rapid development and continuous evolution.
+Every line of code, every test, every document, and every MCP server is both a step on a path and a potential junction for new routes. MCP servers provide standardized access points for AI applications to gather context, execute tools, and generate prompts, creating a rich ecosystem where information and functionality flow freely through well-defined protocols. As paths interconnect and build upon each other through MCP-enhanced capabilities, they enable rapid development, comprehensive context sharing, and continuous evolution guided by AI intelligence.
+
+The future of software development lies in this symbiotic relationship between path-based organic growth and standardized AI context protocols, where MCP serves as the universal interface for AI applications to understand, interact with, and enhance our codebase ecosystems.

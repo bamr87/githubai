@@ -10,6 +10,7 @@ relatedEvolutions: []
 dependencies:
   - space.instructions.md: Foundation principles and path-based development
   - project.instructions.md: Project-specific context and requirements
+  - mcp.instructions.md: Model Context Protocol integration and documentation
 containerRequirements:
   baseImage: null
   exposedPorts: null
@@ -1197,11 +1198,469 @@ Brief description of the problem this requirement addresses.
 - Review Date: [Next review date]
 ```
 
+### MCP-Specific Documentation Patterns
+
+#### MCP Server Documentation Template
+```markdown
+# MCP Server: [Server Name]
+
+## Overview
+
+Brief description of the MCP server's purpose and capabilities.
+
+### Server Capabilities
+- **Resources**: [List of resource types exposed]
+- **Tools**: [List of available tools]
+- **Prompts**: [List of supported prompts]
+
+## Configuration
+
+### Environment Variables
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `MCP_SERVER_NAME` | Server identifier | `server-name` | Yes |
+| `MCP_LOG_LEVEL` | Logging level | `INFO` | No |
+
+### Container Configuration
+```yaml
+version: '3.8'
+services:
+  mcp-server:
+    build: ./mcp-servers/[server-name]
+    environment:
+      - MCP_SERVER_NAME=[server-name]
+    volumes:
+      - ./data:/data:ro
+```
+
+## Resource Access
+
+### Available Resources
+
+#### Resource Type: [Type Name]
+- **URI Pattern**: `[type]://[path]`
+- **Description**: [What this resource provides]
+- **Access Level**: Read-only/Read-write
+- **Example**: `file:///workspace/src/main.py`
+
+### Resource Examples
+
+```python
+# Python client example
+async def list_resources():
+    client = PathAwareMCPClient("docker", ["exec", "-i", "mcp-[server-name]"])
+    await client.connect()
+    
+    resources = await client.listResources()
+    for resource in resources:
+        print(f"URI: {resource.uri}")
+        print(f"Name: {resource.name}")
+        print(f"Description: {resource.description}")
+    
+    await client.disconnect()
+```
+
+## Tool Usage
+
+### Available Tools
+
+#### Tool: [tool_name]
+- **Description**: [What the tool does]
+- **Parameters**:
+  - `param1` (string, required): [Description]
+  - `param2` (number, optional): [Description]
+- **Returns**: [Description of return value]
+
+### Tool Examples
+
+```typescript
+// TypeScript client example
+const client = new PathAwareMCPClient("docker", ["exec", "-i", "mcp-[server-name]"]);
+await client.connect();
+
+const result = await client.callTool("[tool_name]", {
+    param1: "example_value",
+    param2: 42
+});
+
+console.log("Tool result:", result);
+await client.disconnect();
+```
+
+## Prompt Templates
+
+### Available Prompts
+
+#### Prompt: [prompt_name]
+- **Description**: [What the prompt generates]
+- **Arguments**:
+  - `arg1` (string, required): [Description]
+  - `arg2` (boolean, optional): [Description]
+- **Output**: [Description of generated prompt]
+
+### Prompt Examples
+
+```bash
+# Using MCP client to get prompt
+./scripts/mcp/get-prompt.sh [prompt_name] --arg1 "value" --arg2 true
+```
+
+## Health Monitoring
+
+### Health Check Endpoint
+The server provides health status at: `/health`
+
+### Monitoring Commands
+```bash
+# Check server health
+docker exec mcp-[server-name] python -c "import asyncio; from src.health_check import check_server_health; asyncio.run(check_server_health())"
+
+# View server logs
+docker logs mcp-[server-name]
+
+# Restart server
+docker-compose -f docker-compose.mcp.yml restart mcp-[server-name]
+```
+
+## Troubleshooting
+
+### Common Issues
+
+#### Issue: Server Connection Failed
+**Symptoms**: Client cannot connect to MCP server
+
+**Solutions**:
+1. Verify server container is running: `docker ps | grep mcp-[server-name]`
+2. Check server logs: `docker logs mcp-[server-name]`
+3. Validate network connectivity
+4. Restart server if needed
+
+#### Issue: Resource Access Denied
+**Symptoms**: Cannot read/write resources
+
+**Solutions**:
+1. Check file/directory permissions
+2. Verify container volume mounts
+3. Review security settings
+4. Validate resource URI format
+
+## Development
+
+### Local Development Setup
+```bash
+# Clone repository
+git clone [repository-url]
+cd [repository-name]
+
+# Start development environment
+docker-compose -f docker-compose.mcp.yml up -d mcp-[server-name]
+
+# Run tests
+python -m pytest tests/mcp/[server-name]/
+```
+
+### Testing
+```bash
+# Unit tests
+python -m pytest tests/unit/mcp/[server-name]/
+
+# Integration tests
+python -m pytest tests/integration/mcp/[server-name]/
+
+# End-to-end tests
+./scripts/mcp/test-integrations.sh --server [server-name]
+```
+
+## Security Considerations
+
+### Access Control
+- [Describe access control mechanisms]
+- [List security boundaries]
+- [Document authentication requirements]
+
+### Data Privacy
+- [Describe data handling practices]
+- [List sensitive data types]
+- [Document privacy controls]
+
+## Performance
+
+### Benchmarks
+| Operation | Average Time | Throughput |
+|-----------|--------------|------------|
+| List Resources | [X]ms | [Y] ops/sec |
+| Read Resource | [X]ms | [Y] MB/sec |
+| Execute Tool | [X]ms | [Y] ops/sec |
+
+### Optimization Tips
+- [Performance optimization recommendations]
+- [Scaling considerations]
+- [Resource usage guidelines]
+
+## API Reference
+
+### Complete API Documentation
+See [MCP Protocol Specification](https://modelcontextprotocol.io/) for detailed protocol information.
+
+### Server-Specific Extensions
+- [Document any protocol extensions]
+- [List custom capabilities]
+- [Describe non-standard features]
+
+---
+
+**Maintainers**: [List of maintainers]
+**Last Updated**: [Date]
+**Version**: [Server version]
+```
+
+#### MCP Integration Guide Template
+```markdown
+# MCP Integration Guide
+
+This guide provides comprehensive information about integrating Model Context Protocol (MCP) capabilities into your AI applications.
+
+## Quick Start
+
+### Prerequisites
+- Docker and Docker Compose
+- Python 3.11+ or Node.js 18+
+- Basic understanding of AI application architecture
+
+### Installation
+```bash
+# Clone the MCP-enabled repository
+git clone [repository-url]
+cd [repository-name]
+
+# Start MCP server infrastructure
+docker-compose -f docker-compose.mcp.yml up -d
+
+# Verify servers are healthy
+./scripts/mcp/monitor-servers.sh --health-check-all
+```
+
+### Basic Usage
+```python
+from src.mcp.clients.mcp_client import PathAwareMCPClient
+
+# Connect to filesystem MCP server
+client = PathAwareMCPClient("docker", ["exec", "-i", "mcp-filesystem"])
+await client.connect()
+
+# List available resources
+resources = await client.listResources()
+print(f"Found {len(resources)} resources")
+
+# Read a specific file
+content = await client.readResource("file://src/main.py")
+print("File content:", content[:100], "...")
+
+await client.disconnect()
+```
+
+## Available MCP Servers
+
+$(cat config/mcp/discovered_servers.json | jq -r '.servers[] | "- **" + . + "**: [Server description]"')
+
+## Server Capabilities
+
+$(cat config/mcp/server_capabilities.json | jq -r '.servers | to_entries[] | "### " + .key + "\n\n" + "Status: " + .value.status + "\n"')
+
+## Advanced Integration Patterns
+
+### Context Aggregation
+```python
+# Collect context from multiple MCP servers
+async def collect_comprehensive_context():
+    contexts = {}
+    
+    # Filesystem context
+    fs_client = PathAwareMCPClient("docker", ["exec", "-i", "mcp-filesystem"])
+    await fs_client.connect()
+    contexts['filesystem'] = await fs_client.listResources()
+    await fs_client.disconnect()
+    
+    # Database context  
+    db_client = PathAwareMCPClient("docker", ["exec", "-i", "mcp-database"])
+    await db_client.connect()
+    contexts['database'] = await db_client.listResources()
+    await db_client.disconnect()
+    
+    return contexts
+```
+
+### Tool Orchestration
+```python
+# Chain multiple MCP tool executions
+async def automated_workflow():
+    client = PathAwareMCPClient("docker", ["exec", "-i", "mcp-filesystem"])
+    await client.connect()
+    
+    # Step 1: List directory
+    dir_contents = await client.callTool("list_directory", {"path": "./src"})
+    
+    # Step 2: Process each file
+    for file_info in parse_directory_output(dir_contents):
+        file_content = await client.readResource(f"file://{file_info['path']}")
+        # Process file content...
+    
+    await client.disconnect()
+```
+
+## Configuration Management
+
+### Client Configuration
+The MCP client configuration is managed in `config/mcp/client_config.json`:
+
+```json
+{
+    "mcpVersion": "2025-06-18",
+    "servers": {
+        "filesystem": {
+            "command": "docker",
+            "args": ["exec", "-i", "mcp-filesystem", "python", "-m", "mcp_servers.filesystem"],
+            "enabled": true
+        }
+    }
+}
+```
+
+### Environment Variables
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `MCP_PROTOCOL_VERSION` | MCP protocol version | `2025-06-18` |
+| `MCP_LOG_LEVEL` | Logging level for MCP operations | `INFO` |
+| `MCP_TIMEOUT` | Default timeout for MCP operations | `30000` |
+
+## Monitoring and Observability
+
+### Health Monitoring
+```bash
+# Check all MCP server health
+./scripts/mcp/monitor-servers.sh --health-check-all
+
+# Monitor specific server
+./scripts/mcp/monitor-servers.sh --server filesystem
+
+# Generate health report
+./scripts/mcp/monitor-servers.sh --generate-report
+```
+
+### Performance Metrics
+View current performance metrics:
+```bash
+cat config/mcp/validation_report.json | jq '.summary'
+```
+
+### Logging
+MCP operations are logged with path context:
+```
+[2025-07-19 10:30:15] [INFO] [mcp_client] [resource_reading] Reading resource: file://src/main.py
+[2025-07-19 10:30:15] [INFO] [mcp_client] [tool_execution_list_directory] Executing tool: list_directory
+```
+
+## Best Practices
+
+### Resource Management
+- Always close MCP client connections
+- Use connection pooling for high-frequency operations
+- Implement retry logic for network operations
+- Cache frequently accessed resources
+
+### Error Handling
+```python
+from src.mcp.clients.mcp_client import PathAwareMCPClient
+
+async def robust_mcp_operation():
+    client = PathAwareMCPClient("docker", ["exec", "-i", "mcp-filesystem"])
+    
+    try:
+        await client.connect()
+        
+        # Use retry mechanism for critical operations
+        result = await client.withRetry(
+            lambda: client.readResource("file://important.txt"),
+            maxRetries=3,
+            delay=1000
+        )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"MCP operation failed: {e}")
+        raise
+    finally:
+        await client.disconnect()
+```
+
+### Security
+- Validate all resource URIs
+- Implement proper access controls
+- Use least-privilege principles
+- Monitor for suspicious activity
+
+## Troubleshooting
+
+### Common Issues
+
+#### Connection Failures
+**Problem**: Cannot connect to MCP server
+**Solution**: 
+1. Verify server container is running
+2. Check network connectivity
+3. Validate server configuration
+
+#### Performance Issues  
+**Problem**: Slow MCP operations
+**Solution**:
+1. Enable connection pooling
+2. Implement caching
+3. Optimize resource access patterns
+
+#### Resource Access Errors
+**Problem**: Cannot access specific resources
+**Solution**:
+1. Check file permissions
+2. Verify volume mounts
+3. Validate URI format
+
+## Development and Testing
+
+### Local Development
+```bash
+# Start development environment
+docker-compose -f docker-compose.mcp.yml up -d
+
+# Run MCP server tests
+python -m pytest tests/mcp/ -v
+
+# Test specific integration
+./scripts/mcp/test-integrations.sh --server filesystem
+```
+
+### Creating Custom MCP Servers
+See the [MCP Server Development Guide](./mcp-server-development.md) for details on creating custom servers.
+
+## API Reference
+
+### Client API
+Complete API documentation for the MCP client library.
+
+### Server Protocols
+Documentation of server-specific protocol extensions and capabilities.
+
+---
+
+*This guide is automatically updated by the MCP discovery and configuration workflows.*
+```
+
 ## Integration with Other Instructions
 
 This documentation instruction file works in conjunction with:
 - **space.instructions.md**: Foundational path-based principles and container-first development
 - **project.instructions.md**: AI-seed specific requirements and documentation standards
+- **mcp.instructions.md**: Model Context Protocol integration and documentation patterns
 - **python.instructions.md**: Python-specific documentation patterns
 - **javascript.instructions.md**: JavaScript/Node.js documentation standards
 - **bash.instructions.md**: Shell script documentation requirements

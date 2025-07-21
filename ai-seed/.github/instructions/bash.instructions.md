@@ -11,6 +11,7 @@ relatedEvolutions: []
 dependencies:
   - space.instructions.md: Foundation principles and path-based development
   - project.instructions.md: Project-specific context and requirements
+  - mcp.instructions.md: Model Context Protocol integration and automation
 containerRequirements:
   baseImage: 
     - alpine:3.18
@@ -1061,11 +1062,267 @@ EOF
 fi
 ```
 
+## MCP Integration and Automation
+
+### MCP Server Management Scripts
+
+#### MCP Server Health Monitoring
+```bash
+#!/bin/bash
+# Path: mcp-server-health-monitoring
+# File: scripts/mcp/monitor-servers.sh
+
+# Path: mcp-server-health-check
+check_mcp_server_health() {
+    local server_name="$1"
+    local container_name="mcp-${server_name}"
+    
+    execute_in_path "mcp_health_check" \
+        "docker exec $container_name python -c 'import asyncio; from src.health_check import check_server_health; asyncio.run(check_server_health())'"
+}
+
+# Path: mcp-server-discovery
+discover_mcp_servers() {
+    enter_path "mcp_server_discovery"
+    
+    local discovered_servers=()
+    
+    # Discover running MCP server containers
+    while IFS= read -r container; do
+        if [[ "$container" =~ ^mcp- ]]; then
+            local server_type="${container#mcp-}"
+            discovered_servers+=("$server_type")
+            log_info "Discovered MCP server: $server_type" "mcp_discovery"
+        fi
+    done < <(docker ps --format "{{.Names}}" | grep "^mcp-")
+    
+    exit_path "mcp_server_discovery"
+    echo "${discovered_servers[@]}"
+}
+
+# Path: mcp-client-configuration-generation
+generate_mcp_client_config() {
+    local servers=("$@")
+    local config_file="${PROJECT_ROOT}/config/mcp/client_config.json"
+    
+    execute_in_path "mcp_config_generation" \
+        "jq -n --argjson servers '$(printf '"%s",' "${servers[@]}" | sed 's/,$//')' \
+         '{mcpVersion: \"2025-06-18\", servers: \$servers}' > '$config_file'"
+}
+```
+
+#### MCP Server Automation Workflows
+```bash
+#!/bin/bash
+# Path: mcp-server-automation
+# File: scripts/mcp/automate-servers.sh
+
+# Path: mcp-server-lifecycle-automation
+automate_mcp_server_lifecycle() {
+    local action="$1"
+    local server_type="$2"
+    
+    case "$action" in
+        "start")
+            execute_in_path "mcp_server_start" \
+                "docker-compose -f docker-compose.mcp.yml up -d mcp-$server_type"
+            ;;
+        "stop")
+            execute_in_path "mcp_server_stop" \
+                "docker-compose -f docker-compose.mcp.yml stop mcp-$server_type"
+            ;;
+        "restart")
+            execute_in_path "mcp_server_restart" \
+                "docker-compose -f docker-compose.mcp.yml restart mcp-$server_type"
+            ;;
+        "logs")
+            execute_in_path "mcp_server_logs" \
+                "docker-compose -f docker-compose.mcp.yml logs -f mcp-$server_type"
+            ;;
+        *)
+            log_error "Unknown MCP server action: $action" "mcp_automation"
+            return 1
+            ;;
+    esac
+}
+
+# Path: mcp-integration-testing
+test_mcp_integrations() {
+    enter_path "mcp_integration_testing"
+    
+    local servers
+    servers=($(discover_mcp_servers))
+    
+    for server in "${servers[@]}"; do
+        execute_in_path "mcp_server_test_$server" \
+            "test_individual_mcp_server '$server'"
+    done
+    
+    exit_path "mcp_integration_testing"
+}
+
+test_individual_mcp_server() {
+    local server_name="$1"
+    
+    log_info "Testing MCP server: $server_name" "mcp_testing"
+    
+    # Test server health
+    if check_mcp_server_health "$server_name"; then
+        log_info "MCP server $server_name is healthy" "mcp_testing"
+    else
+        log_error "MCP server $server_name health check failed" "mcp_testing"
+        return 1
+    fi
+    
+    # Test basic functionality
+    local test_script="${PROJECT_ROOT}/tmp/test_mcp_$server_name.py"
+    cat > "$test_script" << EOF
+import asyncio
+from src.mcp.clients.mcp_client import PathAwareMCPClient
+
+async def test_server():
+    client = PathAwareMCPClient("docker", ["exec", "-i", "mcp-$server_name", "python", "-m", "mcp_servers.$server_name"])
+    try:
+        await client.connect()
+        resources = await client.listResources()
+        tools = await client.listTools()
+        print(f"SUCCESS: {len(resources)} resources, {len(tools)} tools")
+        return True
+    except Exception as e:
+        print(f"ERROR: {e}")
+        return False
+    finally:
+        await client.disconnect()
+
+if __name__ == "__main__":
+    success = asyncio.run(test_server())
+    exit(0 if success else 1)
+EOF
+    
+    if python3 "$test_script"; then
+        log_info "MCP server $server_name functionality test passed" "mcp_testing"
+        rm -f "$test_script"
+        return 0
+    else
+        log_error "MCP server $server_name functionality test failed" "mcp_testing"
+        rm -f "$test_script"
+        return 1
+    fi
+}
+```
+
+### MCP Context Management Functions
+```bash
+#!/bin/bash
+# Path: mcp-context-management
+# File: scripts/lib/mcp_context.sh
+
+# Path: mcp-context-collection
+collect_mcp_context() {
+    local context_type="$1"
+    local output_file="$2"
+    
+    execute_in_path "mcp_context_collection" \
+        "_collect_context_by_type '$context_type' '$output_file'"
+}
+
+_collect_context_by_type() {
+    local context_type="$1"
+    local output_file="$2"
+    
+    case "$context_type" in
+        "filesystem")
+            collect_filesystem_context "$output_file"
+            ;;
+        "git")
+            collect_git_context "$output_file"
+            ;;
+        "docker")
+            collect_docker_context "$output_file"
+            ;;
+        "project")
+            collect_project_context "$output_file"
+            ;;
+        *)
+            log_error "Unknown context type: $context_type" "mcp_context"
+            return 1
+            ;;
+    esac
+}
+
+# Path: filesystem-context-collection
+collect_filesystem_context() {
+    local output_file="$1"
+    
+    log_info "Collecting filesystem context" "mcp_context"
+    
+    cat > "$output_file" << EOF
+{
+    "context_type": "filesystem",
+    "timestamp": "$(date -Iseconds)",
+    "project_root": "$(pwd)",
+    "directory_structure": $(find . -type d -not -path './.git/*' -not -path './node_modules/*' | head -50 | jq -R . | jq -s .),
+    "file_count": $(find . -type f -not -path './.git/*' -not -path './node_modules/*' | wc -l),
+    "recent_files": $(find . -type f -not -path './.git/*' -not -path './node_modules/*' -mtime -7 | head -20 | jq -R . | jq -s .),
+    "large_files": $(find . -type f -not -path './.git/*' -not -path './node_modules/*' -size +1M | head -10 | jq -R . | jq -s .)
+}
+EOF
+}
+
+# Path: git-context-collection  
+collect_git_context() {
+    local output_file="$1"
+    
+    log_info "Collecting git context" "mcp_context"
+    
+    local branch_name
+    branch_name=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
+    
+    local commit_hash
+    commit_hash=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
+    
+    local remote_url
+    remote_url=$(git config --get remote.origin.url 2>/dev/null || echo "unknown")
+    
+    cat > "$output_file" << EOF
+{
+    "context_type": "git",
+    "timestamp": "$(date -Iseconds)",
+    "current_branch": "$branch_name",
+    "current_commit": "$commit_hash",
+    "remote_url": "$remote_url",
+    "recent_commits": $(git log --oneline -10 2>/dev/null | jq -R . | jq -s . || echo "[]"),
+    "changed_files": $(git diff --name-only HEAD~1 2>/dev/null | jq -R . | jq -s . || echo "[]"),
+    "staged_files": $(git diff --cached --name-only 2>/dev/null | jq -R . | jq -s . || echo "[]")
+}
+EOF
+}
+
+# Path: docker-context-collection
+collect_docker_context() {
+    local output_file="$1"
+    
+    log_info "Collecting docker context" "mcp_context"
+    
+    cat > "$output_file" << EOF
+{
+    "context_type": "docker",
+    "timestamp": "$(date -Iseconds)",
+    "running_containers": $(docker ps --format "{{.Names}}" | jq -R . | jq -s .),
+    "available_images": $(docker images --format "{{.Repository}}:{{.Tag}}" | head -20 | jq -R . | jq -s .),
+    "docker_compose_files": $(find . -name "docker-compose*.yml" -o -name "docker-compose*.yaml" | jq -R . | jq -s .),
+    "dockerfiles": $(find . -name "Dockerfile*" | jq -R . | jq -s .)
+}
+EOF
+}
+```
+
 ## Integration with Other Instructions
 
 This Bash instruction file works in conjunction with:
 - **space.instructions.md**: Foundational path-based principles and container-first development
 - **project.instructions.md**: AI-seed specific requirements and conventions
+- **mcp.instructions.md**: Model Context Protocol integration and automation patterns
 - **python.instructions.md**: Language interoperability for mixed codebases
 - **ci-cd.instructions.md**: Automated pipeline integration and deployment
 - **test.instructions.md**: Automated testing and validation scripts
