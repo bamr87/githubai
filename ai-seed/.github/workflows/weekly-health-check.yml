@@ -55,27 +55,45 @@ jobs:
       recommendations: ${{ steps.generate-recommendations.outputs.list }}
     
     steps:
-    - name: 🌱 Prepare Health Check Environment
+    - name: 🌱 Prepare Evolution Environment
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.PAT_TOKEN_TOKEN }}
 
     - name: 🛠️ Setup Environment
       run: |
         set -euo pipefail
+        if [ ! -f "./scripts/setup-environment.sh" ]; then
+          echo "❌ Setup script not found!"
+          exit 1
+        fi
+        chmod +x ./scripts/setup-environment.sh
+        ./scripts/setup-environment.sh
+
+    - name: 🔍 Validate Prerequisites
+      run: |
+        set -euo pipefail
         
-        # Install additional tools for health checking
-        sudo apt-get update
-        sudo apt-get install -y jq bc curl git
+        # Validate required files exist
+        required_files=("./scripts/setup-environment.sh" "./scripts/evolution-engine.sh")
+        for file in "${required_files[@]}"; do
+          if [ ! -f "$file" ]; then
+            echo "❌ Required file missing: $file"
+            exit 1
+          fi
+        done
         
-        # Setup Node.js for package analysis
-        curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-        sudo apt-get install -y nodejs
+        # Validate environment variables
+        required_vars=("EVOLUTION_VERSION" "WORKFLOW_TYPE")
+        for var in "${required_vars[@]}"; do
+          if [ -z "${!var:-}" ]; then
+            echo "❌ Required environment variable missing: $var"
+            exit 1
+          fi
+        done
         
-        # Setup Python for dependency analysis
-        python3 -m pip install --upgrade pip
-        pip3 install safety bandit
+        echo "✅ All prerequisites validated"
 
     - name: 🔍 Repository Structure Health
       id: structure-health

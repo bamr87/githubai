@@ -56,23 +56,45 @@ jobs:
       next-focus: ${{ steps.generate-roadmap.outputs.focus }}
     
     steps:
-    - name: 🌱 Prepare Evolution Analysis Environment
+    - name: 🌱 Prepare Evolution Environment
       uses: actions/checkout@v4
       with:
-        fetch-depth: 0  # Full history for comprehensive analysis
-        token: ${{ secrets.GITHUB_TOKEN }}
+        fetch-depth: 0
+        token: ${{ secrets.PAT_TOKEN_TOKEN }}
 
-    - name: 🛠️ Setup Advanced Analytics Environment
+    - name: 🛠️ Setup Environment
+      run: |
+        set -euo pipefail
+        if [ ! -f "./scripts/setup-environment.sh" ]; then
+          echo "❌ Setup script not found!"
+          exit 1
+        fi
+        chmod +x ./scripts/setup-environment.sh
+        ./scripts/setup-environment.sh
+
+    - name: 🔍 Validate Prerequisites
       run: |
         set -euo pipefail
         
-        # Install analysis tools
-        sudo apt-get update
-        sudo apt-get install -y jq bc curl git gnuplot python3-pip
+        # Validate required files exist
+        required_files=("./scripts/setup-environment.sh" "./scripts/evolution-engine.sh")
+        for file in "${required_files[@]}"; do
+          if [ ! -f "$file" ]; then
+            echo "❌ Required file missing: $file"
+            exit 1
+          fi
+        done
         
-        # Install Python analytics libraries
-        pip3 install --upgrade pip
-        pip3 install matplotlib seaborn pandas numpy gitpython requests
+        # Validate environment variables
+        required_vars=("EVOLUTION_VERSION" "WORKFLOW_TYPE")
+        for var in "${required_vars[@]}"; do
+          if [ -z "${!var:-}" ]; then
+            echo "❌ Required environment variable missing: $var"
+            exit 1
+          fi
+        done
+        
+        echo "✅ All prerequisites validated"
 
     - name: 📈 Collect Historical Data
       id: collect-data

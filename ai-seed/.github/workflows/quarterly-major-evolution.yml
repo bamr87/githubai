@@ -63,11 +63,11 @@ jobs:
       major-features: ${{ steps.identify-features.outputs.list }}
     
     steps:
-    - name: 🌱 Prepare Strategic Evolution Environment
+    - name: 🌱 Prepare Evolution Environment
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.PAT_TOKEN_TOKEN }}
 
     - name: 🧠 Analyze Current State
       id: analyze-state
@@ -346,23 +346,45 @@ jobs:
     timeout-minutes: 90
     
     steps:
-    - name: 🌱 Prepare Major Evolution Environment
+    - name: 🌱 Prepare Evolution Environment
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.PAT_TOKEN_TOKEN }}
 
-    - name: 🛠️ Setup Advanced Development Environment
+    - name: 🛠️ Setup Environment
+      run: |
+        set -euo pipefail
+        if [ ! -f "./scripts/setup-environment.sh" ]; then
+          echo "❌ Setup script not found!"
+          exit 1
+        fi
+        chmod +x ./scripts/setup-environment.sh
+        ./scripts/setup-environment.sh
+
+    - name: 🔍 Validate Prerequisites
       run: |
         set -euo pipefail
         
-        # Install development tools
-        sudo apt-get update
-        sudo apt-get install -y jq bc curl git python3-pip nodejs npm
+        # Validate required files exist
+        required_files=("./scripts/setup-environment.sh" "./scripts/evolution-engine.sh")
+        for file in "${required_files[@]}"; do
+          if [ ! -f "$file" ]; then
+            echo "❌ Required file missing: $file"
+            exit 1
+          fi
+        done
         
-        # Install Python tools
-        pip3 install --upgrade pip
-        pip3 install requests beautifulsoup4 gitpython
+        # Validate environment variables
+        required_vars=("EVOLUTION_VERSION" "WORKFLOW_TYPE")
+        for var in "${required_vars[@]}"; do
+          if [ -z "${!var:-}" ]; then
+            echo "❌ Required environment variable missing: $var"
+            exit 1
+          fi
+        done
+        
+        echo "✅ All prerequisites validated"
         
         # Install Node.js tools
         npm install -g typescript eslint prettier
