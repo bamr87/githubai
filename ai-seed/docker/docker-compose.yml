@@ -11,6 +11,7 @@ services:
       dockerfile: docker/Dockerfile
       target: development
     container_name: ai-seed-frontend
+    command: ["node", "src/frontend/simple-server.js"]
     environment:
       - NODE_ENV=development
       - AI_SEED_ENV=development
@@ -80,7 +81,7 @@ services:
       - ai_models:/app/models
       - ai_logs:/app/logs
     ports:
-      - "5000:5000"
+      - "5001:5000"
     networks:
       - ai-seed-network
     depends_on:

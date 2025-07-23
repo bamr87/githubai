@@ -19,18 +19,21 @@ FROM base AS development
 ENV NODE_ENV=development
 ENV AI_SEED_ENV=development
 ENV PATH=/app/node_modules/.bin:$PATH
+ENV PIP_BREAK_SYSTEM_PACKAGES=1
 
 # Install development tools
 RUN npm install -g nodemon eslint prettier && \
-    pip3 install --upgrade pip
+    pip3 install --upgrade pip --break-system-packages
 
 # Copy package files for better caching
 COPY src/package*.json ./src/
-COPY src/api/requirements*.txt ./src/api/
+COPY src/frontend/package*.json ./src/frontend/
+COPY src/api/package*.json ./src/api/
 
 # Install dependencies
 RUN cd src && npm ci --include=dev
-RUN cd src/api && pip3 install -r requirements.txt
+RUN cd src/frontend && npm ci --include=dev  
+RUN cd src/api && npm ci --include=dev
 
 # Copy source code
 COPY src/ ./src/
@@ -56,7 +59,7 @@ COPY src/api/requirements.txt ./src/api/
 
 # Install production dependencies only
 RUN cd src && npm ci --only=production
-RUN cd src/api && pip3 install -r requirements.txt
+RUN cd src/api && pip3 install -r requirements.txt --break-system-packages
 
 # Copy built application
 COPY src/ ./src/
