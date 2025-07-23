@@ -1,5 +1,4 @@
 # AI-Seed Development Environment Overrides
-version: '3.8'
 
 services:
   frontend:
@@ -14,11 +13,12 @@ services:
     environment:
       - LOG_LEVEL=DEBUG
       - API_DEBUG=true
+      - API_PORT=3001
     volumes:
       - ./src/api:/app/src/api:rw
     command: ["npm", "run", "dev", "--prefix", "src/api"]
 
-  ai-engine:
+  evolution:
     environment:
       - LOG_LEVEL=DEBUG
       - FLASK_DEBUG=true

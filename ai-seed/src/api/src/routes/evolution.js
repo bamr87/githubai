@@ -448,65 +448,6 @@ router.get('/health', (req, res) => {
 
 export default router
 
-// Get comprehensive evolution data
-const getEvolutionData = () => ({
-  timestamp: new Date().toISOString(),
-  engine: {
-    ...evolutionData.engine,
-    currentCycle: evolutionData.currentCycle.id,
-    totalCycles: evolutionData.metrics.totalCycles
-  },
-  metrics: evolutionData.metrics,
-  recentActivity: evolutionData.currentCycle.improvements.slice(-5).map((imp, index) => ({
-    id: index + 1,
-    type: imp.type,
-    description: imp.description,
-    impact: `+${imp.impact === 'high' ? '15' : imp.impact === 'medium' ? '8' : '3'}% efficiency`,
-    timestamp: new Date(Date.now() - index * 30 * 60 * 1000).toISOString(),
-    pathsAffected: imp.pathsAffected || ['unknown-path']
-  })),
-  healthIndicators: {
-    buildSystem: 85,
-    codeQuality: 78,
-    testCoverage: 72,
-    documentation: 85,
-    security: 91,
-    performance: 89
-  },
-  suggestions: [
-    {
-      id: 'suggestion-1',
-      priority: 'high',
-      type: 'performance',
-      title: 'Optimize container image layers',
-      description: 'Reduce Docker image size by 30% through layer optimization',
-      estimatedImpact: 'Build time -45s, Storage -150MB',
-      complexity: 'medium',
-      pathsAffected: ['build-path', 'deploy-path']
-    },
-    {
-      id: 'suggestion-2',
-      priority: 'medium',
-      type: 'reliability',
-      title: 'Add circuit breaker pattern to API calls',
-      description: 'Implement circuit breakers for external service calls',
-      estimatedImpact: 'Reliability +12%, Error rate -25%',
-      complexity: 'low',
-      pathsAffected: ['api-path']
-    },
-    {
-      id: 'suggestion-3',
-      priority: 'low',
-      type: 'testing',
-      title: 'Implement comprehensive test coverage',
-      description: 'Add unit tests for all components and services',
-      estimatedImpact: 'Coverage +25%, Bug detection +40%',
-      complexity: 'high',
-      pathsAffected: ['testing-path']
-    }
-  ]
-})
-
 
 // GET /api/evolution - Get evolution engine status and data
 router.get('/', (req, res) => {
@@ -711,4 +652,3 @@ router.get('/health', (req, res) => {
   }
 })
 
-export default router
