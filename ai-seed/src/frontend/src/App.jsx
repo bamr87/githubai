@@ -1,6 +1,4 @@
-import React from 'react'
 import { Routes, Route } from 'react-router-dom'
-import { Sprout, Brain, Container, Activity } from 'lucide-react'
 import Dashboard from './components/Dashboard'
 import PathVisualization from './components/PathVisualization'
 import EvolutionEngine from './components/EvolutionEngine'
