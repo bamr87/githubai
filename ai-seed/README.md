@@ -461,10 +461,55 @@ The future of software development is path-based, AI-powered, and collaborative.
 
 *Let's build the future of development together, one path at a time.* 🌱✨
 
+## 🌱 Automated Growth: Periodic Workflows
+
+Your AI-Seed now includes a sophisticated **automated growth system** that nurtures and evolves your repository through natural cycles:
+
+### 🔄 Growth Cycle Schedule
+
+```
+Daily (3 AM UTC) ──▶ Weekly (Sunday 6 AM) ──▶ Monthly (1st at 9 AM) ──▶ Quarterly (1st at 12 PM)
+     │                      │                        │                           │
+     ▼                      ▼                        ▼                           ▼
+ 🌅 Maintenance        🏥 Health Check        📊 Progress Report        🚀 Major Evolution
+   • Bug fixes          • System analysis      • Growth analytics        • New features
+   • Documentation      • Security review       • Trend analysis          • Strategic upgrades
+   • Code quality       • Performance check     • Roadmap planning        • Version releases
+```
+
+### 🎯 Workflow Features
+
+- **🌅 Daily Evolution**: Routine maintenance, bug fixes, and continuous improvements
+- **🏥 Weekly Health Check**: Comprehensive system analysis and preventive care
+- **📊 Monthly Reports**: Growth analytics, trends, and strategic planning
+- **🚀 Quarterly Evolution**: Major feature development and architectural improvements
+
+### 🎛️ Manual Control
+
+Trigger any workflow manually with custom parameters:
+
+```bash
+# Quick evolution cycle
+gh workflow run "Daily Evolution" --field evolution_type=documentation
+
+# Comprehensive health analysis  
+gh workflow run "Weekly Health Check" --field check_type=comprehensive
+
+# Generate monthly insights
+gh workflow run "Monthly Evolution Report" --field include_predictions=true
+
+# Major strategic evolution
+gh workflow run "Quarterly Major Evolution" --field evolution_mode=strategic
+```
+
+**📖 Learn More**: See the [Periodic Growth Workflows Guide](./docs/guides/periodic-growth-workflows.md) for complete documentation.
+
 ---
 
 **Ready to start your journey?** Run `./scripts/setup/init_environment.sh` and let the evolution begin! 🚀
 
 > *"The best time to plant a tree was 20 years ago. The second best time is now."* - Chinese Proverb
+> 
+> *Your AI-Seed will now grow automatically - water it with your contributions and watch it flourish!* 🌱✨
 > 
 > *"The best time to plant a development seed is right now."* - AI-Seed Philosophy

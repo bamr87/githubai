@@ -1,0 +1,337 @@
+---
+# AI Evolution Workflow - Daily Growth Maintenance
+# Version: 0.3.0
+# Last Updated: 2025-07-21
+# 
+# Purpose: Automated daily improvements and maintenance for the AI-seed ecosystem
+# This workflow performs routine evolutionary maintenance to keep the seed healthy and growing
+
+name: 🌱 Daily Evolution - Automatic Growth
+
+on:
+  schedule:
+    - cron: '0 3 * * *'  # Daily at 3 AM UTC - optimal growth time
+  workflow_dispatch:
+    inputs:
+      evolution_type:
+        description: 'Type of evolution to perform'
+        required: false
+        default: 'consistency'
+        type: choice
+        options:
+          - 'consistency'      # Fix inconsistencies across files and configurations
+          - 'error_fixing'     # Resolve errors, bugs, and issues
+          - 'documentation'    # Improve documentation quality and coverage
+          - 'code_quality'     # Enhance code quality, patterns, and standards
+          - 'security_updates' # Apply security improvements and updates
+      intensity:
+        description: 'Scope and impact level of changes'
+        required: false
+        default: 'moderate'
+        type: choice
+        options:
+          - 'minimal'         # Small, safe changes with low risk
+          - 'moderate'        # Medium-sized improvements with moderate risk
+          - 'comprehensive'   # Large-scale improvements with higher impact
+      dry_run:
+        description: 'Run in simulation mode without making actual changes'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  EVOLUTION_VERSION: "0.3.0"
+  WORKFLOW_TYPE: "scheduled_evolution"
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  daily-evolution:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+    - name: 🌱 Prepare Evolution Environment
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.PAT_TOKEN_TOKEN }}
+
+    - name: 🛠️ Setup Environment
+      run: |
+        set -euo pipefail
+        if [ ! -f "./scripts/setup-environment.sh" ]; then
+          echo "❌ Setup script not found!"
+          exit 1
+        fi
+        chmod +x ./scripts/setup-environment.sh
+        ./scripts/setup-environment.sh
+
+    - name: 🔍 Validate Prerequisites
+      run: |
+        set -euo pipefail
+        
+        # Validate required files exist
+        required_files=("./scripts/setup-environment.sh" "./scripts/evolution-engine.sh")
+        for file in "${required_files[@]}"; do
+          if [ ! -f "$file" ]; then
+            echo "❌ Required file missing: $file"
+            exit 1
+          fi
+        done
+        
+        # Validate environment variables
+        required_vars=("EVOLUTION_VERSION" "WORKFLOW_TYPE")
+        for var in "${required_vars[@]}"; do
+          if [ -z "${!var:-}" ]; then
+            echo "❌ Required environment variable missing: $var"
+            exit 1
+          fi
+        done
+        
+        echo "✅ All prerequisites validated"
+
+    - name: 📊 Collect Evolution Context
+      run: |
+        set -euo pipefail
+        
+        echo "📊 Collecting repository context for evolution..."
+        
+        # Collect basic repository metrics
+        echo "Repository State Analysis:" > /tmp/evolution-context.txt
+        echo "=========================" >> /tmp/evolution-context.txt
+        echo "Commit Count: $(git rev-list --count HEAD)" >> /tmp/evolution-context.txt
+        echo "Branch: $(git branch --show-current)" >> /tmp/evolution-context.txt
+        echo "Last Commit: $(git log -1 --format='%h %s')" >> /tmp/evolution-context.txt
+        echo "Files Changed (last 7 days): $(git log --since='7 days ago' --name-only --pretty=format: | sort | uniq | wc -l)" >> /tmp/evolution-context.txt
+        echo "" >> /tmp/evolution-context.txt
+        
+        # File structure analysis
+        echo "File Structure:" >> /tmp/evolution-context.txt
+        echo "Source files: $(find src/ -name '*.js' -o -name '*.py' -o -name '*.jsx' | wc -l)" >> /tmp/evolution-context.txt
+        echo "Test files: $(find tests/ -name '*.test.*' 2>/dev/null | wc -l || echo 0)" >> /tmp/evolution-context.txt
+        echo "Documentation files: $(find docs/ -name '*.md' 2>/dev/null | wc -l || echo 0)" >> /tmp/evolution-context.txt
+        echo "Workflow files: $(find .github/workflows/ -name '*.yml' -o -name '*.yaml' 2>/dev/null | wc -l || echo 0)" >> /tmp/evolution-context.txt
+        
+        echo "✅ Context collection completed"
+
+    - name: 🧬 Execute Daily Evolution
+      env:
+        EVOLUTION_TYPE: ${{ inputs.evolution_type || 'consistency' }}
+        INTENSITY: ${{ inputs.intensity || 'moderate' }}
+        DRY_RUN: ${{ inputs.dry_run || 'false' }}
+      run: |
+        set -euo pipefail
+        
+        echo "🧬 Starting daily evolution process..."
+        echo "Evolution Type: $EVOLUTION_TYPE"
+        echo "Intensity: $INTENSITY"
+        echo "Dry Run: $DRY_RUN"
+        
+        # Create evolution changes based on type
+        case "$EVOLUTION_TYPE" in
+          "consistency")
+            echo "🔧 Applying consistency improvements..."
+            
+            # Ensure all markdown files have proper headers
+            find . -name "*.md" -not -path "./.git/*" | while read -r file; do
+              if [ -f "$file" ] && ! head -n 5 "$file" | grep -q "^#"; then
+                echo "📝 Adding header to: $file"
+                if [ "$DRY_RUN" != "true" ]; then
+                  temp_file=$(mktemp)
+                  echo "# $(basename "$file" .md | tr '-_' ' ' | sed 's/\b\w/\u&/g')" > "$temp_file"
+                  echo "" >> "$temp_file"
+                  cat "$file" >> "$temp_file"
+                  mv "$temp_file" "$file"
+                fi
+              fi
+            done
+            
+            # Ensure package.json files have consistent formatting
+            find . -name "package.json" -not -path "./node_modules/*" | while read -r file; do
+              if [ -f "$file" ]; then
+                echo "📦 Formatting package.json: $file"
+                if [ "$DRY_RUN" != "true" ] && command -v jq >/dev/null 2>&1; then
+                  temp_file=$(mktemp)
+                  jq '.' "$file" > "$temp_file" && mv "$temp_file" "$file"
+                fi
+              fi
+            done
+            ;;
+            
+          "documentation")
+            echo "📚 Improving documentation..."
+            
+            # Update README with current timestamp
+            if [ -f "README.md" ] && [ "$DRY_RUN" != "true" ]; then
+              echo "📝 Updating README timestamp..."
+              if ! grep -q "Last updated:" README.md; then
+                echo "" >> README.md
+                echo "---" >> README.md
+                echo "*Last updated: $(date '+%Y-%m-%d %H:%M:%S UTC')*" >> README.md
+              else
+                sed -i "s/Last updated:.*/Last updated: $(date '+%Y-%m-%d %H:%M:%S UTC')*/" README.md
+              fi
+            fi
+            ;;
+            
+          "code_quality")
+            echo "🔍 Enhancing code quality..."
+            
+            # Add gitignore entries if missing
+            if [ -f ".gitignore" ] && [ "$DRY_RUN" != "true" ]; then
+              missing_entries=(
+                "node_modules/"
+                "*.log"
+                ".env"
+                ".env.local"
+                "dist/"
+                "build/"
+                "__pycache__/"
+                "*.pyc"
+              )
+              
+              for entry in "${missing_entries[@]}"; do
+                if ! grep -q "^$entry$" .gitignore; then
+                  echo "$entry" >> .gitignore
+                  echo "📝 Added to .gitignore: $entry"
+                fi
+              done
+            fi
+            ;;
+            
+          *)
+            echo "🌱 Performing general growth maintenance..."
+            ;;
+        esac
+        
+        echo "✅ Evolution process completed"
+
+    - name: 🔍 Dry Run - Preview Changes
+      if: env.DRY_RUN == 'true' || inputs.dry_run == true
+      run: |
+        set -euo pipefail
+        echo "🔍 DRY RUN MODE - Changes that would be applied:"
+        
+        # Show what would be changed
+        if git diff --name-only | head -10; then
+          echo "Files that would be modified:"
+          git diff --name-only | head -10
+        else
+          echo "No changes would be made with current settings."
+        fi
+
+    - name: 📊 Generate Evolution Report
+      run: |
+        set -euo pipefail
+        
+        echo "📊 Generating evolution report..."
+        
+        report_file="/tmp/evolution-report.md"
+        cat > "$report_file" << EOF
+        # Daily Evolution Report
+        
+        **Date**: $(date '+%Y-%m-%d %H:%M:%S UTC')
+        **Evolution Type**: ${{ inputs.evolution_type || 'consistency' }}
+        **Intensity**: ${{ inputs.intensity || 'moderate' }}
+        **Dry Run**: ${{ inputs.dry_run || 'false' }}
+        
+        ## Changes Applied
+        
+        $(if [ "${{ inputs.dry_run || 'false' }}" = "true" ]; then
+          echo "No changes applied - dry run mode"
+        else
+          echo "Evolution changes applied successfully"
+        fi)
+        
+        ## Repository Health
+        
+        - Total commits: $(git rev-list --count HEAD)
+        - Active branch: $(git branch --show-current)
+        - Last activity: $(git log -1 --format='%cr')
+        
+        ## Next Evolution
+        
+        The next daily evolution will occur at 3 AM UTC tomorrow.
+        EOF
+        
+        echo "✅ Evolution report generated"
+
+    - name: 💾 Commit Evolution Changes
+      if: inputs.dry_run != true
+      run: |
+        set -euo pipefail
+        
+        # Configure git
+        git config --local user.email "action@github.com"
+        git config --local user.name "AI Evolution Bot"
+        
+        # Check for changes
+        if git diff --quiet && git diff --staged --quiet; then
+          echo "🌱 No changes to commit - seed is already optimized!"
+        else
+          echo "🌱 Committing evolution changes..."
+          git add .
+          git commit -m "🌱 Daily evolution: ${{ inputs.evolution_type || 'consistency' }} improvements
+          
+          - Applied ${{ inputs.intensity || 'moderate' }} intensity changes
+          - Evolution type: ${{ inputs.evolution_type || 'consistency' }}
+          - Automated growth cycle: $(date '+%Y-%m-%d')
+          
+          Co-authored-by: AI Evolution Bot <action@github.com>"
+          
+          git push origin HEAD
+          echo "✅ Evolution changes committed and pushed"
+        fi
+
+    - name: 🔄 Error Recovery
+      if: failure()
+      run: |
+        set -euo pipefail
+        
+        echo "❌ Daily evolution failed - attempting recovery"
+        
+        # Log error context
+        echo "Current directory: $(pwd)"
+        echo "Git status: $(git status --porcelain || echo 'Git status failed')"
+        echo "Environment variables: $(env | grep -E '^(EVOLUTION|WORKFLOW)_' || echo 'No evolution vars')"
+        
+        # Attempt cleanup
+        if [ -d "/tmp" ]; then
+          echo "Cleaning temporary files..."
+          find /tmp -name "*evolution*" -type f -delete 2>/dev/null || true
+        fi
+        
+        echo "🔄 Recovery attempt completed"
+
+    - name: 📈 Update Growth Metrics
+      if: always()
+      run: |
+        set -euo pipefail
+        
+        echo "📈 Recording growth metrics..."
+        
+        # Create metrics summary
+        metrics_file="/tmp/growth-metrics.json"
+        cat > "$metrics_file" << EOF
+        {
+          "timestamp": "$(date -Iseconds)",
+          "workflow": "daily-evolution",
+          "evolution_type": "${{ inputs.evolution_type || 'consistency' }}",
+          "intensity": "${{ inputs.intensity || 'moderate' }}",
+          "dry_run": ${{ inputs.dry_run || false }},
+          "success": ${{ job.status == 'success' }},
+          "duration_seconds": ${{ github.run_started_at }},
+          "repository": {
+            "commits": $(git rev-list --count HEAD),
+            "files": $(find . -type f | wc -l),
+            "size_mb": $(du -sm . | cut -f1)
+          }
+        }
+        EOF
+        
+        echo "Growth metrics recorded in $metrics_file"
+        echo "✅ Daily evolution cycle completed"

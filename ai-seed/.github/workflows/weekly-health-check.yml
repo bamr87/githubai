@@ -1,0 +1,547 @@
+---
+# AI Evolution Workflow - Weekly Health Check
+# Version: 0.3.0
+# Last Updated: 2025-07-21
+# 
+# Purpose: Weekly comprehensive health check and system validation
+# This workflow performs deep system analysis and preventive maintenance
+
+name: 🏥 Weekly Health Check - Deep System Analysis
+
+on:
+  schedule:
+    - cron: '0 6 * * 0'  # Sundays at 6 AM UTC - weekly maintenance window
+  workflow_dispatch:
+    inputs:
+      check_type:
+        description: 'Type of health check to perform'
+        required: false
+        default: 'comprehensive'
+        type: choice
+        options:
+          - 'quick'          # Basic health indicators only
+          - 'comprehensive'  # Full system analysis
+          - 'performance'    # Focus on performance metrics
+          - 'security'       # Security-focused validation
+      generate_report:
+        description: 'Generate detailed health report'
+        required: false
+        default: true
+        type: boolean
+      auto_fix:
+        description: 'Automatically fix discovered issues'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  EVOLUTION_VERSION: "0.3.0"
+  WORKFLOW_TYPE: "health_check"
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  security-events: write
+
+jobs:
+  health-assessment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    
+    outputs:
+      health-score: ${{ steps.calculate-health.outputs.score }}
+      issues-found: ${{ steps.analyze-issues.outputs.count }}
+      recommendations: ${{ steps.generate-recommendations.outputs.list }}
+    
+    steps:
+    - name: 🌱 Prepare Evolution Environment
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.PAT_TOKEN_TOKEN }}
+
+    - name: 🛠️ Setup Environment
+      run: |
+        set -euo pipefail
+        if [ ! -f "./scripts/setup-environment.sh" ]; then
+          echo "❌ Setup script not found!"
+          exit 1
+        fi
+        chmod +x ./scripts/setup-environment.sh
+        ./scripts/setup-environment.sh
+
+    - name: 🔍 Validate Prerequisites
+      run: |
+        set -euo pipefail
+        
+        # Validate required files exist
+        required_files=("./scripts/setup-environment.sh" "./scripts/evolution-engine.sh")
+        for file in "${required_files[@]}"; do
+          if [ ! -f "$file" ]; then
+            echo "❌ Required file missing: $file"
+            exit 1
+          fi
+        done
+        
+        # Validate environment variables
+        required_vars=("EVOLUTION_VERSION" "WORKFLOW_TYPE")
+        for var in "${required_vars[@]}"; do
+          if [ -z "${!var:-}" ]; then
+            echo "❌ Required environment variable missing: $var"
+            exit 1
+          fi
+        done
+        
+        echo "✅ All prerequisites validated"
+
+    - name: 🔍 Repository Structure Health
+      id: structure-health
+      run: |
+        set -euo pipefail
+        
+        echo "🏗️ Analyzing repository structure..."
+        
+        # Check for essential files
+        essential_files=(
+          "README.md"
+          ".gitignore"
+          "src/package.json"
+          "docker/docker-compose.yml"
+          ".github/workflows"
+        )
+        
+        missing_files=()
+        for file in "${essential_files[@]}"; do
+          if [ ! -e "$file" ]; then
+            missing_files+=("$file")
+          fi
+        done
+        
+        structure_score=100
+        if [ ${#missing_files[@]} -gt 0 ]; then
+          structure_score=$((100 - ${#missing_files[@]} * 20))
+          echo "⚠️ Missing essential files: ${missing_files[*]}"
+        fi
+        
+        echo "structure_score=$structure_score" >> $GITHUB_OUTPUT
+        echo "missing_files=${#missing_files[@]}" >> $GITHUB_OUTPUT
+        
+        # Analyze directory organization
+        echo "📁 Directory Analysis:"
+        echo "Source files: $(find src/ -name '*.js' -o -name '*.py' -o -name '*.jsx' | wc -l)"
+        echo "Test files: $(find tests/ -name '*.test.*' -o -name '*_test.*' 2>/dev/null | wc -l || echo 0)"
+        echo "Documentation: $(find docs/ -name '*.md' 2>/dev/null | wc -l || echo 0)"
+        echo "Configuration files: $(find config/ -type f 2>/dev/null | wc -l || echo 0)"
+
+    - name: 🔒 Security Health Assessment
+      id: security-health
+      run: |
+        set -euo pipefail
+        
+        echo "🔒 Performing security health check..."
+        
+        security_score=100
+        security_issues=0
+        
+        # Check for sensitive files
+        sensitive_patterns=(
+          "*.key"
+          "*.pem"
+          "*.p12"
+          ".env"
+          "*.env"
+          "config/secrets*"
+        )
+        
+        for pattern in "${sensitive_patterns[@]}"; do
+          if find . -name "$pattern" -not -path "./.git/*" | grep -q .; then
+            echo "⚠️ Found potential sensitive files: $pattern"
+            ((security_issues++))
+          fi
+        done
+        
+        # Check gitignore for common sensitive entries
+        if [ -f ".gitignore" ]; then
+          required_gitignore=(
+            "*.env"
+            "*.key"
+            "*.pem"
+            "node_modules/"
+            "__pycache__/"
+          )
+          
+          for entry in "${required_gitignore[@]}"; do
+            if ! grep -q "$entry" .gitignore; then
+              echo "⚠️ Missing gitignore entry: $entry"
+              ((security_issues++))
+            fi
+          done
+        fi
+        
+        # Check Python dependencies for vulnerabilities
+        if [ -f "src/ai/requirements.txt" ]; then
+          echo "🐍 Checking Python dependencies..."
+          if ! safety check -r src/ai/requirements.txt --json > /tmp/safety-report.json; then
+            vulnerabilities=$(jq '.[] | length' /tmp/safety-report.json 2>/dev/null || echo 0)
+            if [ "$vulnerabilities" -gt 0 ]; then
+              echo "⚠️ Found $vulnerabilities Python vulnerabilities"
+              security_issues=$((security_issues + vulnerabilities))
+            fi
+          fi
+        fi
+        
+        # Calculate security score
+        if [ $security_issues -gt 0 ]; then
+          security_score=$((100 - security_issues * 10))
+          if [ $security_score -lt 0 ]; then
+            security_score=0
+          fi
+        fi
+        
+        echo "security_score=$security_score" >> $GITHUB_OUTPUT
+        echo "security_issues=$security_issues" >> $GITHUB_OUTPUT
+
+    - name: 📊 Performance Health Metrics
+      id: performance-health
+      run: |
+        set -euo pipefail
+        
+        echo "📊 Analyzing performance health..."
+        
+        performance_score=100
+        
+        # Repository size analysis
+        repo_size_mb=$(du -sm . | cut -f1)
+        echo "Repository size: ${repo_size_mb}MB"
+        
+        if [ $repo_size_mb -gt 1000 ]; then
+          echo "⚠️ Repository size is large (${repo_size_mb}MB)"
+          performance_score=$((performance_score - 20))
+        fi
+        
+        # Large file detection
+        large_files=$(find . -type f -size +10M -not -path "./.git/*" | wc -l)
+        if [ $large_files -gt 0 ]; then
+          echo "⚠️ Found $large_files files larger than 10MB"
+          performance_score=$((performance_score - large_files * 5))
+        fi
+        
+        # Git history analysis
+        total_commits=$(git rev-list --count HEAD)
+        recent_activity=$(git log --since="30 days ago" --oneline | wc -l)
+        
+        echo "Total commits: $total_commits"
+        echo "Recent activity (30 days): $recent_activity"
+        
+        # Check for merge conflicts or uncommitted changes
+        if ! git diff --quiet || ! git diff --staged --quiet; then
+          echo "⚠️ Uncommitted changes detected"
+          performance_score=$((performance_score - 10))
+        fi
+        
+        echo "performance_score=$performance_score" >> $GITHUB_OUTPUT
+        echo "repo_size_mb=$repo_size_mb" >> $GITHUB_OUTPUT
+        echo "large_files=$large_files" >> $GITHUB_OUTPUT
+
+    - name: 🧪 Test Coverage Health
+      id: test-health
+      run: |
+        set -euo pipefail
+        
+        echo "🧪 Analyzing test coverage and quality..."
+        
+        test_score=100
+        
+        # Count test files
+        test_files=$(find tests/ -name '*.test.*' -o -name '*_test.*' 2>/dev/null | wc -l || echo 0)
+        src_files=$(find src/ -name '*.js' -o -name '*.py' -o -name '*.jsx' | wc -l)
+        
+        echo "Test files: $test_files"
+        echo "Source files: $src_files"
+        
+        if [ $src_files -gt 0 ]; then
+          test_ratio=$(echo "scale=2; $test_files / $src_files * 100" | bc)
+          echo "Test to source ratio: ${test_ratio}%"
+          
+          if (( $(echo "$test_ratio < 50" | bc -l) )); then
+            echo "⚠️ Low test coverage ratio: ${test_ratio}%"
+            test_score=$((test_score - 30))
+          elif (( $(echo "$test_ratio < 80" | bc -l) )); then
+            echo "⚠️ Moderate test coverage ratio: ${test_ratio}%"
+            test_score=$((test_score - 15))
+          fi
+        else
+          test_score=$((test_score - 50))
+        fi
+        
+        echo "test_score=$test_score" >> $GITHUB_OUTPUT
+        echo "test_files=$test_files" >> $GITHUB_OUTPUT
+        echo "test_ratio=${test_ratio:-0}" >> $GITHUB_OUTPUT
+
+    - name: 📈 Calculate Overall Health Score
+      id: calculate-health
+      run: |
+        set -euo pipefail
+        
+        structure_score=${{ steps.structure-health.outputs.structure_score }}
+        security_score=${{ steps.security-health.outputs.security_score }}
+        performance_score=${{ steps.performance-health.outputs.performance_score }}
+        test_score=${{ steps.test-health.outputs.test_score }}
+        
+        # Weighted average
+        overall_score=$(echo "scale=1; ($structure_score * 0.25) + ($security_score * 0.35) + ($performance_score * 0.25) + ($test_score * 0.15)" | bc)
+        
+        echo "📊 Health Score Breakdown:"
+        echo "Structure: $structure_score/100 (25%)"
+        echo "Security: $security_score/100 (35%)"
+        echo "Performance: $performance_score/100 (25%)"
+        echo "Tests: $test_score/100 (15%)"
+        echo "Overall: $overall_score/100"
+        
+        # Determine health status
+        if (( $(echo "$overall_score >= 90" | bc -l) )); then
+          health_status="EXCELLENT"
+          status_emoji="🌟"
+        elif (( $(echo "$overall_score >= 75" | bc -l) )); then
+          health_status="GOOD"
+          status_emoji="✅"
+        elif (( $(echo "$overall_score >= 60" | bc -l) )); then
+          health_status="FAIR"
+          status_emoji="⚠️"
+        else
+          health_status="NEEDS_ATTENTION"
+          status_emoji="🚨"
+        fi
+        
+        echo "score=$overall_score" >> $GITHUB_OUTPUT
+        echo "status=$health_status" >> $GITHUB_OUTPUT
+        echo "emoji=$status_emoji" >> $GITHUB_OUTPUT
+
+    - name: 🔍 Analyze Issues and Generate Recommendations
+      id: analyze-issues
+      run: |
+        set -euo pipefail
+        
+        echo "🔍 Analyzing issues and generating recommendations..."
+        
+        recommendations=()
+        
+        # Structure recommendations
+        if [ ${{ steps.structure-health.outputs.missing_files }} -gt 0 ]; then
+          recommendations+=("Add missing essential files for better project structure")
+        fi
+        
+        # Security recommendations
+        security_issues=${{ steps.security-health.outputs.security_issues }}
+        if [ $security_issues -gt 0 ]; then
+          recommendations+=("Address $security_issues security issues found")
+          recommendations+=("Review and update .gitignore for sensitive files")
+        fi
+        
+        # Performance recommendations
+        large_files=${{ steps.performance-health.outputs.large_files }}
+        if [ $large_files -gt 0 ]; then
+          recommendations+=("Consider using Git LFS for $large_files large files")
+        fi
+        
+        repo_size=${{ steps.performance-health.outputs.repo_size_mb }}
+        if [ $repo_size -gt 500 ]; then
+          recommendations+=("Repository size (${repo_size}MB) is growing large - consider cleanup")
+        fi
+        
+        # Test recommendations
+        test_ratio="${{ steps.test-health.outputs.test_ratio }}"
+        if (( $(echo "${test_ratio:-0} < 60" | bc -l) )); then
+          recommendations+=("Increase test coverage - current ratio: ${test_ratio}%")
+        fi
+        
+        # General maintenance recommendations
+        last_commit_days=$((($(date +%s) - $(git log -1 --format=%ct)) / 86400))
+        if [ $last_commit_days -gt 30 ]; then
+          recommendations+=("Repository has been inactive for $last_commit_days days")
+        fi
+        
+        echo "count=${#recommendations[@]}" >> $GITHUB_OUTPUT
+        
+        # Format recommendations as JSON array
+        if [ ${#recommendations[@]} -gt 0 ]; then
+          printf '%s\n' "${recommendations[@]}" | jq -R . | jq -s . > /tmp/recommendations.json
+          echo "list=$(cat /tmp/recommendations.json)" >> $GITHUB_OUTPUT
+        else
+          echo "list=[]" >> $GITHUB_OUTPUT
+        fi
+
+    - name: 📋 Generate Health Report
+      if: inputs.generate_report != false
+      run: |
+        set -euo pipefail
+        
+        echo "📋 Generating comprehensive health report..."
+        
+        report_file="/tmp/health-report.md"
+        cat > "$report_file" << EOF
+        # 🏥 AI-Seed Weekly Health Report
+        
+        **Date**: $(date '+%Y-%m-%d %H:%M:%S UTC')
+        **Overall Health**: ${{ steps.calculate-health.outputs.emoji }} ${{ steps.calculate-health.outputs.status }} (${{ steps.calculate-health.outputs.score }}/100)
+        
+        ## 📊 Health Metrics
+        
+        | Category | Score | Status |
+        |----------|-------|--------|
+        | Structure | ${{ steps.structure-health.outputs.structure_score }}/100 | $([ ${{ steps.structure-health.outputs.structure_score }} -ge 80 ] && echo "✅ Good" || echo "⚠️ Needs Improvement") |
+        | Security | ${{ steps.security-health.outputs.security_score }}/100 | $([ ${{ steps.security-health.outputs.security_score }} -ge 80 ] && echo "✅ Good" || echo "⚠️ Needs Improvement") |
+        | Performance | ${{ steps.performance-health.outputs.performance_score }}/100 | $([ ${{ steps.performance-health.outputs.performance_score }} -ge 80 ] && echo "✅ Good" || echo "⚠️ Needs Improvement") |
+        | Testing | ${{ steps.test-health.outputs.test_score }}/100 | $([ ${{ steps.test-health.outputs.test_score }} -ge 80 ] && echo "✅ Good" || echo "⚠️ Needs Improvement") |
+        
+        ## 🔍 Key Findings
+        
+        - **Repository Size**: ${{ steps.performance-health.outputs.repo_size_mb }}MB
+        - **Test Coverage**: ${{ steps.test-health.outputs.test_ratio }}% (test to source ratio)
+        - **Security Issues**: ${{ steps.security-health.outputs.security_issues }} found
+        - **Large Files**: ${{ steps.performance-health.outputs.large_files }} files > 10MB
+        
+        ## 📝 Recommendations
+        
+        $(if [ ${{ steps.analyze-issues.outputs.count }} -gt 0 ]; then
+          echo "${{ steps.analyze-issues.outputs.list }}" | jq -r '.[] | "- " + .'
+        else
+          echo "✅ No specific recommendations - repository health is excellent!"
+        fi)
+        
+        ## 🌱 Growth Trends
+        
+        - **Recent Activity**: $(git log --since="7 days ago" --oneline | wc -l) commits in the last 7 days
+        - **Total Commits**: $(git rev-list --count HEAD)
+        - **Contributors**: $(git shortlog -sn | wc -l)
+        - **Last Update**: $(git log -1 --format='%cr')
+        
+        ## 🎯 Action Items
+        
+        $(if [ ${{ steps.calculate-health.outputs.score }} -lt 75 ]; then
+          echo "⚠️ **Priority**: Address health issues to improve overall score"
+          echo ""
+          echo "1. Focus on categories scoring below 80/100"
+          echo "2. Implement recommended improvements"
+          echo "3. Schedule follow-up health check in 1 week"
+        else
+          echo "✅ **Status**: Repository health is good - continue regular maintenance"
+          echo ""
+          echo "1. Monitor trends and metrics"
+          echo "2. Maintain current practices"
+          echo "3. Next health check in 1 week as scheduled"
+        fi)
+        
+        ---
+        
+        *Generated by AI-Seed Health Check System v${{ env.EVOLUTION_VERSION }}*
+        EOF
+        
+        echo "Health report generated: $report_file"
+        
+        # Save report as artifact
+        mkdir -p ./health-reports
+        cp "$report_file" "./health-reports/health-report-$(date +%Y%m%d).md"
+
+    - name: 🔧 Auto-Fix Issues
+      if: inputs.auto_fix == true && steps.calculate-health.outputs.score < 75
+      run: |
+        set -euo pipefail
+        
+        echo "🔧 Applying automatic fixes for common issues..."
+        
+        # Fix .gitignore issues
+        if [ -f ".gitignore" ]; then
+          missing_entries=(
+            "*.env"
+            "*.env.local"
+            "*.key"
+            "*.pem"
+            "node_modules/"
+            "dist/"
+            "build/"
+            "__pycache__/"
+            "*.pyc"
+            "*.log"
+            ".DS_Store"
+            "Thumbs.db"
+          )
+          
+          for entry in "${missing_entries[@]}"; do
+            if ! grep -q "^$entry$" .gitignore; then
+              echo "$entry" >> .gitignore
+              echo "✅ Added to .gitignore: $entry"
+            fi
+          done
+        fi
+        
+        # Format JSON files
+        find . -name "package.json" -not -path "./node_modules/*" | while read -r file; do
+          if command -v jq >/dev/null 2>&1; then
+            temp_file=$(mktemp)
+            jq '.' "$file" > "$temp_file" && mv "$temp_file" "$file"
+            echo "✅ Formatted: $file"
+          fi
+        done
+        
+        echo "✅ Auto-fix completed"
+
+    - name: 💾 Commit Health Improvements
+      if: inputs.auto_fix == true
+      run: |
+        set -euo pipefail
+        
+        # Configure git
+        git config --local user.email "action@github.com"
+        git config --local user.name "AI Health Bot"
+        
+        # Check for changes
+        if git diff --quiet && git diff --staged --quiet; then
+          echo "🌱 No health improvements to commit"
+        else
+          echo "🌱 Committing health improvements..."
+          git add .
+          git commit -m "🏥 Weekly health check: Automated improvements
+          
+          - Health score: ${{ steps.calculate-health.outputs.score }}/100
+          - Status: ${{ steps.calculate-health.outputs.status }}
+          - Auto-fixed common issues
+          - Generated health report: $(date '+%Y-%m-%d')
+          
+          Co-authored-by: AI Health Bot <action@github.com>"
+          
+          git push origin HEAD
+          echo "✅ Health improvements committed and pushed"
+        fi
+
+    - name: 📤 Upload Health Report
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: health-report-${{ github.run_number }}
+        path: |
+          /tmp/health-report.md
+          ./health-reports/
+        retention-days: 30
+
+    - name: 🔄 Health Check Summary
+      if: always()
+      run: |
+        set -euo pipefail
+        
+        echo "🏥 Weekly Health Check Summary"
+        echo "==============================="
+        echo "Overall Health: ${{ steps.calculate-health.outputs.emoji }} ${{ steps.calculate-health.outputs.status }} (${{ steps.calculate-health.outputs.score }}/100)"
+        echo "Issues Found: ${{ steps.analyze-issues.outputs.count }}"
+        echo "Check Type: ${{ inputs.check_type || 'comprehensive' }}"
+        echo "Auto-Fix Applied: ${{ inputs.auto_fix || false }}"
+        echo ""
+        echo "📊 Component Scores:"
+        echo "- Structure: ${{ steps.structure-health.outputs.structure_score }}/100"
+        echo "- Security: ${{ steps.security-health.outputs.security_score }}/100"
+        echo "- Performance: ${{ steps.performance-health.outputs.performance_score }}/100"
+        echo "- Testing: ${{ steps.test-health.outputs.test_score }}/100"
+        echo ""
+        echo "Next health check: $(date -d '+7 days' '+%Y-%m-%d') at 6 AM UTC"
+        echo "🌱 Keep growing strong, AI-Seed! 🌱"
