@@ -1,3 +1,32 @@
 .DS_Store
 node_modules/
 src/package-lock.json
+
+# Build artifacts
+src/frontend/dist/
+src/frontend/coverage/
+src/api/coverage/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp

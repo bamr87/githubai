@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  # Frontend development server
+  frontend:
+    build:
+      context: ./src/frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./src/frontend/src:/app/src
+      - ./src/frontend/public:/app/public
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:3001
+    depends_on:
+      - api
+
+  # API server
+  api:
+    build:
+      context: ./src/api
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./src/api/src:/app/src
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+    depends_on:
+      - database
+
+  # Database
+  database:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: ai_seed_dev
+      POSTGRES_USER: seed_user
+      POSTGRES_PASSWORD: seed_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # AI Evolution Engine
+  evolution:
+    build:
+      context: ./src/ai
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./src/ai:/app
+      - ./evaluation-results:/app/evaluation-results
+    environment:
+      - PYTHON_ENV=development
+      - DATABASE_URL=postgresql://seed_user:seed_password@database:5432/ai_seed_dev
+    depends_on:
+      - database
+
+volumes:
+  postgres_data:
