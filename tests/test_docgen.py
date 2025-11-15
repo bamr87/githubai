@@ -1,8 +1,13 @@
-import pytest
-from src.githubai.docgen import parse_python_file, generate_markdown_documentation
+import pytest  # noqa: F401  # noqa: F401
+
+from src.githubai.docgen import generate_markdown_documentation, parse_python_file
+
 
 def test_parse_python_file(mocker):
-    mock_open = mocker.patch("builtins.open", mocker.mock_open(read_data="""
+    mock_open = mocker.patch(
+        "builtins.open",
+        mocker.mock_open(
+            read_data="""
     '''
     Module docstring
     '''
@@ -13,16 +18,19 @@ def test_parse_python_file(mocker):
         '''
         # Comment 2
         pass
-    """))
+    """
+        ),
+    )
 
     result = parse_python_file("dummy_path")
     assert result["comments"] == ["Comment 1", "Comment 2"]
     assert result["docstrings"] == [("foo", "Function docstring")]
 
+
 def test_generate_markdown_documentation():
     parsed_data = {
         "comments": ["Comment 1", "Comment 2"],
-        "docstrings": [("foo", "Function docstring")]
+        "docstrings": [("foo", "Function docstring")],
     }
 
     result = generate_markdown_documentation(parsed_data)
