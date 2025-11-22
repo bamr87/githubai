@@ -5,6 +5,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db import connection
+from django.utils import timezone
 from .models import Issue, IssueTemplate
 from .serializers import (
     IssueSerializer,
@@ -14,8 +15,13 @@ from .serializers import (
     CreateFeedbackIssueSerializer,
     CreateAutoIssueSerializer,
 )
+from .chat_serializers import ChatMessageSerializer, ChatResponseSerializer
 from .services import IssueService
 from .services import AutoIssueService
+from .services.ai_service import AIService
+import logging
+
+logger = logging.getLogger('githubai')
 
 
 class HealthCheckView(APIView):
@@ -150,3 +156,51 @@ class IssueViewSet(viewsets.ModelViewSet):
             return Response(IssueSerializer(issue).data, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ChatView(APIView):
+    """Chat endpoint using AIService for conversational interactions."""
+    permission_classes = []
+
+    def post(self, request):
+        """Handle chat messages and return AI responses."""
+        serializer = ChatMessageSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user_message = serializer.validated_data['message']
+
+        try:
+            # Use AIService to get response
+            ai_service = AIService()
+
+            system_message = ("You are a helpful AI assistant integrated with GitHubAI. "
+                            "You can help users with questions about GitHub automation, "
+                            "issue management, and general programming topics.")
+
+            response_text = ai_service.call_ai_chat(
+                system_prompt=system_message,
+                user_prompt=user_message
+            )
+
+            response_data = {
+                'response': response_text,
+                'provider': ai_service.provider_name,
+                'model': ai_service.model,
+                'cached': False,  # AIService returns cached content directly, so we can't determine this
+                'timestamp': timezone.now()
+            }
+
+            response_serializer = ChatResponseSerializer(data=response_data)
+            response_serializer.is_valid(raise_exception=True)
+
+            logger.info(f"Chat response generated - Provider: {ai_service.provider_name}, "
+                       f"Model: {ai_service.model}")
+
+            return Response(response_serializer.data, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            logger.error(f"Error in chat endpoint: {str(e)}")
+            return Response(
+                {'error': 'Failed to generate response. Please try again.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

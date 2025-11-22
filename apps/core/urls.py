@@ -3,7 +3,7 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views import HealthCheckView, IssueTemplateViewSet, IssueViewSet
+from .views import HealthCheckView, IssueTemplateViewSet, IssueViewSet, ChatView
 
 router = DefaultRouter()
 router.register(r"issues", IssueViewSet, basename="issue")
@@ -12,4 +12,5 @@ router.register(r"templates", IssueTemplateViewSet, basename="issuetemplate")
 urlpatterns = [
     path("issues/", include(router.urls)),
     path("health/", HealthCheckView.as_view(), name="health-check"),
+    path("chat/", ChatView.as_view(), name="chat"),
 ]

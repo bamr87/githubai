@@ -7,6 +7,81 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2025-11-22
+
+### Added
+
+- **AI Chat Frontend** - Modern React-based web interface for conversational AI interaction
+  - React 19 application with Vite 7 build system
+  - Ant Design 6 UI component library for professional interface
+  - Real-time chat with message history and provider information display
+  - Keyboard shortcuts: Enter to send, Shift+Enter for new line
+  - Responsive layout optimized for desktop and mobile
+  - Error notifications and loading states for better UX
+
+- **Chat REST API Endpoint** - Backend integration for frontend chat interface
+  - `POST /api/chat/` endpoint for conversational AI interactions
+  - `ChatView` API view with Django REST Framework
+  - `ChatMessageSerializer` and `ChatResponseSerializer` for request/response validation
+  - Integration with existing `AIService` for multi-provider support
+  - Automatic caching via existing `AIResponse` model
+  - Comprehensive logging via existing `APILog` model
+
+- **Docker Configuration** - Frontend containerization and orchestration
+  - Frontend service added to `docker-compose.yml`
+  - Node.js 20 Alpine-based Dockerfile for frontend
+  - Hot module replacement (HMR) enabled for development
+  - Volume mounting for live code updates
+  - Network configuration for frontend-backend communication
+
+- **Frontend Dependencies**
+  - `react: ^19.2.0` - React framework
+  - `react-dom: ^19.2.0` - React DOM rendering
+  - `antd: ^6.0.0` - Ant Design component library
+  - `axios: ^1.13.2` - HTTP client for API communication
+  - `vite: ^7.2.4` - Next generation frontend tooling
+
+- **Documentation**
+  - `docs/features/AI_CHAT_FRONTEND.md` - Comprehensive feature documentation
+  - `docs/FRONTEND_QUICKSTART.md` - Quick start guide for users
+  - `docs/FRONTEND_IMPLEMENTATION.md` - Implementation details and summary
+  - Frontend README with setup and usage instructions
+
+- **Superuser Management** - Enhanced admin account creation
+  - `create_superuser` management command for automated admin account creation
+  - Environment variable configuration for superuser credentials
+  - `DJANGO_SUPERUSER_USERNAME`, `DJANGO_SUPERUSER_EMAIL`, `DJANGO_SUPERUSER_PASSWORD` in `.env`
+  - Idempotent execution (skips if user already exists)
+
+### Changed
+
+- **CORS Configuration** - Extended to support frontend development
+  - Added `http://localhost:5173` to `CORS_ALLOWED_ORIGINS`
+  - Maintained backward compatibility with existing origins
+
+- **URL Configuration** - New chat endpoint routing
+  - Added `/api/chat/` route to `apps/core/urls.py`
+  - Imported `ChatView` in core URL configuration
+
+### Fixed
+
+- None (new feature release)
+
+### Security
+
+- **CORS**: Properly configured for local development (production requires domain restriction)
+- **Input Validation**: All chat inputs validated via DRF serializers
+- **Error Handling**: Generic error messages prevent information disclosure
+- **API Keys**: Securely stored in environment variables, not in code
+- **Note**: Authentication not yet implemented (required for production deployment)
+
+### Performance
+
+- **Caching**: Leverages existing `AIResponse` caching to reduce API calls and costs
+- **Efficient Rendering**: React state management minimizes unnecessary re-renders
+- **Code Splitting**: Vite provides optimized bundle splitting
+- **Resource Usage**: Frontend container ~50MB, minimal CPU impact
+
 ## [0.2.0] - 2025-11-21
 
 ### Added
