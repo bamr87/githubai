@@ -11,40 +11,50 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.11"
-
-      - name: Install dependencies
+      - name: Create environment file
         run: |
-          python -m pip install --upgrade pip
-          pip install openai pygithub gitpython
+          echo "DEBUG=True" > .env
+          echo "SECRET_KEY=github-actions-key" >> .env
+          echo "DATABASE_URL=sqlite:///db.sqlite3" >> .env
+          echo "AI_API_KEY=${{ secrets.AI_API_KEY }}" >> .env
+          echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> .env
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        run: |
+          docker build -f infra/docker/Dockerfile -t githubai:latest .
 
       - name: Configure Git
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
-      - name: Run AI Doc Generator
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run Django migrations
         run: |
-          python src/githubai/auto_doc_generator.py
+          docker run --rm -v "$PWD":/app --env-file .env githubai:latest python manage.py migrate --run-syncdb
+
+      - name: Generate Documentation from Commit
+        run: |
+          docker run --rm -v "$PWD":/app --env-file .env githubai:latest python manage.py generate_docs --commit
 
       - name: Create and push documentation branch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git checkout -b feature-documentation
-          git add CHANGELOG_AI.md
-          git commit -m "Add AI-generated changelog and documentation summary"
-          # Ensure the branch is up-to-date before pushing
-          git pull --rebase origin feature-documentation || true
-          git push -u origin feature-documentation
+          if [ -f docs/CHANGELOG_AI.md ]; then
+            git checkout -b feature-documentation
+            git add docs/CHANGELOG_AI.md
+            git commit -m "Add AI-generated changelog and documentation summary"
+            # Ensure the branch is up-to-date before pushing
+            git pull --rebase origin feature-documentation || true
+            git push -u origin feature-documentation
+          else
+            echo "No documentation generated, skipping branch creation"
+          fi

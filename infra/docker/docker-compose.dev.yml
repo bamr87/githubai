@@ -1,0 +1,33 @@
+version: '3.9'
+
+# Development override configuration
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    command: python manage.py runserver 0.0.0.0:8000
+    environment:
+      - DJANGO_DEBUG=True
+    volumes:
+      - .:/app
+    stdin_open: true
+    tty: true
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    command: celery -A githubai worker --loglevel=debug --concurrency=2
+    environment:
+      - DJANGO_DEBUG=True
+
+  celery_beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    environment:
+      - DJANGO_DEBUG=True

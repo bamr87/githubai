@@ -11,32 +11,44 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.11"
-
-      - name: Install dependencies
+      - name: Create environment file
         run: |
-          python -m pip install --upgrade pip
-          pip install openai pygithub gitpython
+          echo "DEBUG=True" > .env
+          echo "SECRET_KEY=github-actions-key" >> .env
+          echo "DATABASE_URL=sqlite:///db.sqlite3" >> .env
+          echo "AI_API_KEY=${{ secrets.AI_API_KEY }}" >> .env
+          echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> .env
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        run: |
+          docker build -f infra/docker/Dockerfile -t githubai:latest .
 
       - name: Configure Git
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
-      - name: Run AI Doc Generator
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUBAI_TOKEN }}
+      - name: Run Django migrations
         run: |
-          python src/githubai/auto_doc_generator.py
+          docker run --rm -v "$PWD":/app --env-file .env githubai:latest python manage.py migrate --run-syncdb
 
-      - name: Log AI Outputs
-        run: cat CHANGELOG_AI.md
+      - name: Generate Documentation from PR
+        run: |
+          docker run --rm -v "$PWD":/app --env-file .env githubai:latest python manage.py generate_docs --pr ${{ github.event.pull_request.number }} --repo ${{ github.repository }}
+
+      - name: Display Generated Documentation
+        run: |
+          if [ -f docs/CHANGELOG_AI.md ]; then
+            echo "## Generated Documentation:"
+            cat docs/CHANGELOG_AI.md
+          else
+            echo "No documentation file generated"
+          fi

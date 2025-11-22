@@ -1,57 +1,62 @@
-# Coding Guidelines
+# GitHubAI Coding Guidelines
 
-## Introduction
+## Project Overview
+GitHubAI is a production-ready Django application for automating GitHub workflows using AI. It uses Django REST Framework, Celery, Redis, and PostgreSQL, all containerized with Docker.
 
-These are VS Code coding guidelines. Please also review our [Source Code Organisation](https://github.com/microsoft/vscode/wiki/Source-Code-Organization) page.
+## Architecture & Structure
+- **Apps (`apps/`)**:
+  - `core`: Shared utilities, base models (`APILog`), and exceptions.
+  - `ai_services`: AI integration with caching (`AIResponse`) and logging.
+  - `github_integration`: Wrappers for GitHub API interactions.
+  - `issues`: Issue management logic, templates, and API views.
+  - `docs`: Automated documentation generation.
+  - `versioning`: Semantic versioning logic.
+- **Infrastructure (`infra/`)**: Docker configurations and utility scripts.
+- **Settings**: Located in `githubai/settings.py`.
 
-## Indentation
+## Development Workflow
 
-We use tabs, not spaces.
+### Docker
+Always run commands within the Docker container to ensure correct environment and dependencies.
+- **Start Dev Server**: `docker-compose -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.dev.yml up`
+- **Run Commands**: `docker-compose -f infra/docker/docker-compose.yml exec web <command>`
 
-## Naming Conventions
+### Testing
+- **Run Tests**: `docker-compose -f infra/docker/docker-compose.yml exec web pytest`
+- **Configuration**: See `pyproject.toml` and `pytest.ini`.
 
-* Use PascalCase for `type` names
-* Use PascalCase for `enum` values
-* Use camelCase for `function` and `method` names
-* Use camelCase for `property` names and `local variables`
-* Use whole words in names when possible
+### Linting & Formatting
+- **Tools**: `black` (120 line length), `flake8`, `pylint`.
+- **Configuration**: Defined in `pyproject.toml`.
 
-## Types
+## Coding Conventions
 
-* Do not export `types` or `functions` unless you need to share it across multiple components
-* Do not introduce new `types` or `values` to the global namespace
+### Python Style
+- Follow PEP 8.
+- Use `black` for formatting.
+- Use `snake_case` for functions/variables, `PascalCase` for classes.
+- **Docstrings**: Required for all public modules, classes, and functions.
 
-## Comments
+### Service Layer Pattern
+- Business logic should reside in `services.py` within each app, not in views or models.
+- Example: `AIService` in `apps/ai_services/services.py`.
 
-* When there are comments for `functions`, `interfaces`, `enums`, and `classes` use JSDoc style comments
+### Logging
+- Use the project logger: `logger = logging.getLogger('githubai')`.
+- Log significant events, especially external API calls.
 
-## Strings
+### AI Integration
+- **Do not call AI APIs directly.** Use `apps.ai_services.services.AIService`.
+- This service handles:
+  - **Caching**: Checks `AIResponse` to save costs.
+  - **Logging**: Records usage in `APILog`.
+  - **Error Handling**: Standardized exception handling.
 
-* Use "double quotes" for strings shown to the user that need to be externalized (localized)
-* Use 'single quotes' otherwise
-* All strings visible to the user need to be externalized
+### Management Commands
+- Custom commands are in `apps/<app>/management/commands/`.
+- Run via Docker: `docker-compose exec web python manage.py <command_name>`.
 
-## Style
-
-* Use arrow functions `=>` over anonymous function expressions
-* Only surround arrow function parameters when necessary. For example, `(x) => x + x` is wrong but the following are correct:
-
-```javascript
-x => x + x
-(x, y) => x + y
-<T>(x: T, y: T) => x === y
-```
-
-* Always surround loop and conditional bodies with curly braces
-* Open curly braces always go on the same line as whatever necessitates them
-* Parenthesized constructs should have no surrounding whitespace. A single space follows commas, colons, and semicolons in those constructs. For example:
-
-```javascript
-for (let i = 0, n = str.length; i < 10; i++) {
-    if (x < 10) {
-        foo();
-    }
-}
-
-function f(x: number, y: string): void { }
-```
+## Key Files
+- `apps/ai_services/services.py`: Core AI interaction logic.
+- `apps/core/models.py`: `APILog` model.
+- `infra/docker/docker-compose.yml`: Main service definition.

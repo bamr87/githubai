@@ -97,8 +97,8 @@ pythonPlatform = "Linux"
 executionEnvironments = [{ root = "src" }]
 
 [tool.pytest.ini_options]
-addopts = "--cov-report xml:coverage.xml --cov src --cov-fail-under 0 --cov-append -m 'not integration' --import-mode=importlib"
-pythonpath = ["src"]
+addopts = "--cov-report xml:coverage.xml --cov apps --cov-fail-under 0 --cov-append -m 'not integration' --import-mode=importlib"
+pythonpath = [".", "apps"]
 testpaths = "tests"
 junit_family = "xunit2"
 markers = [

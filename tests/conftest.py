@@ -1,23 +1,47 @@
 """
-This is a configuration file for pytest containing customizations and fixtures.
+Pytest configuration file for GitHubAI Django tests.
 
-In VSCode, Code Coverage is recorded in config.xml. Delete this file to reset reporting.
+Provides fixtures and configuration for testing Django apps.
 """
 
 from __future__ import annotations
 
-import unittest.mock as mock  # Added import for MagicMock
-
-import pytest  # noqa: F401  # noqa: F401
+import unittest.mock as mock
+import pytest
 from _pytest.nodes import Item
 
 
-def pytest_collection_modifyitems(items: list[Item]):
-    for item in items:
-        if "spark" in item.nodeid:
-            item.add_marker(pytest.mark.spark)
-        elif "_int_" in item.nodeid:
-            item.add_marker(pytest.mark.integration)
+def pytest_addoption(parser):
+	"""Add custom command line options."""
+	parser.addoption(
+		"--run-integration",
+		action="store_true",
+		default=False,
+		help="Run integration tests that require API keys"
+	)
+
+
+def pytest_configure(config):
+	"""Register custom markers."""
+	config.addinivalue_line(
+		"markers", "integration: mark test as integration test requiring external APIs"
+	)
+	config.addinivalue_line(
+		"markers", "spark: mark test as spark-related"
+	)
+
+
+def pytest_collection_modifyitems(config, items: list[Item]):
+	"""Modify test collection to add markers automatically."""
+	skip_integration = pytest.mark.skip(reason="need --run-integration option to run")
+
+	for item in items:
+		if "spark" in item.nodeid:
+			item.add_marker(pytest.mark.spark)
+		elif "_int_" in item.nodeid or "integration" in item.nodeid:
+			item.add_marker(pytest.mark.integration)
+			if not config.getoption("--run-integration"):
+				item.add_marker(skip_integration)
 
 
 @pytest.fixture

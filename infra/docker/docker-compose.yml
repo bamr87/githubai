@@ -1,0 +1,137 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: githubai
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d githubai"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - network
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - network
+
+  web:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile
+    container_name: web
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ../..:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    ports:
+      - "8000:8000"
+    env_file:
+      - ../../.env
+    environment:
+      - PYTHONPATH=/app/apps:${PYTHONPATH}
+      - DATABASE_URL=postgresql://user:${DB_PASSWORD:-changeme}@db:5432/githubai
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - network
+
+  celery_worker:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile
+    container_name: celery_worker
+    command: celery -A githubai worker --loglevel=info --concurrency=4
+    volumes:
+      - ../..:/app
+      - media_volume:/app/media
+    env_file:
+      - ../../.env
+    environment:
+      - PYTHONPATH=/app/apps:${PYTHONPATH}
+      - DATABASE_URL=postgresql://user:${DB_PASSWORD:-changeme}@db:5432/githubai
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - network
+
+  celery_beat:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile
+    container_name: celery_beat
+    command: celery -A githubai beat --loglevel=info
+    volumes:
+      - ../..:/app
+    env_file:
+      - ../../.env
+    environment:
+      - PYTHONPATH=/app/apps:${PYTHONPATH}
+      - DATABASE_URL=postgresql://user:${DB_PASSWORD:-changeme}@db:5432/githubai
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - network
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ../nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ../nginx/conf.d:/etc/nginx/conf.d:ro
+      - static_volume:/app/staticfiles:ro
+      - media_volume:/app/media:ro
+    depends_on:
+      - web
+    networks:
+      - network
+
+volumes:
+  postgres_data:
+  redis_data:
+  static_volume:
+  media_volume:
+
+networks:
+  network:
+    driver: bridge
