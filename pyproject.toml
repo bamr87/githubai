@@ -5,7 +5,7 @@ build-backend = "flit_core.buildapi"
 [project]
 name = "githubai"
 authors = [{ name = "Amr", email = "amr@bash-365.com" }]
-description = "Sample Python Project for creating a new Python Module"
+description = "AI-Powered GitHub Automation - Django web application for automated issue management, documentation generation, and semantic versioning"
 readme = "README.md"
 classifiers = [
     "Development Status :: 3 - Alpha",

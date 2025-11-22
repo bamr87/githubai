@@ -190,6 +190,16 @@ AI_TEMPERATURE=0.2
 AI_MAX_TOKENS=2500
 ```
 
+### Security Best Practices
+
+- **Never commit `.env` file** - It contains sensitive credentials
+- Use strong, unique `DJANGO_SECRET_KEY` for production
+- Set `DJANGO_DEBUG=False` in production environments
+- Restrict `DJANGO_ALLOWED_HOSTS` to your actual domain in production
+- Use environment-specific `.env` files (`.env.production`, `.env.staging`)
+- Rotate API keys and tokens regularly
+- Review and limit GitHub token scopes to minimum required permissions
+
 ## Development
 
 ### Run in Development Mode
@@ -246,12 +256,56 @@ The Django management commands can be used in GitHub Actions workflows. See [doc
 
 ## Contributing
 
-Contributions are welcome! Please:
+Contributions are welcome! Please follow these guidelines:
+
+### Getting Started
 
 1. Fork the repository
-2. Create a feature branch
-3. Add tests for new functionality
-4. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/your-feature-name`)
+3. Set up your development environment using Docker (see [Development](#development) section)
+
+### Coding Standards
+
+- Follow PEP 8 style guide for Python code
+- Use `black` for code formatting (120 character line length)
+- Run `flake8` and `pylint` for linting
+- Write docstrings for all public modules, classes, and functions
+- Use `snake_case` for functions and variables, `PascalCase` for classes
+- Place business logic in `services.py` files, not in views or models
+
+### Before Submitting
+
+1. Add tests for new functionality
+2. Ensure all tests pass: `docker-compose -f infra/docker/docker-compose.yml exec web pytest`
+3. Run linters:
+   ```bash
+   docker-compose -f infra/docker/docker-compose.yml exec web black .
+   docker-compose -f infra/docker/docker-compose.yml exec web flake8
+   docker-compose -f infra/docker/docker-compose.yml exec web pylint apps/
+   ```
+4. Update documentation if needed
+
+### Pull Request Process
+
+1. Update the README.md or relevant documentation with details of changes
+2. Ensure your PR description clearly explains the problem and solution
+3. Reference any related issues in your PR description (e.g., "Fixes #123")
+4. Request review from maintainers
+5. Address any feedback from code reviews
+6. Once approved, a maintainer will merge your PR
+
+### Code Review Checklist
+
+- [ ] Code follows project coding standards
+- [ ] Tests are included and passing
+- [ ] Documentation is updated
+- [ ] No unnecessary dependencies added
+- [ ] Commit messages are clear and descriptive
+- [ ] No security vulnerabilities introduced
+
+For more details, see:
+- [Issue Tracker](https://github.com/bamr87/githubai/issues)
+- [Pull Requests](https://github.com/bamr87/githubai/pulls)
 
 ## Troubleshooting
 
@@ -278,6 +332,65 @@ docker-compose -f infra/docker/docker-compose.yml exec web python manage.py migr
 docker-compose -f infra/docker/docker-compose.yml ps
 curl http://localhost:8000/health/
 ```
+
+### Port already in use
+
+If port 8000 is already in use:
+```bash
+# Find process using port 8000
+lsof -i :8000
+# Kill the process
+kill -9 <PID>
+# Or change port in docker-compose.yml
+```
+
+### Container build fails
+
+```bash
+# Clean rebuild
+docker-compose -f infra/docker/docker-compose.yml down
+docker system prune -a
+docker-compose -f infra/docker/docker-compose.yml build --no-cache
+docker-compose -f infra/docker/docker-compose.yml up
+```
+
+### Celery worker not processing tasks
+
+```bash
+# Check Celery worker logs
+docker-compose -f infra/docker/docker-compose.yml logs celery_worker
+# Restart Celery services
+docker-compose -f infra/docker/docker-compose.yml restart celery_worker celery_beat
+```
+
+### Redis connection errors
+
+```bash
+# Check Redis status
+docker-compose -f infra/docker/docker-compose.yml exec redis redis-cli ping
+# Should return "PONG"
+# Restart Redis
+docker-compose -f infra/docker/docker-compose.yml restart redis
+```
+
+### Static files not loading
+
+```bash
+# Collect static files
+docker-compose -f infra/docker/docker-compose.yml exec web python manage.py collectstatic --noinput
+```
+
+### API authentication issues
+
+Ensure your `.env` file contains valid credentials:
+- `AI_API_KEY`: Valid OpenAI or Anthropic API key
+- `GITHUB_TOKEN`: Valid GitHub personal access token with appropriate scopes
+
+### Getting help
+
+- Check existing [GitHub Issues](https://github.com/bamr87/githubai/issues)
+- Review application logs: `docker-compose -f infra/docker/docker-compose.yml logs -f`
+- Join discussions in [GitHub Discussions](https://github.com/bamr87/githubai/discussions)
 
 ## License
 
