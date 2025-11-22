@@ -177,7 +177,7 @@
   - [ ] Docker containers start successfully
   - [ ] `docker-compose exec web python manage.py auto_issue --list-chores` works
   - [ ] Dry-run mode produces output
-  - [ ] API accessible at http://localhost:8000
+  - [ ] API accessible at <http://localhost:8000>
 
 - [ ] Documentation accurate
   - [ ] README examples work

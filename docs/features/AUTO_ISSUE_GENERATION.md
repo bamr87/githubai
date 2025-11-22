@@ -160,10 +160,12 @@ CHORE_TYPES = {
 ### Service Layer Changes
 
 **New Files Created**:
+
 - `apps/core/services/auto_issue_service.py` (330 lines)
 - `apps/core/management/commands/auto_issue.py` (76 lines)
 
 **Modified Files**:
+
 - `apps/core/services/__init__.py` - Added `AutoIssueService` export
 - `apps/core/services/issue_service.py` - Added `create_issue_from_feedback()`
 - `apps/core/views.py` - Added 2 new API actions
@@ -177,6 +179,7 @@ CHORE_TYPES = {
 - `IssueFileReference` - Stores context files used in analysis
 
 New issues are marked with:
+
 - `ai_generated=True`
 - Labels: `['auto-generated', 'maintenance']` + chore-specific labels
 
@@ -187,6 +190,7 @@ New issues are marked with:
 **Endpoint**: `POST /api/issues/issues/create-auto-issue/`
 
 **Request Body**:
+
 ```json
 {
     "chore_type": "code_quality",
@@ -197,6 +201,7 @@ New issues are marked with:
 ```
 
 **Response (201)**:
+
 ```json
 {
     "id": 42,
@@ -211,6 +216,7 @@ New issues are marked with:
 **Endpoint**: `POST /api/issues/issues/create-from-feedback/`
 
 **Request Body**:
+
 ```json
 {
     "feedback_type": "bug",
@@ -222,6 +228,7 @@ New issues are marked with:
 ```
 
 **Response (201)**:
+
 ```json
 {
     "id": 43,
@@ -254,6 +261,7 @@ DEFAULT_REPO=bamr87/githubai
 ### Settings Changes
 
 No Django settings changes required. The feature uses existing:
+
 - `settings.GITHUB_TOKEN`
 - `settings.AI_API_KEY`
 - `settings.AI_PROVIDER`
@@ -451,22 +459,23 @@ docker-compose exec web pytest --cov=apps.core.services.auto_issue_service tests
 
 ### Test Scenarios Covered
 
-✅ **Service Initialization** - AutoIssueService instantiation  
-✅ **Chore Type Listing** - Available analysis types  
-✅ **Full Issue Creation** - End-to-end with mocked GitHub/AI  
-✅ **Dry Run Mode** - Analysis without GitHub issue  
-✅ **TODO Scanning** - Regex pattern matching  
-✅ **Code Quality Analysis** - Line length, docstrings  
-✅ **Label Generation** - Chore-specific labels  
-✅ **Title Generation** - Finding count integration  
-✅ **Invalid Input Handling** - Error cases  
-✅ **Feedback Issue Creation** - User feedback processing  
+✅ **Service Initialization** - AutoIssueService instantiation
+✅ **Chore Type Listing** - Available analysis types
+✅ **Full Issue Creation** - End-to-end with mocked GitHub/AI
+✅ **Dry Run Mode** - Analysis without GitHub issue
+✅ **TODO Scanning** - Regex pattern matching
+✅ **Code Quality Analysis** - Line length, docstrings
+✅ **Label Generation** - Chore-specific labels
+✅ **Title Generation** - Finding count integration
+✅ **Invalid Input Handling** - Error cases
+✅ **Feedback Issue Creation** - User feedback processing
 
 **Test Coverage**: 100% of public methods
 
 ### Manual Testing Steps
 
 1. **Setup Environment**:
+
    ```bash
    docker-compose up -d
    docker-compose exec web python manage.py migrate
@@ -477,26 +486,32 @@ docker-compose exec web pytest --cov=apps.core.services.auto_issue_service tests
    - Set `AI_API_KEY` in `.env`
 
 3. **Test Dry Run**:
+
    ```bash
    docker-compose exec web python manage.py auto_issue --chore-type code_quality --dry-run
    ```
+
    - ✅ Verify analysis output generated
    - ✅ Confirm no GitHub issue created
 
 4. **Test Live Issue Creation**:
+
    ```bash
    docker-compose exec web python manage.py auto_issue --chore-type general_review
    ```
+
    - ✅ Check GitHub for new issue
    - ✅ Verify issue has correct labels
    - ✅ Verify issue body is well-formatted
 
 5. **Test API**:
+
    ```bash
    curl -X POST http://localhost:8000/api/issues/issues/create-auto-issue/ \
        -H "Content-Type: application/json" \
        -d '{"chore_type": "todo_scan", "auto_submit": true}'
    ```
+
    - ✅ Verify 201 Created response
    - ✅ Check database for Issue record
 
@@ -509,6 +524,7 @@ docker-compose exec web pytest --cov=apps.core.services.auto_issue_service tests
 **Symptom**: `GitHubException: 401 Unauthorized`
 
 **Solution**:
+
 ```bash
 # Verify token is set
 docker-compose exec web python -c "from django.conf import settings; print(settings.GITHUB_TOKEN[:10])"
@@ -525,6 +541,7 @@ docker-compose restart web
 **Symptom**: `AIServiceException: API key invalid`
 
 **Solution**:
+
 ```bash
 # Check AI configuration
 docker-compose exec web python manage.py configure_ai --test
@@ -539,6 +556,7 @@ AI_PROVIDER=openai
 **Symptom**: Empty findings array
 
 **Solution**:
+
 - Verify repository name format: `owner/repo`
 - Check file paths are relative to repo root
 - Try without `--files` flag to use defaults
@@ -548,6 +566,7 @@ AI_PROVIDER=openai
 **Symptom**: `ModuleNotFoundError: No module named 'core.services.auto_issue_service'`
 
 **Solution**:
+
 ```bash
 # Restart Django to reload code
 docker-compose restart web
@@ -559,17 +578,20 @@ docker-compose exec web ls -la apps/core/services/auto_issue_service.py
 ### Debug Tips
 
 **Enable Verbose Logging**:
+
 ```python
 # In settings.py
 LOGGING['loggers']['githubai']['level'] = 'DEBUG'
 ```
 
 **Check Logs**:
+
 ```bash
 docker-compose logs -f web | grep auto_issue
 ```
 
 **Database Inspection**:
+
 ```bash
 docker-compose exec web python manage.py shell
 >>> from core.models import Issue
@@ -613,13 +635,13 @@ docker-compose exec web python manage.py shell
 
 ### Security Best Practices Applied
 
-✅ **Input Validation**: All user inputs validated via serializers  
-✅ **SQL Injection Protection**: Django ORM used exclusively  
-✅ **API Key Storage**: Environment variables only  
-✅ **Rate Limiting**: Inherits from Django REST Framework settings  
-✅ **Error Handling**: No sensitive data in error messages  
-✅ **Logging**: Tokens/keys excluded from logs  
-✅ **HTTPS**: Required for production GitHub/AI API calls  
+✅ **Input Validation**: All user inputs validated via serializers
+✅ **SQL Injection Protection**: Django ORM used exclusively
+✅ **API Key Storage**: Environment variables only
+✅ **Rate Limiting**: Inherits from Django REST Framework settings
+✅ **Error Handling**: No sensitive data in error messages
+✅ **Logging**: Tokens/keys excluded from logs
+✅ **HTTPS**: Required for production GitHub/AI API calls
 
 **Recommendations**:
 
@@ -659,16 +681,19 @@ docker-compose exec web python manage.py shell
 ### Resource Requirements
 
 **Memory Usage**:
+
 - Base: ~50MB per request
 - Per file analyzed: ~1-5MB
 - AI model overhead: ~10MB
 
 **CPU Usage**:
+
 - Regex processing: Low
 - File parsing: Low-Medium
 - Network I/O: Primary bottleneck
 
 **Database Impact**:
+
 - 1 Issue record per generation (~2KB)
 - N IssueFileReference records (~5KB each)
 - Minimal database load

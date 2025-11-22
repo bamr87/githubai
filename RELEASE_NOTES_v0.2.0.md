@@ -62,6 +62,7 @@ curl -X POST http://localhost:8000/api/issues/issues/create-from-feedback/ \
 ```
 
 Perfect for integrating with:
+
 - User feedback forms
 - Support ticket systems
 - In-app feedback widgets
@@ -75,6 +76,7 @@ Two new REST API endpoints:
 - `POST /api/issues/issues/create-from-feedback/` - User feedback processing
 
 Both endpoints support:
+
 - Dry-run mode for preview
 - Custom file targeting
 - AI-powered content refinement
@@ -113,6 +115,7 @@ New documentation added:
 ## 💾 Database Changes
 
 **No database migrations required**. The feature uses existing models:
+
 - `Issue` - Stores auto-generated and feedback issues
 - `IssueFileReference` - Stores context files
 
@@ -240,7 +243,7 @@ async function submitFeedback(formData) {
             description: formData.details
         })
     });
-    
+
     if (response.ok) {
         const issue = await response.json();
         alert(`Issue #${issue.github_issue_number} created!`);
@@ -259,7 +262,7 @@ async function submitFeedback(formData) {
 ## 📊 Statistics
 
 - **Files Added**: 6 (services, commands, tests, docs)
-- **Files Modified**: 5 (README, views, serializers, __init__)
+- **Files Modified**: 5 (README, views, serializers, **init**)
 - **Lines of Code**: ~900 (service + tests + docs)
 - **Test Coverage**: 100% of public methods
 - **Documentation**: ~2,000 lines

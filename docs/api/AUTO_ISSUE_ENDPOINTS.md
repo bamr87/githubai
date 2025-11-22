@@ -575,6 +575,7 @@ Ensure environment variables are set:
 ### Integration Scenarios
 
 **1. Support Ticket System:**
+
 ```python
 # Convert support ticket to GitHub issue
 ticket = get_support_ticket(ticket_id)
@@ -587,6 +588,7 @@ create_feedback_issue(
 ```
 
 **2. In-App Feedback Form:**
+
 ```javascript
 // User feedback button handler
 document.querySelector('#feedback-btn').addEventListener('click', () => {
@@ -602,6 +604,7 @@ document.querySelector('#feedback-btn').addEventListener('click', () => {
 ```
 
 **3. Email-to-Issue:**
+
 ```python
 # Parse email and create issue
 def process_feedback_email(email):
