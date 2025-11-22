@@ -1,5 +1,5 @@
 # Django and Core Dependencies
-Django==4.2.7
+Django==4.2.26
 psycopg2-binary==2.9.9
 django-environ==0.11.2
 gunicorn==21.2.0
