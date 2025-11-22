@@ -57,6 +57,7 @@ class AIResponse(TimeStampedModel):
     user_prompt = models.TextField()
     response_content = models.TextField()
     model = models.CharField(max_length=50, default='gpt-4o-mini')
+    provider = models.CharField(max_length=20, default='openai', help_text='AI provider used (openai, xai, etc.)')
     temperature = models.FloatField(default=0.2)
     max_tokens = models.IntegerField(default=2500)
     tokens_used = models.IntegerField(null=True, blank=True)
@@ -66,11 +67,12 @@ class AIResponse(TimeStampedModel):
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['prompt_hash']),
+            models.Index(fields=['provider', '-created_at']),
             models.Index(fields=['-created_at']),
         ]
 
     def __str__(self):
-        return f"AI Response [{self.model}] - {self.prompt_hash[:8]}"
+        return f"AI Response [{self.provider}:{self.model}] - {self.prompt_hash[:8]}"
 
     def increment_cache_hit(self):
         """Increment the cache hit counter"""

@@ -22,7 +22,9 @@ jobs:
           echo "DEBUG=True" > .env
           echo "SECRET_KEY=github-actions-key" >> .env
           echo "DATABASE_URL=sqlite:///db.sqlite3" >> .env
-          echo "AI_API_KEY=${{ secrets.AI_API_KEY }}" >> .env
+          echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
+          echo "XAI_API_KEY=${{ secrets.XAI_API_KEY }}" >> .env
+          echo "AI_PROVIDER=openai" >> .env
           echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> .env
 
       - name: Set up Docker Buildx

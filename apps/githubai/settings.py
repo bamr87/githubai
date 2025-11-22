@@ -218,10 +218,28 @@ logs_dir = BASE_DIR / "logs"
 logs_dir.mkdir(exist_ok=True)
 
 # GitHubAI specific settings
-AI_API_KEY = env("AI_API_KEY", default="")
-AI_MODEL = env("AI_MODEL", default="gpt-4o-mini")
-AI_TEMPERATURE = env.float("AI_TEMPERATURE", default=0.2)
-AI_MAX_TOKENS = env.int("AI_MAX_TOKENS", default=2500)
+# AI Provider Configuration
+AI_PROVIDER = env("AI_PROVIDER", default="openai")
+
+# OpenAI Configuration
+OPENAI_API_KEY = env("OPENAI_API_KEY", default="")
+OPENAI_MODEL = env("OPENAI_MODEL", default="gpt-4o-mini")
+OPENAI_TEMPERATURE = env.float("OPENAI_TEMPERATURE", default=0.2)
+OPENAI_MAX_TOKENS = env.int("OPENAI_MAX_TOKENS", default=2500)
+OPENAI_BASE_URL = env("OPENAI_BASE_URL", default="https://api.openai.com/v1")
+
+# XAI Configuration
+XAI_API_KEY = env("XAI_API_KEY", default="")
+XAI_MODEL = env("XAI_MODEL", default="grok-beta")
+XAI_TEMPERATURE = env.float("XAI_TEMPERATURE", default=0.2)
+XAI_MAX_TOKENS = env.int("XAI_MAX_TOKENS", default=2500)
+XAI_BASE_URL = env("XAI_BASE_URL", default="https://api.x.ai/v1")
+
+# Legacy settings for backward compatibility
+AI_API_KEY = env("AI_API_KEY", default=OPENAI_API_KEY)
+AI_MODEL = env("AI_MODEL", default=OPENAI_MODEL)
+AI_TEMPERATURE = env.float("AI_TEMPERATURE", default=OPENAI_TEMPERATURE)
+AI_MAX_TOKENS = env.int("AI_MAX_TOKENS", default=OPENAI_MAX_TOKENS)
 
 GITHUB_TOKEN = env("GITHUB_TOKEN", default="")
 GITHUB_REPO_OWNER = env("GITHUB_REPO_OWNER", default="bamr87")
