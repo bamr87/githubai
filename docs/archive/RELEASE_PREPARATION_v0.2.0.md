@@ -12,7 +12,7 @@ The **Auto Issue Generation** feature enables AI-powered automatic repository an
 
 **Justification**: This release adds significant new features in a backward-compatible manner.
 
-#### ✅ Qualifies as MINOR because:
+#### ✅ Qualifies as MINOR because
 
 - **New features added** (backward compatible):
   - `AutoIssueService` with 6 chore types
@@ -79,7 +79,7 @@ All documentation has been created following the feature documentation prompt re
    - Coverage summary
    - Manual testing procedures
 
-5. **`RELEASE_NOTES_v0.2.0.md`** (300+ lines)
+5. **`docs/RELEASE_NOTES_v0.2.0.md`** (300+ lines)
    - User-facing release notes
    - Feature highlights
    - Usage examples
@@ -168,7 +168,7 @@ git push origin release/v0.2.0
 # "Release v0.2.0: Auto Issue Generation Feature"
 
 # PR Description should include:
-# - Summary of changes (copy from RELEASE_NOTES)
+# - Summary of changes (copy from docs/RELEASE_NOTES_v0.2.0.md)
 # - Link to documentation (docs/AUTO_ISSUE_FEATURE.md)
 # - Testing completed (reference TESTING_CHECKLIST.md)
 # - No breaking changes
@@ -216,7 +216,7 @@ Documentation:
 This is a MINOR release (backward compatible).
 No breaking changes. All existing functionality preserved.
 
-See RELEASE_NOTES_v0.2.0.md for full details."
+See docs/RELEASE_NOTES_v0.2.0.md for full details."
 
 # Push tag to remote
 git push origin v0.2.0
@@ -230,7 +230,7 @@ git push origin v0.2.0
 # 2. Click "Draft a new release"
 # 3. Select tag: v0.2.0
 # 4. Release title: "v0.2.0 - Auto Issue Generation"
-# 5. Description: Paste contents of RELEASE_NOTES_v0.2.0.md
+# 5. Description: Paste contents of docs/RELEASE_NOTES_v0.2.0.md
 # 6. Attach any binaries (if applicable)
 # 7. Click "Publish release"
 
@@ -317,6 +317,7 @@ tests/test_issues_service.py::TestIssueService
 ### Testing Recommendations
 
 **Before Release**:
+
 1. ✅ Unit tests complete and passing
 2. ✅ Integration tests complete (with mocks)
 3. ⏳ Manual testing with live APIs (requires GitHub token)
@@ -324,6 +325,7 @@ tests/test_issues_service.py::TestIssueService
 5. ⏳ Security audit completed
 
 **Post-Release**:
+
 1. User acceptance testing with real data
 2. Monitor error rates and performance
 3. Collect feedback on AI-generated content quality
@@ -347,13 +349,13 @@ tests/test_issues_service.py::TestIssueService
 
 ### Mitigation Strategies Implemented
 
-✅ **Input Validation**: Django REST Framework serializers  
-✅ **Error Handling**: Comprehensive try-except blocks  
-✅ **Logging**: All operations logged (without sensitive data)  
-✅ **Dry-Run Mode**: Preview before creating issues  
-✅ **Rate Limit Awareness**: Document GitHub API limits  
-✅ **Token Security**: Environment variables, never exposed  
-✅ **Backward Compatibility**: No breaking changes  
+✅ **Input Validation**: Django REST Framework serializers
+✅ **Error Handling**: Comprehensive try-except blocks
+✅ **Logging**: All operations logged (without sensitive data)
+✅ **Dry-Run Mode**: Preview before creating issues
+✅ **Rate Limit Awareness**: Document GitHub API limits
+✅ **Token Security**: Environment variables, never exposed
+✅ **Backward Compatibility**: No breaking changes
 
 ### Rollback Plan
 
@@ -380,18 +382,21 @@ git push origin main
 ### Metrics to Watch
 
 **Application Metrics**:
+
 - Request rate to `/create-auto-issue/` and `/create-from-feedback/`
 - Response times (target: <30s for auto-issue, <10s for feedback)
 - Error rates (target: <5%)
 - Success rate of GitHub issue creation
 
 **External Service Metrics**:
+
 - GitHub API rate limit usage
 - GitHub API error rates
 - AI API usage and costs
 - AI API response times
 
 **Business Metrics**:
+
 - Number of auto-issues created per day
 - Number of feedback issues created
 - Chore type distribution
@@ -400,12 +405,14 @@ git push origin main
 ### Alerts to Configure
 
 **Critical Alerts**:
+
 - GitHub API rate limit >80% consumed
 - Error rate >10%
 - AI API costs >$X per day
 - Response time >60 seconds
 
 **Warning Alerts**:
+
 - GitHub API rate limit >50%
 - Error rate >5%
 - AI API costs >$Y per week
@@ -449,7 +456,7 @@ All documentation artifacts with summaries:
 
 | Document | Location | Purpose | Audience |
 |----------|----------|---------|----------|
-| **Release Notes** | `RELEASE_NOTES_v0.2.0.md` | User-facing release announcement | All users |
+| **Release Notes** | `docs/RELEASE_NOTES_v0.2.0.md` | User-facing release announcement | All users |
 | **Auto Issue Feature Guide** | `docs/AUTO_ISSUE_FEATURE.md` | Complete user guide | Developers/Operators |
 | **API Documentation** | `docs/api/AUTO_ISSUE_ENDPOINTS.md` | API reference | API consumers |
 | **README Updates** | `README.md` | Quick start and examples | New users |
@@ -558,18 +565,21 @@ After successful release:
 The release is considered successful if:
 
 ✅ **Technical**:
+
 - All tests passing
 - No critical bugs reported
 - Response times <30s
 - Error rate <5%
 
 ✅ **Business**:
+
 - Feature adoption >10 uses in first week
 - Positive user feedback
 - GitHub issues created successfully
 - AI content quality acceptable
 
 ✅ **Operational**:
+
 - No production incidents
 - Monitoring in place
 - Documentation complete
@@ -579,14 +589,15 @@ The release is considered successful if:
 
 ## Summary
 
-**Feature**: Auto Issue Generation with AI-powered analysis and feedback processing  
-**Version**: 0.1.14 → **0.2.0** (MINOR)  
-**Status**: ✅ **Ready for Release**  
-**Test Coverage**: 100% (11/11 tests passing)  
-**Breaking Changes**: None  
-**Documentation**: Complete  
+**Feature**: Auto Issue Generation with AI-powered analysis and feedback processing
+**Version**: 0.1.14 → **0.2.0** (MINOR)
+**Status**: ✅ **Ready for Release**
+**Test Coverage**: 100% (11/11 tests passing)
+**Breaking Changes**: None
+**Documentation**: Complete
 
 **Next Steps**:
+
 1. Review this summary
 2. Execute git commands from section 3
 3. Create GitHub release
@@ -595,6 +606,6 @@ The release is considered successful if:
 
 ---
 
-**Generated**: 2025-11-21  
-**Author**: GitHub Copilot  
+**Generated**: 2025-11-21
+**Author**: GitHub Copilot
 **Prompt**: Feature Documentation and Release Preparation

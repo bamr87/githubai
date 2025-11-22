@@ -271,22 +271,58 @@ docker-compose -f infra/docker/docker-compose.yml logs -f celery_worker
 
 ## GitHub Actions Integration
 
-The Django management commands can be used in GitHub Actions workflows. See [documentation/DJANGO_IMPLEMENTATION.md](documentation/DJANGO_IMPLEMENTATION.md) for examples.
+The Django management commands can be used in GitHub Actions workflows. See [Development Documentation](docs/development/) for examples.
 
 ## Documentation
 
-- [documentation/DJANGO_IMPLEMENTATION.md](documentation/DJANGO_IMPLEMENTATION.md) - Complete implementation guide
-- [documentation/CHANGELOG_AI.md](documentation/CHANGELOG_AI.md) - AI-generated changelog
-- Admin interface - Interactive documentation at `/admin/`
+### 📚 Comprehensive Documentation
+
+- **[Getting Started](docs/GETTING_STARTED.md)** - Quick setup guide for new users
+- **[Documentation Index](docs/README.md)** - Complete documentation navigation
+
+### 📖 User Guides
+
+- **[Auto Issue Feature](docs/guides/auto-issue-feature.md)** - Automated repository analysis
+- **[AI Chat Interface](docs/guides/chat-interface.md)** - Using the web chat interface
+- **[AI Provider Configuration](docs/guides/ai-provider-configuration.md)** - Configure OpenAI, XAI, etc.
+- **[Troubleshooting](docs/guides/troubleshooting.md)** - Common issues and solutions
+
+### 🔌 API Reference
+
+- **[Auto Issue Endpoints](docs/api/AUTO_ISSUE_ENDPOINTS.md)** - REST API for auto-issue generation
+- **[Chat Endpoint](docs/api/CHAT_ENDPOINT.md)** - Conversational AI API
+- **[Interactive API](http://localhost:8000/api/)** - Browse API when server is running
+
+### 🛠️ Development
+
+- **[Django Implementation](docs/development/django-implementation.md)** - Architecture and design
+- **[Testing Guide](docs/development/testing-guide.md)** - How to test features
+- **[Contributing](docs/development/contributing.md)** - How to contribute
+
+### 📋 Release Notes
+
+- **[Changelog](docs/releases/CHANGELOG.md)** - All version changes
+- **[v0.3.0 Release](docs/releases/v0.3.0.md)** - AI Chat Frontend
+- **[v0.2.0 Release](docs/releases/v0.2.0.md)** - Auto Issue Generation
 
 ## Contributing
 
-Contributions are welcome! Please:
+Contributions are welcome! Please see our [Contributing Guide](docs/development/contributing.md) for details on:
+
+- Development setup
+- Coding standards
+- Testing guidelines
+- Pull request process
+
+Quick start:
 
 1. Fork the repository
-2. Create a feature branch
-3. Add tests for new functionality
-4. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Add tests for new functionality
+5. Submit a pull request
+
+See [docs/development/contributing.md](docs/development/contributing.md) for complete guidelines.
 
 ## Troubleshooting
 

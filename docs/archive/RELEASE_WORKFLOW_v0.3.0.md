@@ -108,7 +108,7 @@ git add docs/api/CHAT_ENDPOINT.md
 git add docs/testing/AI_CHAT_TESTING.md
 git add docs/FRONTEND_QUICKSTART.md
 git add docs/FRONTEND_IMPLEMENTATION.md
-git add RELEASE_NOTES_v0.3.0.md
+git add docs/RELEASE_NOTES_v0.3.0.md
 
 # Stage modified files
 git add apps/core/views.py
@@ -220,7 +220,7 @@ Adds complete AI chat frontend with React and Ant Design, plus REST API endpoint
 - [x] Feature documentation: `docs/features/AI_CHAT_FRONTEND.md`
 - [x] API documentation: `docs/api/CHAT_ENDPOINT.md`
 - [x] Testing guide: `docs/testing/AI_CHAT_TESTING.md`
-- [x] Release notes: `RELEASE_NOTES_v0.3.0.md`
+- [x] Release notes: `docs/RELEASE_NOTES_v0.3.0.md`
 - [x] Changelog updated: `CHANGELOG.md`
 
 ## Migration Notes
@@ -243,7 +243,7 @@ If issues arise:
 
 - Feature Documentation: [AI_CHAT_FRONTEND.md](docs/features/AI_CHAT_FRONTEND.md)
 - API Reference: [CHAT_ENDPOINT.md](docs/api/CHAT_ENDPOINT.md)
-- Release Notes: [RELEASE_NOTES_v0.3.0.md](RELEASE_NOTES_v0.3.0.md)
+- Release Notes: [RELEASE_NOTES_v0.3.0.md](docs/RELEASE_NOTES_v0.3.0.md)
 
 ## Checklist
 
@@ -309,7 +309,7 @@ git tag -a v0.3.0 -m "Release version 0.3.0: AI Chat Frontend
 - docs/features/AI_CHAT_FRONTEND.md
 - docs/api/CHAT_ENDPOINT.md
 - docs/testing/AI_CHAT_TESTING.md
-- RELEASE_NOTES_v0.3.0.md
+- docs/RELEASE_NOTES_v0.3.0.md
 
 ## Migration
 No migration required. Fully backward compatible.
@@ -317,7 +317,7 @@ No migration required. Fully backward compatible.
 ## Security
 ⚠️ Add authentication before production deployment.
 
-Full release notes: RELEASE_NOTES_v0.3.0.md"
+Full release notes: docs/RELEASE_NOTES_v0.3.0.md"
 
 # Push tag to remote
 git push origin v0.3.0
@@ -333,7 +333,7 @@ git show v0.3.0
 2. Click "Draft a new release"
 3. Select tag: `v0.3.0`
 4. Release title: `v0.3.0 - AI Chat Frontend`
-5. Description: Copy from `RELEASE_NOTES_v0.3.0.md`
+5. Description: Copy from `docs/RELEASE_NOTES_v0.3.0.md`
 6. Attach any release assets (optional)
 7. Mark as pre-release if needed
 8. Click "Publish release"
