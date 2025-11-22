@@ -10,9 +10,12 @@ from .serializers import (
     IssueSerializer,
     IssueTemplateSerializer,
     CreateSubIssueSerializer,
-    CreateREADMEUpdateSerializer
+    CreateREADMEUpdateSerializer,
+    CreateFeedbackIssueSerializer,
+    CreateAutoIssueSerializer,
 )
 from .services import IssueService
+from .services import AutoIssueService
 
 
 class HealthCheckView(APIView):
@@ -99,3 +102,51 @@ class IssueViewSet(viewsets.ModelViewSet):
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+    @action(detail=False, methods=["post"], url_path="create-from-feedback")
+    def create_from_feedback(self, request):
+        """Create an issue directly from user feedback using AI refinement."""
+        serializer = CreateFeedbackIssueSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        data = serializer.validated_data
+
+        try:
+            service = IssueService()
+            issue = service.create_issue_from_feedback(
+                feedback_type=data["feedback_type"],
+                summary=data["summary"],
+                description=data["description"],
+                repo=data.get("repo"),
+                context_files=data.get("context_files") or [],
+            )
+            return Response(IssueSerializer(issue).data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=["post"], url_path="create-auto-issue")
+    def create_auto_issue(self, request):
+        """Automatically analyze repository and create maintenance issue."""
+        serializer = CreateAutoIssueSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        data = serializer.validated_data
+
+        try:
+            service = AutoIssueService()
+            issue = service.analyze_repo_and_create_issue(
+                repo=data.get("repo", "bamr87/githubai"),
+                chore_type=data["chore_type"],
+                context_files=data.get("context_files"),
+                auto_submit=data.get("auto_submit", True),
+            )
+
+            if not data.get("auto_submit", True):
+                return Response(
+                    {"analysis": issue, "message": "Dry run - no issue created"},
+                    status=status.HTTP_200_OK
+                )
+
+            return Response(IssueSerializer(issue).data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

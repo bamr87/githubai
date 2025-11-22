@@ -189,6 +189,101 @@ class IssueService:
         logger.info(f"Created README update issue #{issue.github_issue_number}")
         return issue
 
+    def create_issue_from_feedback(
+        self,
+        feedback_type,
+        summary,
+        description,
+        repo=None,
+        context_files=None,
+    ):
+        """Create a GitHub issue from raw user feedback using AI.
+
+        Args:
+            feedback_type: "bug" or "feature" (mapped to Issue.issue_type)
+            summary: Short user-provided summary used as base title
+            description: Detailed feedback text from the user
+            repo: Optional repo string (defaults to bamr87/githubai)
+            context_files: Optional list of repo file paths to include as context
+        """
+
+        repo = repo or getattr(settings, "DEFAULT_REPO", "bamr87/githubai")
+        context_files = context_files or []
+
+        file_refs_content = {}
+        for file_path in context_files:
+            try:
+                content = self.github_service.fetch_file_contents(repo, file_path)
+                file_refs_content[file_path] = content
+            except Exception as e:
+                logger.warning(f"Could not fetch context file {file_path}: {e}")
+
+        context_block = ""
+        if file_refs_content:
+            context_block = "\n\nRepo Context Files:\n" + "\n\n".join(
+                [f"File: {path}\n{content}" for path, content in file_refs_content.items()]
+            )
+
+        system_instructions = (
+            "You are an assistant that converts raw user feedback about a GitHub "
+            "project into a well-structured GitHub issue. "
+            "Return GitHub-flavored Markdown with clear sections such as Summary, "
+            "Details, Steps to Reproduce (for bugs), Expected vs Actual, or "
+            "Motivation and Acceptance Criteria (for features). Do not include "
+            "front-matter or YAML, only the Markdown body."
+        )
+
+        user_instructions = (
+            f"Feedback type: {feedback_type}\n"
+            f"Short summary: {summary}\n\n"
+            f"Detailed feedback:\n{description}\n"
+            f"{context_block}"
+        )
+
+        ai_generated_body = self.ai_service.call_ai_chat(
+            system_instructions,
+            user_instructions,
+        )
+
+        issue_type = "bug" if feedback_type == "bug" else "feature"
+        labels = ["ai-generated", issue_type]
+
+        github_issue = self.github_service.create_github_issue(
+            repo=repo,
+            title=summary,
+            body=ai_generated_body,
+            parent_issue_number=None,
+            labels=labels,
+        )
+
+        issue = Issue.objects.create(
+            github_repo=repo,
+            github_issue_number=github_issue["number"],
+            title=summary,
+            body=ai_generated_body,
+            issue_type=issue_type,
+            labels=labels,
+            ai_generated=True,
+            ai_prompt_used=system_instructions,
+            ai_response=ai_generated_body,
+            html_url=github_issue.get("html_url"),
+        )
+
+        for file_path, content in file_refs_content.items():
+            IssueFileReference.objects.create(
+                issue=issue,
+                file_path=file_path,
+                content=content,
+            )
+
+        logger.info(
+            "Created feedback-based issue #%s (%s) in %s",
+            issue.github_issue_number,
+            issue_type,
+            repo,
+        )
+        return issue
+
     def _extract_template_name(self, issue_body):
         """Extract template name from issue body comment"""
         match = re.search(r"<!-- template:\s*(.+\.md)\s*-->", issue_body)

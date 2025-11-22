@@ -157,6 +157,44 @@ class TestIssueService:
         assert file_ref.file_path == "README.md"
         assert issue.file_references.count() == 1
 
+    @patch("core.services.issue_service.GitHubService")
+    @patch("core.services.issue_service.AIService")
+    def test_create_issue_from_feedback_creates_github_and_db_issue(
+        self, mock_ai_class, mock_github_class
+    ):
+        """IssueService.create_issue_from_feedback should call AI and GitHub and persist issue."""
+
+        mock_github_instance = Mock()
+        mock_github_instance.fetch_file_contents.return_value = "# README content"
+        mock_github_instance.create_github_issue.return_value = {
+            "number": 200,
+            "html_url": "https://github.com/owner/repo/issues/200",
+        }
+        mock_github_class.return_value = mock_github_instance
+
+        mock_ai_instance = Mock()
+        mock_ai_instance.call_ai_chat.return_value = "# Refined issue body"
+        mock_ai_class.return_value = mock_ai_instance
+
+        service = IssueService()
+        issue = service.create_issue_from_feedback(
+            feedback_type="bug",
+            summary="Login button not working",
+            description="When I click login, nothing happens.",
+            repo=self.repo,
+            context_files=["README.md"],
+        )
+
+        assert issue.github_issue_number == 200
+        assert issue.issue_type == "bug"
+        assert issue.ai_generated is True
+        assert Issue.objects.filter(github_issue_number=200).exists()
+        mock_ai_instance.call_ai_chat.assert_called_once()
+        mock_github_instance.create_github_issue.assert_called_once()
+
+        # Context file should be stored on IssueFileReference
+        assert issue.file_references.count() == 1
+
 
 class TestIssueServiceIntegration(TestCase):
     """Integration tests for IssueService (requires API keys)."""

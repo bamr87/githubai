@@ -8,6 +8,12 @@ A production-ready Django web application that leverages AI models to automate G
 
 - Automatically generates structured sub-issues (functional requirements, test plans, etc.) from parent issues
 - Creates AI-powered README updates by analyzing repository files
+- **Auto-Issue Generation**: Automatically analyzes repository for maintenance tasks and creates GitHub issues
+  - Code quality analysis
+  - TODO/FIXME scanning
+  - Documentation gap detection
+  - Dependency checks
+  - Test coverage analysis
 - YAML-driven templates for customizable and consistent issue generation
 - Full REST API and web interface for issue management
 
@@ -100,6 +106,12 @@ docker-compose exec web python manage.py generate_docs --commit HEAD
 # Bump version
 docker-compose exec web python manage.py bump_version
 docker-compose exec web python manage.py bump_version --type minor
+
+# Auto-generate repository maintenance issues
+docker-compose exec web python manage.py auto_issue --list-chores
+docker-compose exec web python manage.py auto_issue --chore-type code_quality
+docker-compose exec web python manage.py auto_issue --chore-type todo_scan --files "apps/core/services/*.py"
+docker-compose exec web python manage.py auto_issue --chore-type general_review --dry-run
 ```
 
 ### REST API
@@ -118,6 +130,27 @@ curl -X POST http://localhost:8000/api/issues/issues/create-sub-issue/ \
         "repo": "owner/repo",
         "parent_issue_number": 123,
         "file_refs": ["README.md"]
+    }'
+
+# Create GitHub issue from user feedback
+curl -X POST http://localhost:8000/api/issues/issues/create-from-feedback/ \
+    -H "Content-Type: application/json" \
+    -d '{
+        "feedback_type": "bug",
+        "summary": "Login button not working",
+        "description": "When I click the login button on the homepage, nothing happens.",
+        "repo": "owner/repo",
+        "context_files": ["README.md"]
+    }'
+
+# Auto-generate repository maintenance issue
+curl -X POST http://localhost:8000/api/issues/issues/create-auto-issue/ \
+    -H "Content-Type: application/json" \
+    -d '{
+        "chore_type": "code_quality",
+        "repo": "bamr87/githubai",
+        "context_files": ["apps/core/services/issue_service.py"],
+        "auto_submit": true
     }'
 
 # List templates
@@ -227,6 +260,8 @@ docker-compose -f infra/docker/docker-compose.yml logs -f celery_worker
 - `GET /api/issues/issues/{id}/` - Get issue details
 - `POST /api/issues/issues/create-sub-issue/` - Create sub-issue
 - `POST /api/issues/issues/create-readme-update/` - Create README update
+- `POST /api/issues/issues/create-from-feedback/` - Create issue from user feedback
+- `POST /api/issues/issues/create-auto-issue/` - Auto-generate maintenance issue
 - `GET /api/issues/templates/` - List issue templates
 
 ### System

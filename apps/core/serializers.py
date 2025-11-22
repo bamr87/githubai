@@ -76,3 +76,37 @@ class CreateREADMEUpdateSerializer(serializers.Serializer):
     repo = serializers.CharField(max_length=200, default='bamr87/githubai')
     additional_files = serializers.ListField(child=serializers.CharField(), required=False)
 
+
+class CreateFeedbackIssueSerializer(serializers.Serializer):
+    """Serializer for creating issues from user feedback"""
+
+    FEEDBACK_TYPES = ("bug", "feature")
+
+    feedback_type = serializers.ChoiceField(choices=FEEDBACK_TYPES)
+    summary = serializers.CharField(max_length=200)
+    description = serializers.CharField()
+    repo = serializers.CharField(max_length=200, required=False, default='bamr87/githubai')
+    context_files = serializers.ListField(
+        child=serializers.CharField(), required=False, allow_empty=True
+    )
+
+
+class CreateAutoIssueSerializer(serializers.Serializer):
+    """Serializer for creating auto-generated issues from repo analysis"""
+
+    CHORE_TYPES = (
+        'code_quality',
+        'todo_scan',
+        'documentation',
+        'dependencies',
+        'test_coverage',
+        'general_review',
+    )
+
+    chore_type = serializers.ChoiceField(choices=CHORE_TYPES, default='general_review')
+    repo = serializers.CharField(max_length=200, required=False, default='bamr87/githubai')
+    context_files = serializers.ListField(
+        child=serializers.CharField(), required=False, allow_empty=True
+    )
+    auto_submit = serializers.BooleanField(default=True)
+
