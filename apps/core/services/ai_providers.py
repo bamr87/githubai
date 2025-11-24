@@ -166,12 +166,22 @@ class AIProviderFactory:
     }
 
     @classmethod
-    def create_provider(cls, provider_name: Optional[str] = None) -> AIProvider:
+    def create_provider(cls, provider_name: Optional[str] = None,
+                       api_key: Optional[str] = None,
+                       model: Optional[str] = None,
+                       temperature: Optional[float] = None,
+                       max_tokens: Optional[int] = None,
+                       base_url: Optional[str] = None) -> AIProvider:
         """
         Create an AI provider instance based on configuration
 
         Args:
             provider_name: Optional provider name override
+            api_key: Optional API key override
+            model: Optional model override
+            temperature: Optional temperature override
+            max_tokens: Optional max_tokens override
+            base_url: Optional base_url override
 
         Returns:
             AIProvider instance
@@ -186,19 +196,19 @@ class AIProviderFactory:
 
         provider_class = cls.PROVIDERS[provider_name]
 
-        # Get provider-specific configuration
+        # Get provider-specific configuration from settings (if not overridden)
         if provider_name == "openai":
-            api_key = settings.OPENAI_API_KEY
-            model = settings.OPENAI_MODEL
-            temperature = settings.OPENAI_TEMPERATURE
-            max_tokens = settings.OPENAI_MAX_TOKENS
-            base_url = getattr(settings, 'OPENAI_BASE_URL', None)
+            api_key = api_key or settings.OPENAI_API_KEY
+            model = model or settings.OPENAI_MODEL
+            temperature = temperature if temperature is not None else settings.OPENAI_TEMPERATURE
+            max_tokens = max_tokens or settings.OPENAI_MAX_TOKENS
+            base_url = base_url or getattr(settings, 'OPENAI_BASE_URL', None)
         elif provider_name == "xai":
-            api_key = settings.XAI_API_KEY
-            model = settings.XAI_MODEL
-            temperature = settings.XAI_TEMPERATURE
-            max_tokens = settings.XAI_MAX_TOKENS
-            base_url = getattr(settings, 'XAI_BASE_URL', "https://api.x.ai/v1")
+            api_key = api_key or settings.XAI_API_KEY
+            model = model or settings.XAI_MODEL
+            temperature = temperature if temperature is not None else settings.XAI_TEMPERATURE
+            max_tokens = max_tokens or settings.XAI_MAX_TOKENS
+            base_url = base_url or getattr(settings, 'XAI_BASE_URL', "https://api.x.ai/v1")
         else:
             raise AIProviderError(f"Provider configuration not found for: {provider_name}")
 
