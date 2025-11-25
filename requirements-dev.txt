@@ -1,49 +1,49 @@
 # Django and Core Dependencies
-Django==4.2.7
-psycopg2-binary==2.9.9
-django-environ==0.11.2
-gunicorn==21.2.0
-whitenoise==6.6.0
+Django~=5.1.0
+psycopg[binary]~=3.2.0
+django-environ~=0.11.0
+gunicorn~=23.0.0
+whitenoise~=6.8.0
 
 # API and REST
-djangorestframework==3.14.0
-django-filter==23.5
-django-cors-headers==4.3.1
+djangorestframework~=3.15.0
+django-filter~=24.3.0
+django-cors-headers~=4.6.0
 
 # Celery and Task Queue
-celery==5.3.4
-redis==5.0.1
-django-celery-beat==2.5.0
-django-celery-results==2.5.1
+celery~=5.4.0
+redis~=5.2.0
+django-celery-beat~=2.7.0
+django-celery-results~=2.5.0
 
 # AI and External APIs
-openai>=1.0.0
-PyGithub>=2.0.0
-requests>=2.31.0
-GitPython>=3.1.0
+openai~=1.54.0
+PyGithub~=2.4.0
+requests~=2.32.0
+GitPython~=3.1.0
 
 # Testing Tools
-pytest==7.3.1
-pytest-django==4.7.0
-pytest-cov==4.0.0
-pytest-mock<3.10.1
-pytest-playwright
-coverage
-axe-playwright-python
-selenium
-beautifulsoup4
+pytest~=8.3.0
+pytest-django~=4.9.0
+pytest-cov~=6.0.0
+pytest-mock~=3.14.0
+pytest-playwright~=0.6.0
+coverage~=7.6.0
+axe-playwright-python~=0.1.0
+selenium~=4.26.0
+beautifulsoup4~=4.12.0
 
 # Linters
-ruff
-black==23.3.0
-flake8
-pylint==2.17.4
+ruff~=0.7.0
+black~=24.10.0
+flake8~=7.1.0
+pylint~=3.3.0
 
 # Development Tools
-cruft
-pip-tools
-factory-boy==3.3.0
+cruft~=2.15.0
+pip-tools~=7.4.0
+factory-boy~=3.3.0
 
 # Build and Release
-build
-twine
+build~=1.2.0
+twine~=6.0.0

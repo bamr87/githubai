@@ -1,7 +1,7 @@
 # Multi-stage Dockerfile for GitHubAI Django Application
 
 # Stage 1: Build stage
-FROM python:3.11-slim as builder
+FROM python:3.12-slim as builder
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -26,7 +26,7 @@ RUN pip install --upgrade pip setuptools wheel && \
     pip install --user -r requirements-dev.txt
 
 # Stage 2: Runtime stage
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \

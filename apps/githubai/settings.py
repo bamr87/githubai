@@ -1,13 +1,13 @@
 """
 Django settings for githubai.
 
-Generated for Django 4.2
+Generated for Django 5.1
 
 For more information on this file, see
-https://docs.djangoproject.com/en/4.2/topics/settings/
+https://docs.djangoproject.com/en/5.1/topics/settings/
 
 For the full list of settings and their values, see
-https://docs.djangoproject.com/en/4.2/ref/settings/
+https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 import sys
@@ -94,7 +94,14 @@ TEMPLATES = [
 WSGI_APPLICATION = "githubai.wsgi.application"
 
 # Database
-DATABASES = {"default": env.db("DATABASE_URL")}
+# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
+DATABASES = {
+    "default": {
+        **env.db("DATABASE_URL"),
+        "CONN_HEALTH_CHECKS": True,  # Django 5.1+ connection health checks
+        "CONN_MAX_AGE": 600,  # Connection pooling
+    }
+}
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -113,10 +120,20 @@ USE_I18N = True
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/5.1/ref/settings/#std:setting-STORAGES
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"] if (BASE_DIR / "static").exists() else []
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+# Django 5.1+ STORAGES setting (replaces STATICFILES_STORAGE)
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 # Media files
 MEDIA_URL = "/media/"
