@@ -2,6 +2,7 @@
 import hashlib
 import logging
 import time
+from typing import Optional, Dict, Any, List
 from jinja2 import Template, TemplateError
 from django.conf import settings
 from django.utils import timezone
@@ -19,7 +20,7 @@ logger = logging.getLogger('githubai')
 class AIService:
     """Service for AI API interactions with caching"""
 
-    def __init__(self, provider_name: str = None, ai_model_id: int = None):
+    def __init__(self, provider_name: Optional[str] = None, ai_model_id: Optional[int] = None) -> None:
         """
         Initialize AI service with specified provider or model
 
@@ -93,18 +94,26 @@ class AIService:
         self.temperature = self.ai_provider.default_temperature if self.ai_provider else 0.2
         self.max_tokens = self.ai_model.max_tokens if self.ai_model else 2500
 
-    def _init_legacy_provider(self, provider_name):
+    def _init_legacy_provider(self, provider_name: str) -> None:
         """Initialize using legacy settings-based configuration"""
-        self.provider_name = provider_name
+        self.provider_name: str = provider_name
         self.provider = AIProviderFactory.create_provider(provider_name)
-        self.model = self.provider.model
-        self.temperature = self.provider.temperature
-        self.max_tokens = self.provider.max_tokens
+        self.model: str = self.provider.model
+        self.temperature: float = self.provider.temperature
+        self.max_tokens: int = self.provider.max_tokens
 
-    def call_ai_chat(self, system_prompt=None, user_prompt=None,
-                        model=None, temperature=None, max_tokens=None,
-                        use_cache=True, provider_name=None,
-                        prompt_template_id=None, context=None):
+    def call_ai_chat(
+        self,
+        system_prompt: Optional[str] = None,
+        user_prompt: Optional[str] = None,
+        model: Optional[str] = None,
+        temperature: Optional[float] = None,
+        max_tokens: Optional[int] = None,
+        use_cache: bool = True,
+        provider_name: Optional[str] = None,
+        prompt_template_id: Optional[int] = None,
+        context: Optional[Dict[str, Any]] = None
+    ) -> str:
         """
         Call AI Chat API with caching support.
         Vendor agnostic implementation supporting multiple AI providers
@@ -395,12 +404,19 @@ class AIService:
             logger.error(f"AI API error ({active_provider.provider_name}): {str(e)}")
             raise
 
-    def _generate_prompt_hash(self, system_prompt, user_prompt, model, temperature, provider_name):
+    def _generate_prompt_hash(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        model: str,
+        temperature: float,
+        provider_name: str
+    ) -> str:
         """Generate hash for prompt caching including provider information"""
         content = f"{provider_name}|{model}|{temperature}|{system_prompt}|{user_prompt}"
         return hashlib.sha256(content.encode()).hexdigest()
 
-    def _get_cached_response(self, prompt_hash):
+    def _get_cached_response(self, prompt_hash: str) -> Optional[str]:
         """Retrieve cached response"""
         try:
             cached = AIResponse.objects.get(prompt_hash=prompt_hash)
@@ -409,9 +425,19 @@ class AIService:
         except AIResponse.DoesNotExist:
             return None
 
-    def _cache_response(self, prompt_hash, system_prompt, user_prompt,
-                       content, model, temperature, max_tokens, tokens_used, provider_name,
-                       ai_model=None):
+    def _cache_response(
+        self,
+        prompt_hash: str,
+        system_prompt: str,
+        user_prompt: str,
+        content: str,
+        model: str,
+        temperature: float,
+        max_tokens: int,
+        tokens_used: Optional[int],
+        provider_name: str,
+        ai_model: Optional[AIModel] = None
+    ) -> None:
         """Cache the AI response with provider information"""
         try:
             AIResponse.objects.create(
@@ -430,11 +456,23 @@ class AIService:
         except Exception as e:
             logger.warning(f"Could not cache response ({provider_name}): {e}")
 
-    def _log_prompt_execution(self, prompt_template, input_variables,
-                              rendered_system_prompt, rendered_user_prompt,
-                              output_content, provider_used, model_used,
-                              temperature_used, tokens_used, duration_ms,
-                              cache_hit, success, error_message=None, ai_model=None):
+    def _log_prompt_execution(
+        self,
+        prompt_template,
+        input_variables: Dict[str, Any],
+        rendered_system_prompt: str,
+        rendered_user_prompt: str,
+        output_content: str,
+        provider_used: str,
+        model_used: str,
+        temperature_used: float,
+        tokens_used: Optional[int],
+        duration_ms: Optional[int],
+        cache_hit: bool,
+        success: bool,
+        error_message: Optional[str] = None,
+        ai_model: Optional[AIModel] = None
+    ) -> None:
         """Log prompt template execution for analytics"""
         from core.models import PromptExecution
 
@@ -460,16 +498,16 @@ class AIService:
             logger.warning(f"Could not log prompt execution: {e}")
 
     @classmethod
-    def get_available_providers(cls):
+    def get_available_providers(cls) -> List[str]:
         """Get list of available AI providers"""
         return AIProviderFactory.get_available_providers()
 
     @classmethod
-    def get_current_provider(cls):
+    def get_current_provider(cls) -> str:
         """Get the currently configured provider name"""
         return getattr(settings, 'AI_PROVIDER', 'openai')
 
-    def switch_provider(self, provider_name: str):
+    def switch_provider(self, provider_name: str) -> None:
         """
         Switch to a different provider
 

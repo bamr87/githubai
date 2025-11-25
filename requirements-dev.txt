@@ -47,3 +47,11 @@ factory-boy~=3.3.0
 # Build and Release
 build~=1.2.0
 twine~=6.0.0
+
+# Documentation
+sphinx~=7.2.0
+sphinx-rtd-theme~=2.0.0
+sphinx-autodoc-typehints~=2.0.0
+sphinxcontrib-django~=2.5.0
+sphinx-autobuild~=2024.2.4
+myst-parser~=2.0.0

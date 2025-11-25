@@ -143,6 +143,28 @@ services:
     networks:
       - network
 
+  docs:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile
+    container_name: docs
+    command: sphinx-autobuild docs/api-reference docs/api-reference/_build/html --host 0.0.0.0 --port 8001
+    volumes:
+      - ../..:/app
+    ports:
+      - "8001:8001"
+    env_file:
+      - ../../.env
+    environment:
+      - PYTHONPATH=/app/apps:${PYTHONPATH}
+      - DATABASE_URL=postgresql://user:${DB_PASSWORD:-changeme}@db:5432/githubai
+      - DJANGO_SETTINGS_MODULE=githubai.settings
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - network
+
 volumes:
   postgres_data:
   redis_data:

@@ -1,6 +1,7 @@
 """Issues service layer - migrated from create_issue.py"""
 import re
 import logging
+from typing import Dict, List, Optional
 from django.conf import settings
 from core.models import Issue, IssueTemplate, IssueFileReference
 from core.services.github_service import GitHubService
@@ -12,11 +13,16 @@ logger = logging.getLogger('githubai')
 class IssueService:
     """Service for managing GitHub issues with AI generation"""
 
-    def __init__(self):
-        self.github_service = GitHubService()
-        self.ai_service = AIService()
+    def __init__(self) -> None:
+        self.github_service: GitHubService = GitHubService()
+        self.ai_service: AIService = AIService()
 
-    def create_sub_issue_from_template(self, repo, parent_issue_number, file_refs=None):
+    def create_sub_issue_from_template(
+        self,
+        repo: str,
+        parent_issue_number: int,
+        file_refs: Optional[List[str]] = None
+    ) -> Issue:
         """
         Create a sub-issue based on a parent issue using a template.
         Migrated from create_issue.py::create_sub_issue_from_template
@@ -116,7 +122,12 @@ class IssueService:
         logger.info(f"Created sub-issue #{issue.github_issue_number} from parent #{parent_issue_number}")
         return issue
 
-    def create_readme_update_issue(self, repo, issue_number, additional_files=None):
+    def create_readme_update_issue(
+        self,
+        repo: str,
+        issue_number: int,
+        additional_files: Optional[List[str]] = None
+    ) -> Issue:
         """
         Create a README update issue.
         Migrated from create_issue.py::create_readme_update_issue
@@ -191,12 +202,12 @@ class IssueService:
 
     def create_issue_from_feedback(
         self,
-        feedback_type,
-        summary,
-        description,
-        repo=None,
-        context_files=None,
-    ):
+        feedback_type: str,
+        summary: str,
+        description: str,
+        repo: Optional[str] = None,
+        context_files: Optional[List[str]] = None,
+    ) -> Issue:
         """Create a GitHub issue from raw user feedback using AI.
 
         Args:
@@ -284,7 +295,7 @@ class IssueService:
         )
         return issue
 
-    def _extract_template_name(self, issue_body):
+    def _extract_template_name(self, issue_body: str) -> str:
         """Extract template name from issue body comment"""
         match = re.search(r"<!-- template:\s*(.+\.md)\s*-->", issue_body)
         if match:

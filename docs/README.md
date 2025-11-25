@@ -23,6 +23,9 @@ Essential guides for using GitHubAI features:
 
 Complete API documentation:
 
+- **[Auto-Generated API Reference](api-reference/README.md)** - Complete code reference (Sphinx)
+  - Models, Services, Views, Serializers
+  - Automatically generated from docstrings
 - **[Auto Issue Endpoints](api/AUTO_ISSUE_ENDPOINTS.md)** - REST API for automated issue creation
 - **[Chat Endpoint](api/CHAT_ENDPOINT.md)** - Conversational AI API
 

@@ -24,9 +24,9 @@ class AutoIssueService:
         'general_review': 'Perform a general repository health check',
     }
 
-    def __init__(self):
-        self.github_service = GitHubService()
-        self.ai_service = AIService()
+    def __init__(self) -> None:
+        self.github_service: GitHubService = GitHubService()
+        self.ai_service: AIService = AIService()
 
     def analyze_repo_and_create_issue(
         self,

@@ -2,6 +2,7 @@
 import ast
 import hashlib
 import logging
+from typing import Dict, List, Tuple, Optional, Any
 from django.conf import settings
 from git import Repo
 from github import Github
@@ -14,7 +15,7 @@ logger = logging.getLogger('githubai')
 class DocGenerationService:
     """Service for generating documentation - migrated from docgen.py"""
 
-    def parse_python_file(self, file_path):
+    def parse_python_file(self, file_path: str) -> Dict[str, Any]:
         """
         Parse Python file and extract comments and docstrings.
         Migrated from docgen.py::parse_python_file
@@ -40,7 +41,7 @@ class DocGenerationService:
 
         return {"comments": comments, "docstrings": docstrings}
 
-    def generate_markdown_documentation(self, parsed_data):
+    def generate_markdown_documentation(self, parsed_data: Dict[str, Any]) -> str:
         """
         Generate structured documentation in Markdown format.
         Migrated from docgen.py::generate_markdown_documentation
@@ -58,7 +59,7 @@ class DocGenerationService:
 
         return markdown
 
-    def process_file(self, file_path):
+    def process_file(self, file_path: str) -> DocumentationFile:
         """Process a file and save to database"""
         parsed_data = self.parse_python_file(file_path)
         markdown = self.generate_markdown_documentation(parsed_data)
@@ -84,10 +85,10 @@ class DocGenerationService:
 class ChangelogService:
     """Service for generating changelogs - migrated from auto_doc_generator.py"""
 
-    def __init__(self):
-        self.ai_service = AIService()
+    def __init__(self) -> None:
+        self.ai_service: AIService = AIService()
 
-    def generate_from_commit(self, repo_path=None):
+    def generate_from_commit(self, repo_path: Optional[str] = None) -> Optional[ChangelogEntry]:
         """
         Generate changelog from git commit.
         Migrated from auto_doc_generator.py

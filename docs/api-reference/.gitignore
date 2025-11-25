@@ -1,0 +1,8 @@
+# Sphinx Build
+_build/
+_static/
+_templates/
+
+# Generated documentation
+*.html
+*.doctree

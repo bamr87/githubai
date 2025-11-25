@@ -1,8 +1,10 @@
 """Core views - merged from all apps"""
+from typing import Any
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
+from rest_framework.request import Request
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db import connection
 from django.utils import timezone
@@ -28,7 +30,7 @@ class HealthCheckView(APIView):
     """Health check endpoint for monitoring"""
     permission_classes = []
 
-    def get(self, request):
+    def get(self, request: Request) -> Response:
         """Return health status"""
         health_status = {
             'status': 'healthy',
@@ -64,7 +66,7 @@ class IssueViewSet(viewsets.ModelViewSet):
     search_fields = ['title', 'body', 'github_issue_number']
 
     @action(detail=False, methods=['post'], url_path='create-sub-issue')
-    def create_sub_issue(self, request):
+    def create_sub_issue(self, request: Request) -> Response:
         """Create a sub-issue from a parent issue"""
         serializer = CreateSubIssueSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -87,7 +89,7 @@ class IssueViewSet(viewsets.ModelViewSet):
             )
 
     @action(detail=False, methods=['post'], url_path='create-readme-update')
-    def create_readme_update(self, request):
+    def create_readme_update(self, request: Request) -> Response:
         """Create a README update issue"""
         serializer = CreateREADMEUpdateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -110,7 +112,7 @@ class IssueViewSet(viewsets.ModelViewSet):
             )
 
     @action(detail=False, methods=["post"], url_path="create-from-feedback")
-    def create_from_feedback(self, request):
+    def create_from_feedback(self, request: Request) -> Response:
         """Create an issue directly from user feedback using AI refinement."""
         serializer = CreateFeedbackIssueSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -131,7 +133,7 @@ class IssueViewSet(viewsets.ModelViewSet):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=["post"], url_path="create-auto-issue")
-    def create_auto_issue(self, request):
+    def create_auto_issue(self, request: Request) -> Response:
         """Automatically analyze repository and create maintenance issue."""
         serializer = CreateAutoIssueSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -162,7 +164,7 @@ class ChatView(APIView):
     """Chat endpoint using AIService for conversational interactions."""
     permission_classes = []
 
-    def post(self, request):
+    def post(self, request: Request) -> Response:
         """Handle chat messages and return AI responses."""
         serializer = ChatMessageSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

@@ -1,6 +1,7 @@
 """GitHub Integration services - migrated from github_integration app"""
 import base64
 import logging
+from typing import Dict, List, Optional, Any
 from django.conf import settings
 import requests
 from core.models import APILog
@@ -11,12 +12,12 @@ logger = logging.getLogger('githubai')
 class GitHubService:
     """Service for GitHub API interactions"""
 
-    def __init__(self):
-        self.token = settings.GITHUB_TOKEN
-        self.headers = {'Authorization': f'token {self.token}'}
-        self.base_url = 'https://api.github.com'
+    def __init__(self) -> None:
+        self.token: str = settings.GITHUB_TOKEN
+        self.headers: Dict[str, str] = {'Authorization': f'token {self.token}'}
+        self.base_url: str = 'https://api.github.com'
 
-    def fetch_issue(self, repo, issue_number):
+    def fetch_issue(self, repo: str, issue_number: int) -> Dict[str, Any]:
         """
         Fetch issue details from GitHub.
         Migrated from github_api_utils.py::fetch_issue
@@ -55,7 +56,14 @@ class GitHubService:
             logger.error(f"Error fetching issue #{issue_number}: {e}")
             raise
 
-    def create_github_issue(self, repo, title, body, parent_issue_number=None, labels=None):
+    def create_github_issue(
+        self,
+        repo: str,
+        title: str,
+        body: str,
+        parent_issue_number: Optional[int] = None,
+        labels: Optional[List[str]] = None
+    ) -> Dict[str, Any]:
         """
         Create a new GitHub issue.
         Migrated from github_api_utils.py::create_github_issue
@@ -109,7 +117,7 @@ class GitHubService:
             logger.error(f"Error creating issue in {repo}: {e}")
             raise
 
-    def fetch_file_contents(self, repo, filepath):
+    def fetch_file_contents(self, repo: str, filepath: str) -> str:
         """
         Fetch file contents from GitHub repository.
         Migrated from create_issue.py::fetch_file_contents

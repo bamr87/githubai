@@ -2,6 +2,7 @@
 import subprocess
 import logging
 from pathlib import Path
+from typing import Optional
 from django.conf import settings
 from django.utils import timezone
 from core.models import Version
@@ -12,29 +13,29 @@ logger = logging.getLogger('githubai')
 class VersioningService:
     """Service for semantic versioning - migrated from scripts/versioning.py"""
 
-    def __init__(self):
-        self.version_file = settings.BASE_DIR / 'VERSION'
-        self.init_file = settings.BASE_DIR / 'src' / 'githubai' / '__init__.py'
+    def __init__(self) -> None:
+        self.version_file: Path = settings.BASE_DIR / 'VERSION'
+        self.init_file: Path = settings.BASE_DIR / 'src' / 'githubai' / '__init__.py'
 
-    def run(self, cmd):
+    def run(self, cmd: str) -> str:
         """Execute shell command"""
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
         return result.stdout.strip()
 
-    def get_latest_tag(self):
+    def get_latest_tag(self) -> Optional[str]:
         """Get latest git tag"""
         try:
             return self.run("git describe --tags $(git rev-list --tags --max-count=1)").lstrip('v')
         except subprocess.CalledProcessError:
             return None
 
-    def read_version(self):
+    def read_version(self) -> str:
         """Read version from VERSION file"""
         if self.version_file.exists():
             return self.version_file.read_text().strip()
         return "0.0.0"
 
-    def write_version(self, version):
+    def write_version(self, version: str) -> None:
         """Write version to VERSION file and __init__.py"""
         self.version_file.write_text(version)
 
@@ -50,7 +51,7 @@ class VersioningService:
 
         logger.info(f"Updated version to {version}")
 
-    def determine_bump(self, commit_msg):
+    def determine_bump(self, commit_msg: str) -> str:
         """Determine bump type from commit message"""
         if "[major]" in commit_msg:
             return "major"
@@ -59,7 +60,7 @@ class VersioningService:
         else:
             return "patch"
 
-    def bump_version(self, current_version, bump_type):
+    def bump_version(self, current_version: str, bump_type: str) -> str:
         """Calculate new version"""
         major, minor, patch = map(int, current_version.split('.'))
         if bump_type == "major":
@@ -69,7 +70,7 @@ class VersioningService:
         else:
             return f"{major}.{minor}.{patch + 1}"
 
-    def process_version_bump(self):
+    def process_version_bump(self) -> Version:
         """Main version bump process"""
         commit_msg = self.run("git log -1 --pretty=%B")
         commit_sha = self.run("git log -1 --pretty=%H")
@@ -103,7 +104,7 @@ class VersioningService:
         logger.info(f"Bumped version from {current_version} to {new_version} ({bump_type})")
         return version
 
-    def create_git_tag(self, version):
+    def create_git_tag(self, version: Version) -> None:
         """Create and push git tag"""
         tag = f"v{version.version_number}"
         self.run("git config --global user.name 'github-actions[bot]'")
