@@ -166,6 +166,12 @@ class AIProviderFactory:
     }
 
     @classmethod
+    def register_provider(cls, name: str, provider_class):
+        """Register a new provider (useful for testing with MockAIProvider)"""
+        cls.PROVIDERS[name] = provider_class
+        logger.info(f"Registered AI provider: {name}")
+
+    @classmethod
     def create_provider(cls, provider_name: Optional[str] = None,
                        api_key: Optional[str] = None,
                        model: Optional[str] = None,
@@ -209,6 +215,12 @@ class AIProviderFactory:
             temperature = temperature if temperature is not None else settings.XAI_TEMPERATURE
             max_tokens = max_tokens or settings.XAI_MAX_TOKENS
             base_url = base_url or getattr(settings, 'XAI_BASE_URL', "https://api.x.ai/v1")
+        elif provider_name == "mock":
+            api_key = api_key or getattr(settings, 'MOCK_API_KEY', 'mock-test-key')
+            model = model or getattr(settings, 'MOCK_MODEL', 'mock-gpt-4')
+            temperature = temperature if temperature is not None else 0.7
+            max_tokens = max_tokens or 1000
+            base_url = base_url or getattr(settings, 'MOCK_BASE_URL', None)
         else:
             raise AIProviderError(f"Provider configuration not found for: {provider_name}")
 

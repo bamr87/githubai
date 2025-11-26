@@ -1,0 +1,116 @@
+[
+    {
+        "model": "core.prompttemplate",
+        "pk": 1,
+        "fields": {
+            "created_at": "2025-01-01T00:00:00Z",
+            "updated_at": "2025-01-01T00:00:00Z",
+            "name": "Test Chat Assistant",
+            "category": "chat",
+            "description": "Test prompt template for chat interactions",
+            "system_prompt": "You are a helpful AI assistant for testing.",
+            "user_prompt_template": "{{ message }}",
+            "ai_model": 1,
+            "model": "gpt-4o-mini",
+            "provider": "auto",
+            "temperature": 0.2,
+            "max_tokens": 2500,
+            "version_number": 1,
+            "parent_version": null,
+            "is_active": true,
+            "usage_count": 0,
+            "last_used_at": null
+        }
+    },
+    {
+        "model": "core.prompttemplate",
+        "pk": 2,
+        "fields": {
+            "created_at": "2025-01-01T00:00:00Z",
+            "updated_at": "2025-01-01T00:00:00Z",
+            "name": "Test Issue Generator",
+            "category": "auto_issue",
+            "description": "Test prompt for generating issues",
+            "system_prompt": "You are a software engineering assistant that creates GitHub issues for testing.",
+            "user_prompt_template": "Repository: {{ repo }}\nAnalysis Type: {{ chore_type }}\n\n{{ analysis_data }}",
+            "ai_model": 1,
+            "model": "gpt-4o-mini",
+            "provider": "auto",
+            "temperature": 0.2,
+            "max_tokens": 3000,
+            "version_number": 1,
+            "parent_version": null,
+            "is_active": true,
+            "usage_count": 0,
+            "last_used_at": null
+        }
+    },
+    {
+        "model": "core.issuetemplate",
+        "pk": 1,
+        "fields": {
+            "created_at": "2025-01-01T00:00:00Z",
+            "updated_at": "2025-01-01T00:00:00Z",
+            "name": "test_bug_report.md",
+            "about": "Test template for bug reports",
+            "title_prefix": "[Test Bug]: ",
+            "labels": [
+                "bug",
+                "test"
+            ],
+            "prompt": "Create a detailed bug report for testing purposes",
+            "template_body": "## Bug Description\n\nDescribe the bug for testing.\n\n## Expected Behavior\n\nWhat should happen.\n\n## Actual Behavior\n\nWhat actually happens.",
+            "include_files": [],
+            "is_active": true
+        }
+    },
+    {
+        "model": "core.issue",
+        "pk": 1,
+        "fields": {
+            "created_at": "2025-01-01T00:00:00Z",
+            "updated_at": "2025-01-01T00:00:00Z",
+            "github_issue_number": 9001,
+            "github_repo": "test/repo",
+            "title": "Test Issue: Sample for automated testing",
+            "body": "This is a test issue created for automated testing.\n\n**Purpose**: Unit testing\n**Type**: Sample data",
+            "issue_type": "other",
+            "labels": [
+                "test",
+                "sample"
+            ],
+            "state": "open",
+            "parent_issue": null,
+            "template": 1,
+            "ai_generated": true,
+            "ai_prompt_used": "Generate a test issue",
+            "ai_response": "Here is a test issue for your testing needs.",
+            "html_url": "https://github.com/test/repo/issues/9001"
+        }
+    },
+    {
+        "model": "core.issue",
+        "pk": 2,
+        "fields": {
+            "created_at": "2025-01-01T00:00:00Z",
+            "updated_at": "2025-01-01T00:00:00Z",
+            "github_issue_number": 9002,
+            "github_repo": "test/repo",
+            "title": "Test Issue: Another sample for testing",
+            "body": "This is another test issue.\n\n**Purpose**: Integration testing\n**Type**: Sample data",
+            "issue_type": "feature",
+            "labels": [
+                "test",
+                "sample",
+                "feature"
+            ],
+            "state": "open",
+            "parent_issue": null,
+            "template": null,
+            "ai_generated": false,
+            "ai_prompt_used": null,
+            "ai_response": null,
+            "html_url": "https://github.com/test/repo/issues/9002"
+        }
+    }
+]

@@ -1,0 +1,88 @@
+[
+    {
+        "model": "core.aiprovider",
+        "pk": 1,
+        "fields": {
+            "created_at": "2025-01-01T00:00:00Z",
+            "updated_at": "2025-01-01T00:00:00Z",
+            "name": "openai",
+            "display_name": "OpenAI (Test)",
+            "api_key": "test-openai-key-12345",
+            "base_url": "https://api.openai.com/v1",
+            "is_active": true,
+            "default_temperature": 0.2,
+            "default_max_tokens": 2500,
+            "description": "Test OpenAI provider for automated testing",
+            "documentation_url": "https://platform.openai.com/docs"
+        }
+    },
+    {
+        "model": "core.aiprovider",
+        "pk": 2,
+        "fields": {
+            "created_at": "2025-01-01T00:00:00Z",
+            "updated_at": "2025-01-01T00:00:00Z",
+            "name": "xai",
+            "display_name": "XAI (Test)",
+            "api_key": "test-xai-key-12345",
+            "base_url": "https://api.x.ai/v1",
+            "is_active": false,
+            "default_temperature": 0.2,
+            "default_max_tokens": 2500,
+            "description": "Test XAI provider (inactive by default)",
+            "documentation_url": "https://docs.x.ai"
+        }
+    },
+    {
+        "model": "core.aimodel",
+        "pk": 1,
+        "fields": {
+            "created_at": "2025-01-01T00:00:00Z",
+            "updated_at": "2025-01-01T00:00:00Z",
+            "provider": 1,
+            "name": "gpt-4o-mini",
+            "display_name": "GPT-4o Mini (Test)",
+            "capabilities": [
+                "chat",
+                "code"
+            ],
+            "max_tokens": 16384,
+            "context_window": 128000,
+            "supports_system_prompt": true,
+            "supports_streaming": true,
+            "input_price_per_million": "0.15",
+            "output_price_per_million": "0.60",
+            "is_active": true,
+            "is_default": true,
+            "description": "Test model for automated testing",
+            "release_date": "2024-07-01",
+            "deprecation_date": null
+        }
+    },
+    {
+        "model": "core.aimodel",
+        "pk": 2,
+        "fields": {
+            "created_at": "2025-01-01T00:00:00Z",
+            "updated_at": "2025-01-01T00:00:00Z",
+            "provider": 2,
+            "name": "grok-beta",
+            "display_name": "Grok Beta (Test)",
+            "capabilities": [
+                "chat",
+                "code"
+            ],
+            "max_tokens": 4096,
+            "context_window": 131072,
+            "supports_system_prompt": true,
+            "supports_streaming": true,
+            "input_price_per_million": "5.00",
+            "output_price_per_million": "15.00",
+            "is_active": false,
+            "is_default": true,
+            "description": "Test Grok model",
+            "release_date": "2024-11-01",
+            "deprecation_date": null
+        }
+    }
+]

@@ -1,0 +1,43 @@
+{
+    "fixture_version": "2025-11-25",
+    "description": "Canned AI responses for MockAIProvider testing. Responses are matched by exact prompt or category fallback.",
+    "responses": [
+        {
+            "prompt": "You are a code quality analyst. Analyze the following Python code and suggest improvements:\n\ndef calculate_total(items):\n    total = 0\n    for item in items:\n        total = total + item['price']\n    return total",
+            "response": "# Code Quality Analysis\n\n## Issues Found\n1. **No input validation**: Function doesn't check if items is None or empty\n2. **KeyError risk**: No handling if 'price' key is missing\n3. **Type assumptions**: Assumes items are dictionaries without validation\n\n## Suggested Improvements\n```python\ndef calculate_total(items: list[dict]) -> float:\n    \"\"\"Calculate total price from list of items.\n    \n    Args:\n        items: List of dictionaries with 'price' key\n        \n    Returns:\n        Total price sum\n        \n    Raises:\n        ValueError: If items is None or contains invalid data\n    \"\"\"\n    if items is None:\n        raise ValueError(\"Items cannot be None\")\n    \n    return sum(item.get('price', 0) for item in items)\n```\n\n## Benefits\n- Type hints for clarity\n- Input validation\n- Safe dictionary access with .get()\n- More Pythonic using sum() and generator\n- Proper docstring",
+            "tokens_used": 245,
+            "category": "code_quality"
+        },
+        {
+            "prompt": "Generate a GitHub issue for implementing user authentication",
+            "response": "# Implement User Authentication System\n\n## Description\nImplement a secure user authentication system with login, logout, and session management capabilities.\n\n## Requirements\n- [ ] User registration with email verification\n- [ ] Secure password hashing (bcrypt/argon2)\n- [ ] Login/logout functionality\n- [ ] Session management with JWT tokens\n- [ ] Password reset flow\n- [ ] Rate limiting on auth endpoints\n\n## Technical Details\n- Use Django's built-in authentication framework\n- Implement token-based authentication for API\n- Add 2FA support (optional but recommended)\n\n## Acceptance Criteria\n- Users can register with email/password\n- Users can log in and receive auth token\n- Sessions expire after 24 hours\n- Failed login attempts are logged\n- All passwords are properly hashed\n\n## Security Considerations\n- Implement CSRF protection\n- Use HTTPS only\n- Add rate limiting (5 attempts per 15 min)\n- Log authentication events\n\n## Estimated Effort\n3-5 days",
+            "tokens_used": 198,
+            "category": "auto_issue"
+        },
+        {
+            "prompt": "Create a prompt template for analyzing code quality issues",
+            "response": "**System Prompt:**\nYou are an expert code quality analyst with deep knowledge of software engineering best practices, design patterns, and clean code principles. Your role is to analyze code and provide constructive, actionable feedback.\n\n**User Prompt Template:**\nAnalyze the following {{language}} code from file `{{file_path}}`:\n\n```{{language}}\n{{code_content}}\n```\n\nPlease provide:\n1. **Issues Found**: List specific problems (bugs, code smells, anti-patterns)\n2. **Severity**: Rate each issue as Critical/High/Medium/Low\n3. **Suggested Fixes**: Provide improved code examples\n4. **Best Practices**: Explain why changes are recommended\n5. **Estimated Impact**: Time to fix and risk level\n\nFocus on:\n- Security vulnerabilities\n- Performance issues\n- Maintainability concerns\n- Testing gaps\n- Documentation needs\n\nFormat output as markdown with code blocks.",
+            "tokens_used": 167,
+            "category": "prompt_template"
+        },
+        {
+            "prompt": "Hello! Can you help me understand how to use this API?",
+            "response": "Hello! I'd be happy to help you understand the API. \n\nThe GitHubAI API provides several key endpoints:\n\n1. **Auto-Issue Generation** (`/api/issues/issues/create-auto-issue/`)\n   - Automatically analyzes repositories and creates issues\n   - Supports multiple analysis types (code_quality, documentation, testing)\n\n2. **AI Chat** (`/api/chat/chat/`)\n   - Interactive chat with AI assistants\n   - Supports different AI providers (OpenAI, XAI, etc.)\n\n3. **Issue Management** (`/api/issues/issues/`)\n   - CRUD operations for GitHub issues\n   - Link issues to templates and track progress\n\nTo get started:\n1. Set up your environment variables (API keys)\n2. Run migrations: `python manage.py migrate`\n3. Start the server: `docker-compose up`\n4. Access the API at `http://localhost:8000/api/`\n\nWhat specific aspect would you like to explore?",
+            "tokens_used": 185,
+            "category": "chat"
+        },
+        {
+            "prompt": "Explain the difference between fixtures and data migrations in Django",
+            "response": "Great question! Here's the key difference between fixtures and data migrations in Django:\n\n## Fixtures\n**What**: Static data files (JSON/YAML/XML)\n**When to use**:\n- Test data for automated tests\n- Sample/demo data\n- Initial lookup data (categories, statuses)\n\n**Pros**:\n- Easy to create and edit\n- Version-controlled\n- Fast to load\n- Reusable across environments\n\n**Cons**:\n- Brittle (breaks if models change)\n- No automatic schema evolution\n- Primary key conflicts\n\n**Example**:\n```bash\npython manage.py loaddata test_config.json\n```\n\n## Data Migrations\n**What**: Python code in migration files\n**When to use**:\n- Production data transformations\n- Schema + data changes together\n- Complex data operations\n- One-time data imports\n\n**Pros**:\n- Evolves with schema changes\n- Part of migration history\n- Can be reversed\n- Access to full Django ORM\n\n**Cons**:\n- Harder to write\n- Slower execution\n- Can't easily reuse\n\n**Example**:\n```python\ndef populate_defaults(apps, schema_editor):\n    Model = apps.get_model('app', 'Model')\n    Model.objects.create(name='Default')\n```\n\n## Rule of Thumb\n- **Tests/demos**: Use fixtures\n- **Production data changes**: Use data migrations\n- **Initial critical data**: Use both (fixture + migration to load it)",
+            "tokens_used": 289,
+            "category": "chat"
+        }
+    ],
+    "fallbacks": {
+        "code_quality": "Based on the code analysis, here are the recommended improvements:\n\n1. Add input validation and error handling\n2. Include type hints for better code clarity\n3. Add comprehensive docstrings\n4. Follow PEP 8 style guidelines\n5. Consider edge cases and boundary conditions\n6. Add unit tests for coverage\n\nThese changes will improve code maintainability, reliability, and readability.",
+        "auto_issue": "# Automated Issue\n\n## Description\nThis is an automatically generated issue based on repository analysis.\n\n## Problem Statement\n[Analysis results would go here]\n\n## Proposed Solution\n[Recommended implementation steps]\n\n## Acceptance Criteria\n- [ ] Issue is properly documented\n- [ ] Solution is tested\n- [ ] Code review completed\n\n## Labels\n`enhancement`, `automated`",
+        "chat": "I'm a mock AI assistant for testing purposes. In a real environment, I would provide detailed, context-aware responses based on your query. For testing, I'm returning this canned response to ensure deterministic behavior.",
+        "prompt_template": "**System Prompt:**\nYou are a helpful AI assistant specialized in {{domain}}.\n\n**User Prompt:**\n{{user_query}}\n\n**Instructions:**\n1. Analyze the input carefully\n2. Provide clear, actionable guidance\n3. Use examples where appropriate\n4. Format output as markdown\n\n**Output Format:**\n[Structured response based on the query]",
+        "default": "This is a mock AI response for testing purposes. The actual response would be generated by a real AI model based on your specific prompt. This default fallback is used when no specific response pattern is matched."
+    }
+}

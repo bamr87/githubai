@@ -96,6 +96,7 @@ curl -X POST http://localhost:8000/api/issues/issues/create-auto-issue/ \
 - **Explore Features**: See [Auto Issue Feature Guide](guides/auto-issue-feature.md)
 - **Configure AI Providers**: Read [AI Provider Configuration](guides/ai-provider-configuration.md)
 - **Use the Chat Interface**: Check [Chat Interface Guide](guides/chat-interface.md)
+- **Setup Test Environment**: Learn about [Test Environment](guides/test-environment.md) for isolated testing
 - **View API Documentation**: Browse [API Reference](api/)
 
 ## Common Commands

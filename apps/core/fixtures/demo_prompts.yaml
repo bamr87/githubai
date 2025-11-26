@@ -1,0 +1,39 @@
+# Instructions for generating demo content
+
+# This YAML file provides instructions for the generate_content_data command
+# Usage: python manage.py generate_content_data --prompt-file apps/core/fixtures/demo_prompts.yaml
+
+generate_prompt_templates: true
+prompt_templates:
+  count: 5
+  categories:
+    - chat
+    - auto_issue
+    - documentation
+    - sub_issue
+    - readme_update
+
+generate_issue_templates: true
+issue_templates:
+  count: 4
+  # AI will generate these based on common software project needs
+
+generate_sample_issues: true
+sample_issues:
+  count: 10
+  repo: "bamr87/githubai"
+  types:
+    - feature
+    - bug
+    - documentation
+    - readme
+
+# Custom generation instructions
+custom_instructions:
+  prompt_style: "professional and production-ready"
+  issue_style: "detailed with clear acceptance criteria"
+  focus_areas:
+    - "AI automation features"
+    - "GitHub integration"
+    - "Documentation improvements"
+    - "Code quality enhancements"
