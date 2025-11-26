@@ -16,8 +16,8 @@ This guide covers a React-based Single Page Application (SPA) architecture with 
 - **Styling**:
   - Tailwind CSS 4.0
   - SCSS for legacy/custom styles
-  - Custom Lemon UI component library
-- **UI Components**: Custom `@posthog/lemon-ui` design system
+  - Custom component library
+- **UI Components**: Custom design system (e.g., `@org/ui-library`)
 - **Package Manager**: pnpm with workspaces
 - **Node Version**: >=22 <23
 
@@ -25,22 +25,19 @@ This guide covers a React-based Single Page Application (SPA) architecture with 
 
 ```text
 frontend/
-├── @posthog/               # Internal packages
-│   ├── lemon-ui/          # Design system components
-│   └── ee/                # Enterprise edition exports
+├── @org/                   # Internal packages (monorepo)
+│   ├── ui-library/         # Design system components
+│   └── ee/                 # Enterprise edition exports (optional)
 ├── src/
 │   ├── index.tsx          # Main app entry point
 │   ├── initKea.ts         # Kea initialization & plugins
 │   ├── layout/            # Layout components & navigation
 │   ├── lib/               # Shared utilities, hooks, components
 │   ├── models/            # Global Kea logics (data models)
-│   ├── queries/           # Query system (HogQL, schema, runners)
+│   ├── queries/           # Query system (schema, runners) - optional
 │   ├── scenes/            # Page-level components (route handlers)
 │   ├── stories/           # Storybook stories
 │   ├── styles/            # Global styles
-│   ├── taxonomy/          # Event/property definitions
-│   ├── exporter/          # Insight export standalone app
-│   ├── toolbar/           # PostHog toolbar standalone app
 │   └── types.ts           # Global TypeScript types
 ├── public/                # Static assets
 ├── bin/                   # Build & utility scripts
@@ -123,7 +120,7 @@ export const myLogic = kea<myLogicType>([
 
 ### Kea Plugins
 
-PostHog uses these Kea plugins (configured in `initKea.ts`):
+Common Kea plugins (configured in `initKea.ts`):
 
 1. **loadersPlugin**: Automatic async data fetching with loading/error states
 2. **formsPlugin**: Form state management
@@ -368,11 +365,11 @@ Use absolute imports via path aliases:
 // Good
 import { api } from 'lib/api'
 import { urls } from 'scenes/urls'
-import { LemonButton } from '@posthog/lemon-ui'
+import { Button } from '@org/ui-library'
 
 // Bad
 import { api } from '../../lib/api'
-import LemonButton from '../../../@posthog/lemon-ui/src/LemonButton'
+import Button from '../../../@org/ui-library/src/Button'
 ```
 
 **Configured aliases** (in `tsconfig.json` - adapt to your structure):
@@ -445,7 +442,7 @@ expect(screen.getByText('Hello')).toBeInTheDocument()
 ### Mocking
 
 - API mocks: Use MSW (Mock Service Worker) in `src/mocks/handlers.ts`
-- PostHog mocks: Auto-mocked in `src/mocks/jest.ts`
+- Analytics/tracking mocks: Auto-mocked in `src/mocks/jest.ts`
 - Browser APIs: Use `jest.spyOn` or fake implementations
 
 ## Development Workflow
@@ -582,8 +579,8 @@ loaders({
 try {
     await api.dangerous.operation()
 } catch (error) {
-    lemonToast.error(`Operation failed: ${error.detail}`)
-    posthog.captureException(error)
+    toast.error(`Operation failed: ${error.detail}`)
+    captureException(error) // Send to error tracking service
 }
 ```
 
@@ -653,8 +650,8 @@ import { List } from 'react-virtualized'
 ### Browser DevTools
 
 - React DevTools: Inspect component hierarchy
-- Redux DevTools: **DISABLED** (use Kea logger instead)
-- PostHog DevTools: `window.posthog.debug()`
+- Redux DevTools: Often **DISABLED** in favor of Kea logger
+- Analytics DevTools: Check your analytics provider's debug tools
 
 ### Kea Debugging
 
@@ -746,7 +743,7 @@ import.meta.env.VITE_APP_NAME
 
 ## Storybook
 
-PostHog uses Storybook v7 for component development:
+Storybook v7+ is recommended for component development:
 
 ```bash
 # Start Storybook

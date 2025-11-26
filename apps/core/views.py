@@ -8,7 +8,7 @@ from rest_framework.request import Request
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db import connection
 from django.utils import timezone
-from .models import Issue, IssueTemplate
+from .models import Issue, IssueTemplate, AIProvider, AIModel
 from .serializers import (
     IssueSerializer,
     IssueTemplateSerializer,
@@ -16,6 +16,8 @@ from .serializers import (
     CreateREADMEUpdateSerializer,
     CreateFeedbackIssueSerializer,
     CreateAutoIssueSerializer,
+    AIProviderSerializer,
+    AIModelSerializer,
 )
 from .chat_serializers import ChatMessageSerializer, ChatResponseSerializer
 from .services import IssueService
@@ -47,6 +49,29 @@ class HealthCheckView(APIView):
             return Response(health_status, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         return Response(health_status, status=status.HTTP_200_OK)
+
+
+class AIProviderViewSet(viewsets.ReadOnlyModelViewSet):
+    """ViewSet for AI providers (read-only)"""
+    queryset = AIProvider.objects.filter(is_active=True)
+    serializer_class = AIProviderSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['name', 'is_active']
+
+
+class AIModelViewSet(viewsets.ReadOnlyModelViewSet):
+    """ViewSet for AI models (read-only)"""
+    queryset = AIModel.objects.filter(is_active=True)
+    serializer_class = AIModelSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['provider', 'is_active', 'is_default', 'name']
+
+    @action(detail=False, methods=['get'], url_path='by-provider/(?P<provider_name>[^/.]+)')
+    def by_provider(self, request: Request, provider_name: str) -> Response:
+        """Get models filtered by provider name"""
+        models = self.queryset.filter(provider__name=provider_name)
+        serializer = self.get_serializer(models, many=True)
+        return Response(serializer.data)
 
 
 class IssueTemplateViewSet(viewsets.ModelViewSet):

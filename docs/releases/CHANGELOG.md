@@ -7,6 +7,89 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2025-11-26
+
+### Added
+
+- **Complete Frontend Application Rebuild** - Production-ready React SPA with full navigation and features
+  - React Router 7 for client-side routing with 8 distinct pages
+  - Modern AppLayout component with collapsible sidebar navigation
+  - Responsive design with full-width content layout
+  - Ant Design 6 ConfigProvider for consistent theming
+
+- **New Pages & Routes**
+  - `HomePage` (`/`) - Landing page with feature cards, quick stats, and quick actions
+  - `ChatPage` (`/chat`) - AI chat interface with dynamic provider/model selection
+  - `IssuesPage` (`/issues`) - Issue dashboard with filtering, search, and pagination
+  - `IssueDetailPage` (`/issues/:id`) - Single issue view with full details
+  - `CreateIssuePage` (`/issues/create`) - Manual issue creation with template support
+  - `AutoIssuePage` (`/issues/auto`) - AI-powered automatic issue generation
+  - `TemplatesPage` (`/templates`) - Template browser with preview modal
+  - `SettingsPage` (`/settings`) - Settings placeholder page
+
+- **Chat Components** - Refactored modular chat components
+  - `ChatContainer` - Main chat state management with AI provider integration
+  - `ChatMessage` - Individual message rendering with role-based styling
+  - `MessageList` - Message list with empty state
+  - `MessageInput` - Input field with keyboard shortcuts and loading state
+
+- **Layout Components**
+  - `AppLayout` - Fixed sidebar navigation, sticky header, footer
+  - Menu with icons: Home, AI Chat, Issues, Templates, Settings
+  - Collapsible sidebar with responsive breakpoint
+  - GitHub link and connection status indicator
+
+- **API Client Layer** - Centralized API abstraction
+  - `src/services/api.js` with organized endpoint methods
+  - `chatApi` - Send messages with optional provider/model override
+  - `issueApi` - Full CRUD, auto-issue, feedback, README update
+  - `templateApi` - Template CRUD operations
+  - `providerApi` - List and get AI providers
+  - `modelApi` - List and get AI models
+  - `healthApi` - Health check endpoint
+  - Error interceptor with user-friendly messages
+
+- **Backend API Enhancements**
+  - `AIProviderSerializer` - Read-only provider serialization (excludes API keys)
+  - `AIModelSerializer` - Model serialization with provider info
+  - `AIProviderViewSet` - Read-only provider endpoints at `/api/providers/`
+  - `AIModelViewSet` - Read-only model endpoints at `/api/models/`
+  - Custom `by_provider` action for filtering models by provider name
+
+- **Frontend Documentation**
+  - `.github/instructions/frontend.instructions.md` - Copilot guidelines for frontend
+  - `frontend/FRONTEND_ARCHITECTURE.md` - Comprehensive architecture document
+  - Component patterns, API usage, and best practices
+
+### Changed
+
+- **CSS Reset** - Replaced Vite default template styles
+  - `index.css` - Clean reset with full-width body/root
+  - `App.css` - Application-specific styles for Ant Design overrides
+  - Removed `place-items: center` causing narrow layout
+  - Added chat message, dashboard card, and utility styles
+
+- **App.jsx** - Complete rewrite with routing
+  - Replaced monolithic chat app with React Router setup
+  - ConfigProvider wrapper for Ant Design theming
+  - AppLayout wrapper for consistent navigation
+
+- **URL Structure** - Organized API endpoints
+  - `/api/providers/` - AI provider list/detail
+  - `/api/models/` - AI model list/detail with provider filter
+  - `/api/models/by-provider/<name>/` - Models by provider name
+
+### Fixed
+
+- **Layout Width Issue** - Content no longer narrow and left-aligned
+  - Removed restrictive `body { display: flex; place-items: center }` from Vite template
+  - Fixed sidebar margin transitions
+  - Content now uses full available width
+
+### Dependencies
+
+- Added `react-router-dom: ^7.9.6` for client-side routing
+
 ## [0.3.0] - 2025-11-22
 
 ### Added

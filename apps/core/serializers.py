@@ -1,6 +1,75 @@
 """Core serializers - merged from issues app"""
 from rest_framework import serializers
-from .models import Issue, IssueTemplate, IssueFileReference
+from .models import Issue, IssueTemplate, IssueFileReference, AIProvider, AIModel
+
+
+class AIProviderSerializer(serializers.ModelSerializer):
+    """Serializer for AIProvider model (read-only, excludes api_key)."""
+
+    has_api_key = serializers.ReadOnlyField()
+    models_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AIProvider
+        fields = [
+            'id',
+            'name',
+            'display_name',
+            'base_url',
+            'is_active',
+            'default_temperature',
+            'default_max_tokens',
+            'description',
+            'documentation_url',
+            'has_api_key',
+            'models_count',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = fields  # All fields read-only for security
+
+    def get_models_count(self, obj):
+        """Return count of active models for this provider."""
+        return obj.models.filter(is_active=True).count()
+
+
+class AIModelSerializer(serializers.ModelSerializer):
+    """Serializer for AIModel model."""
+
+    provider_name = serializers.CharField(source='provider.name', read_only=True)
+    provider_display_name = serializers.CharField(source='provider.display_name', read_only=True)
+    full_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AIModel
+        fields = [
+            'id',
+            'provider',
+            'provider_name',
+            'provider_display_name',
+            'name',
+            'display_name',
+            'full_name',
+            'capabilities',
+            'max_tokens',
+            'context_window',
+            'supports_system_prompt',
+            'supports_streaming',
+            'input_price_per_million',
+            'output_price_per_million',
+            'is_active',
+            'is_default',
+            'description',
+            'release_date',
+            'deprecation_date',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def get_full_name(self, obj):
+        """Return provider:model format name."""
+        return f"{obj.provider.name}:{obj.name}"
 
 
 class IssueTemplateSerializer(serializers.ModelSerializer):
