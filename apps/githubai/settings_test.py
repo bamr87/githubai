@@ -40,7 +40,7 @@ else:
 DATABASES = {  # noqa: F405
     "default": env.db(  # noqa: F405
         "DATABASE_URL",
-        default="postgresql://githubai_test:test123@db:5432/githubai_test",
+        default="postgresql://test:test123@db:5432/test",
     )
 }
 
@@ -87,16 +87,10 @@ CELERY_RESULT_BACKEND = env(  # noqa: F405
 # This allows deterministic testing without real API calls
 TEST_ENV = env("TEST_ENV", default=False)  # noqa: F405
 
-if TEST_ENV:
-    # Import and register MockAIProvider
-    try:
-        from core.services.mock_provider import MockAIProvider
-        from core.services.ai_providers import AIProviderFactory
-
-        AIProviderFactory.register_provider("mock", MockAIProvider)
-        logger.info("MockAIProvider registered for test environment")
-    except ImportError as e:
-        logger.warning(f"MockAIProvider not available: {e} - real providers will be used")
+# Note: MockAIProvider registration is deferred to AppConfig.ready()
+# to avoid "Apps aren't loaded yet" error during settings import.
+# See core/apps.py for the actual registration code.
+# The TEST_ENV flag is used by core/apps.py to trigger registration.
 
 # ==============================================================================
 # TEST DATA CONFIGURATION
@@ -145,14 +139,11 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"  # noqa: F405
 # CACHE (TEST)
 # ==============================================================================
 
-# Use Redis DB 1 for cache in test environment
+# Use local memory cache for test environment (simpler, no Redis dependency for cache)
 CACHES = {  # noqa: F405
     "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://redis:6379/1",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        },
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "unique-snowflake",
     }
 }
 

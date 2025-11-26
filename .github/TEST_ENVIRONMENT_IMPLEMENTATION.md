@@ -12,7 +12,7 @@ Implemented a complete TEST environment instantiation system for GitHubAI that e
 ### 1. Infrastructure (Docker)
 
 - **`infra/docker/docker-compose.test.yml`**: Override file for isolated test containers
-  - Separate database (`githubai_test`)
+  - Separate database (`test`)
   - Different ports (8001, 5174, 8002, 5433, 6380)
   - Isolated volumes (`postgres_test_data`, `redis_test_data`)
   - Test-specific environment (`settings_test.py`)
@@ -147,7 +147,7 @@ Implemented a complete TEST environment instantiation system for GitHubAI that e
 ### Isolation Strategy
 
 - Separate Docker containers (suffix: `_test`)
-- Separate database (`githubai_test`)
+- Separate database (`test`)
 - Separate ports (no conflicts with dev)
 - Separate volumes (isolated storage)
 - Separate environment (`.env.test`)

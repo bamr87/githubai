@@ -4,34 +4,34 @@
 
 services:
   db:
-    container_name: githubai_db_test
+    container_name: db_test
     environment:
-      POSTGRES_DB: githubai_test
-      POSTGRES_USER: githubai_test
+      POSTGRES_DB: test
+      POSTGRES_USER: test
       POSTGRES_PASSWORD: test123
     volumes:
       - postgres_test_data:/var/lib/postgresql/data
-    ports:
+    ports: !override
       - "5433:5432"  # Different port to avoid conflicts
 
   redis:
-    container_name: githubai_redis_test
+    container_name: redis_test
     volumes:
       - redis_test_data:/data
-    ports:
+    ports: !override
       - "6380:6379"  # Different port to avoid conflicts
 
   web:
-    container_name: githubai_web_test
+    container_name: web_test
     environment:
       - DJANGO_SETTINGS_MODULE=githubai.settings_test
       - TEST_ENV=true
-      - DATABASE_URL=postgresql://githubai_test:test123@db:5432/githubai_test
+      - DATABASE_URL=postgresql://test:test123@db:5432/test
       - CELERY_BROKER_URL=redis://redis:6379/1  # Use different Redis DB
       - CELERY_RESULT_BACKEND=redis://redis:6379/1
     env_file:
       - ../../.env.test
-    ports:
+    ports: !override
       - "8001:8000"  # Different port to avoid conflicts
     volumes:
       - ../../apps:/app/apps:rw
@@ -46,11 +46,11 @@ services:
         condition: service_healthy
 
   celery_worker:
-    container_name: githubai_celery_worker_test
+    container_name: celery_worker_test
     environment:
       - DJANGO_SETTINGS_MODULE=githubai.settings_test
       - TEST_ENV=true
-      - DATABASE_URL=postgresql://githubai_test:test123@db:5432/githubai_test
+      - DATABASE_URL=postgresql://test:test123@db:5432/test
       - CELERY_BROKER_URL=redis://redis:6379/1
       - CELERY_RESULT_BACKEND=redis://redis:6379/1
     env_file:
@@ -65,11 +65,11 @@ services:
         condition: service_healthy
 
   celery_beat:
-    container_name: githubai_celery_beat_test
+    container_name: celery_beat_test
     environment:
       - DJANGO_SETTINGS_MODULE=githubai.settings_test
       - TEST_ENV=true
-      - DATABASE_URL=postgresql://githubai_test:test123@db:5432/githubai_test
+      - DATABASE_URL=postgresql://test:test123@db:5432/test
       - CELERY_BROKER_URL=redis://redis:6379/1
       - CELERY_RESULT_BACKEND=redis://redis:6379/1
     env_file:
@@ -83,15 +83,15 @@ services:
         condition: service_healthy
 
   frontend:
-    container_name: githubai_frontend_test
-    ports:
+    container_name: frontend_test
+    ports: !override
       - "5174:5173"  # Different port to avoid conflicts
     environment:
       - VITE_API_URL=http://localhost:8001
 
   nginx:
-    container_name: githubai_nginx_test
-    ports:
+    container_name: nginx_test
+    ports: !override
       - "8081:80"  # Different port to avoid conflicts
     volumes:
       - static_test_volume:/app/staticfiles:ro
@@ -100,16 +100,17 @@ services:
       - web
 
   docs:
-    container_name: githubai_docs_test
-    ports:
+    container_name: docs_test
+    # Override ports completely (Docker Compose merges by default)
+    ports: !override
       - "8002:8001"  # Different port to avoid conflicts
 
 volumes:
   postgres_test_data:
-    name: githubai_postgres_test_data
+    name: postgres_test_data
   redis_test_data:
-    name: githubai_redis_test_data
+    name: redis_test_data
   static_test_volume:
-    name: githubai_static_test_volume
+    name: static_test_volume
   media_test_volume:
-    name: githubai_media_test_volume
+    name: media_test_volume

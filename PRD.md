@@ -1,6 +1,6 @@
 # GitHubAI Product Requirements Document
 
-## 0. WHY (Why Hell-bent Yield)
+## 0. WHY (What, How, and whY)
 
 **North Star**: Empower developers to automate GitHub workflows via AI-powered issue management, documentation, and maintenance.
 
@@ -172,7 +172,7 @@ curl -X POST http://localhost:8000/api/chat/ \
 
 ---
 
-## 8. RISK (Reality-Induced Setback Kilolist)
+## 8. RISK (Risks, Impacts, Strategies, and Key-mitigations)
 
 | Risk | Impact (RICE) | Mitigation |
 |------|---------------|------------|
@@ -184,7 +184,7 @@ curl -X POST http://localhost:8000/api/chat/ \
 
 ---
 
-## 9. DONE (Definition Of "No-more-Engineering-Needed")
+## 9. DONE (Definition Of Notable Essentials)
 
 ### Machine Checks (Binary ✅)
 

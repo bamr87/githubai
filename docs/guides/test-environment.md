@@ -43,8 +43,8 @@ This will:
 The test environment uses **separate instances** of everything:
 
 | Component | Dev/Prod | Test | Purpose |
-|-----------|----------|------|---------|
-| Database | `githubai` | `githubai_test` | Data isolation |
+|-----------|----------|------|----------|
+| Database | `githubai` | `test` | Data isolation |
 | Web Port | 8000 | 8001 | No conflicts |
 | Frontend Port | 5173 | 5174 | No conflicts |
 | Redis DB | 0 | 1 | Cache isolation |
@@ -66,7 +66,7 @@ docker-compose -f infra/docker/docker-compose.test.yml
 Override file changes:
 
 - Container names (suffix: `_test`)
-- Database name (`githubai_test`)
+- Database name (`test`)
 - Ports (8001, 5174, etc.)
 - Environment (`settings_test.py`)
 - Volumes (`postgres_test_data`, etc.)
@@ -184,7 +184,7 @@ nano .env.test
 
 ```bash
 # Database (isolated)
-DATABASE_URL=postgresql://githubai_test:test123@db:5432/githubai_test
+DATABASE_URL=postgresql://test:test123@db:5432/test
 
 # Use MockAIProvider
 AI_PROVIDER=mock
@@ -458,7 +458,7 @@ lsof -ti:8001,5174,8002,5433,6380
 
 ### Database Connection Failed
 
-**Problem**: Can't connect to `githubai_test`
+**Problem**: Can't connect to `test` database
 
 **Solution**:
 

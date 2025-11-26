@@ -142,9 +142,9 @@ RETRY_COUNT=0
 while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
     if $DOCKER_COMPOSE exec -T web python -c "
 import sys
-import psycopg2
+import psycopg
 try:
-    psycopg2.connect('postgresql://githubai_test:test123@db:5432/githubai_test')
+    psycopg.connect('postgresql://test:test123@db:5432/test')
     sys.exit(0)
 except Exception:
     sys.exit(1)
