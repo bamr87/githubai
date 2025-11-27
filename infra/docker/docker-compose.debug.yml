@@ -1,0 +1,40 @@
+# Docker Compose override for VS Code debugging
+# Usage: docker-compose -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.debug.yml up
+
+services:
+  web:
+    command: >
+      python -m debugpy --listen 0.0.0.0:5678 --wait-for-client
+      manage.py runserver 0.0.0.0:8000 --noreload
+    ports:
+      - "8000:8000"
+      - "5678:5678"  # debugpy port for Django
+    environment:
+      - DJANGO_DEBUG=True
+      - DEBUGPY_ENABLE=1
+    stdin_open: true
+    tty: true
+
+  celery_worker:
+    command: >
+      python -m debugpy --listen 0.0.0.0:5679
+      -m celery -A githubai worker --loglevel=debug --pool=solo --concurrency=1
+    ports:
+      - "5679:5679"  # debugpy port for Celery Worker
+    environment:
+      - DJANGO_DEBUG=True
+      - DEBUGPY_ENABLE=1
+    stdin_open: true
+    tty: true
+
+  celery_beat:
+    command: >
+      python -m debugpy --listen 0.0.0.0:5680
+      -m celery -A githubai beat --loglevel=debug
+    ports:
+      - "5680:5680"  # debugpy port for Celery Beat
+    environment:
+      - DJANGO_DEBUG=True
+      - DEBUGPY_ENABLE=1
+    stdin_open: true
+    tty: true

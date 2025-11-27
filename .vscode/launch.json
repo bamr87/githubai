@@ -1,33 +1,58 @@
 {
-    "version": "0.1.0",
+    "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python Debugger: Flask",
+            "name": "Docker: Attach to Django (web)",
             "type": "debugpy",
-            "request": "launch",
-            "module": "flask",
-            "env": {
-                "FLASK_APP": "app.py",
-                "FLASK_DEBUG": "1"
+            "request": "attach",
+            "connect": {
+                "host": "localhost",
+                "port": 5678
             },
-            "args": [
-                "run",
-                "--no-debugger",
-                "--no-reload"
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}",
+                    "remoteRoot": "/app"
+                }
             ],
-            "jinja": true,
-            "autoStartBrowser": false
+            "django": true,
+            "justMyCode": false
         },
         {
-            "name": "Python Debugger: Current File",
+            "name": "Docker: Attach to Celery Worker",
             "type": "debugpy",
-            "request": "launch",
-            "program": "${file}",
-            "console": "integratedTerminal"
+            "request": "attach",
+            "connect": {
+                "host": "localhost",
+                "port": 5679
+            },
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}",
+                    "remoteRoot": "/app"
+                }
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "Docker: Attach to Celery Beat",
+            "type": "debugpy",
+            "request": "attach",
+            "connect": {
+                "host": "localhost",
+                "port": 5680
+            },
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}",
+                    "remoteRoot": "/app"
+                }
+            ],
+            "justMyCode": false
         },
         {
             "name": "Python: Debug Tests",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${file}",
             "purpose": [
@@ -36,8 +61,34 @@
             "console": "integratedTerminal",
             "justMyCode": false,
             "env": {
+                "DJANGO_SETTINGS_MODULE": "githubai.settings_test",
+                "PYTHONPATH": "${workspaceFolder}/apps",
                 "PYTEST_ADDOPTS": "--no-cov -n0 --dist no"
             }
+        }
+    ],
+    "inputs": [
+        {
+            "id": "managementCommand",
+            "type": "promptString",
+            "description": "Enter the Django management command to run",
+            "default": "help"
+        },
+        {
+            "id": "testFile",
+            "type": "promptString",
+            "description": "Enter the test file path (relative to tests/)",
+            "default": "test_ai_services.py"
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Docker: Attach Django + Celery",
+            "configurations": [
+                "Docker: Attach to Django (web)",
+                "Docker: Attach to Celery Worker"
+            ],
+            "stopAll": true
         }
     ]
 }

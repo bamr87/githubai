@@ -43,6 +43,7 @@ pylint~=3.3.0
 cruft~=2.15.0
 pip-tools~=7.4.0
 factory-boy~=3.3.0
+debugpy~=1.8.0
 
 # Build and Release
 build~=1.2.0

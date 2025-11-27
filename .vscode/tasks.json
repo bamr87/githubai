@@ -1,0 +1,152 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Docker: Start Debug Stack",
+            "type": "shell",
+            "command": "docker-compose -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.debug.yml up -d db redis && docker-compose -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.debug.yml up web",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "group": "build"
+        },
+        {
+            "label": "Docker: Start Dev Stack",
+            "type": "shell",
+            "command": "docker-compose -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.dev.yml up",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "group": "build"
+        },
+        {
+            "label": "Docker: Start Full Debug Stack (all services)",
+            "type": "shell",
+            "command": "docker-compose -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.debug.yml up",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "group": "build"
+        },
+        {
+            "label": "Docker: Stop All",
+            "type": "shell",
+            "command": "docker-compose -f infra/docker/docker-compose.yml down",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "silent"
+            }
+        },
+        {
+            "label": "Docker: Run Migrations",
+            "type": "shell",
+            "command": "docker-compose -f infra/docker/docker-compose.yml exec web python manage.py migrate",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always"
+            }
+        },
+        {
+            "label": "Docker: Run Tests",
+            "type": "shell",
+            "command": "docker-compose -f infra/docker/docker-compose.yml exec web pytest -v",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "group": "test"
+        },
+        {
+            "label": "Docker: Run Tests (Current File)",
+            "type": "shell",
+            "command": "docker-compose -f infra/docker/docker-compose.yml exec web pytest ${relativeFile} -v",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "group": "test"
+        },
+        {
+            "label": "Docker: Django Shell",
+            "type": "shell",
+            "command": "docker-compose -f infra/docker/docker-compose.yml exec web python manage.py shell",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "Docker: Rebuild Web Container",
+            "type": "shell",
+            "command": "docker-compose -f infra/docker/docker-compose.yml build web",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always"
+            }
+        },
+        {
+            "label": "Docker: View Logs (web)",
+            "type": "shell",
+            "command": "docker-compose -f infra/docker/docker-compose.yml logs -f web",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "isBackground": true
+        },
+        {
+            "label": "Docker: View Logs (celery_worker)",
+            "type": "shell",
+            "command": "docker-compose -f infra/docker/docker-compose.yml logs -f celery_worker",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "isBackground": true
+        }
+    ]
+}
