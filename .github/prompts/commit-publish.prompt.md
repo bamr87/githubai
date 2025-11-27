@@ -56,16 +56,16 @@ Execute the complete release pipeline for the current changes in the GitHubAI re
    ```bash
    # Start services if not running
    docker-compose -f infra/docker/docker-compose.yml up -d
-   
+
    # Run full pytest suite (excludes integration tests by default)
    docker-compose -f infra/docker/docker-compose.yml exec web pytest
-   
+
    # Run with coverage report
    docker-compose -f infra/docker/docker-compose.yml exec web pytest --cov
-   
+
    # Run specific test file
    docker-compose -f infra/docker/docker-compose.yml exec web pytest tests/test_ai_services.py
-   
+
    # Run integration tests (requires external APIs)
    docker-compose -f infra/docker/docker-compose.yml exec web pytest -m integration --run-integration
    ```
@@ -109,25 +109,25 @@ Execute the complete release pipeline for the current changes in the GitHubAI re
 3. **Add Changelog Entry** following Keep a Changelog format:
    ```markdown
    ## [X.Y.Z] - YYYY-MM-DD
-   
+
    ### Added
    - New features (services, endpoints, components)
-   
+
    ### Changed
    - Changes to existing functionality
-   
+
    ### Deprecated
    - Features marked for removal
-   
+
    ### Removed
    - Removed features
-   
+
    ### Fixed
    - Bug fixes
-   
+
    ### Security
    - Security updates
-   
+
    ### Dependencies
    - Package updates
    ```
@@ -140,7 +140,7 @@ Execute the complete release pipeline for the current changes in the GitHubAI re
    ```bash
    echo "X.Y.Z" > VERSION
    ```
-   
+
    Note: `pyproject.toml` uses dynamic versioning - no manual update needed.
 
 2. **Alternative: Use Management Command**:
@@ -163,7 +163,7 @@ Execute the complete release pipeline for the current changes in the GitHubAI re
 
 2. **Create Semantic Commit Message**:
    Format: `<type>(<scope>): <description>`
-   
+
    Types:
    - `feat`: New feature
    - `fix`: Bug fix
