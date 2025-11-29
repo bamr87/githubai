@@ -51,7 +51,7 @@ fast = true
 branch = true
 
 [tool.coverage.report]
-fail_under = 80
+fail_under = 90
 
 [tool.flake8]
 max-line-length = 120

@@ -68,10 +68,10 @@ User → Web UI (React) → REST API → AIService → Multi-provider AI → Res
 
 | Endpoint | Method | Request | Response | Errors |
 |----------|--------|---------|----------|--------|
-| `/api/issues/issues/create-auto-issue/` | POST | `{"chore_type": "code_quality", "repo": "owner/repo", "auto_submit": true}` | `{"id": 42, "github_issue_number": 123, "title": "[Auto] Code Quality - 5 items"}` | `400` Invalid chore type, `401` GitHub auth fail, `500` AI API fail |
-| `/api/issues/issues/create-from-feedback/` | POST | `{"feedback_type": "bug", "summary": "Login broken", "description": "Details...", "repo": "owner/repo"}` | `{"id": 43, "github_issue_number": 124, "title": "Login broken"}` | `400` Missing required fields, `401` Auth fail |
+| `/api/issues/create-auto-issue/` | POST | `{"chore_type": "code_quality", "repo": "owner/repo", "auto_submit": true}` | `{"id": 42, "github_issue_number": 123, "title": "[Auto] Code Quality - 5 items"}` | `400` Invalid chore type, `401` GitHub auth fail, `500` AI API fail |
+| `/api/issues/create-from-feedback/` | POST | `{"feedback_type": "bug", "summary": "Login broken", "description": "Details...", "repo": "owner/repo"}` | `{"id": 43, "github_issue_number": 124, "title": "Login broken"}` | `400` Missing required fields, `401` Auth fail |
 | `/api/chat/` | POST | `{"message": "How do I deploy?"}` | `{"response": "To deploy...", "provider": "openai", "model": "gpt-4o-mini"}` | `400` Empty message, `500` AI API fail |
-| `/api/issues/issues/create-sub-issue/` | POST | `{"repo": "owner/repo", "parent_issue_number": 10, "file_refs": ["README.md"]}` | `{"id": 44, "github_issue_number": 125}` | `400` Invalid parent issue, `404` Parent not found |
+| `/api/issues/create-sub-issue/` | POST | `{"repo": "owner/repo", "parent_issue_number": 10, "file_refs": ["README.md"]}` | `{"id": 44, "github_issue_number": 125}` | `400` Invalid parent issue, `404` Parent not found |
 | `/health/` | GET | None | `{"status": "ok", "services": ["db", "redis", "ai"]}` | `503` Service unavailable |
 
 **Authentication**: Currently none (local dev only). Production requires Django REST Framework token auth (deferred to post-MVP).
@@ -105,7 +105,7 @@ curl -X POST http://localhost:8000/api/chat/ \
 | Accessibility | Admin UI uses Django defaults (WCAG 2.1 AA baseline) | Lighthouse score >80 |
 | Reliability | 99% uptime for core services (web, db, redis) | Healthcheck monitoring |
 | Cost | AI API costs <$5/month for typical usage (100 requests) | Token usage tracking |
-| Compatibility | Docker Compose 2.x, PostgreSQL 14+, Python 3.11+ | CI tests on min versions |
+| Compatibility | Docker Compose 2.x, PostgreSQL 14+, Python 3.11/3.12/3.13 | CI tests on min versions |
 
 **MVP Focus**: Latency and Security are P0. Scale/Reliability deferred to production deployment.
 
@@ -162,15 +162,17 @@ curl -X POST http://localhost:8000/api/chat/ \
 |-----------|-----------|--------------|
 | **v0.3.0** (Done) | AI Chat Frontend - React UI + REST API | 2025-11-22 |
 | **v0.4.0** (Done) | Prompt Refinement - AI-powered prompt generation via admin | 2025-11-23 |
-| **v0.4.1** (Current) | Minor bug fixes and stability improvements | 2025-11-25 |
-| **v0.5.0** (Next) | Authentication + API Tokens - Secure multi-user access | Q1 2026 |
+| **v0.4.1** (Done) | Minor bug fixes and stability improvements | 2025-11-25 |
+| **v0.5.0** (Current) | PRD MACHINE - AI-powered PRD automation | 2025-11-29 |
+| **v0.6.0** (Next) | Authentication + API Tokens - Secure multi-user access | Q1 2026 |
 
 **RICE Scoring** (Reach × Impact × Confidence / Effort):
 
 - v0.3.0: (100 users × 3 impact × 0.9 confidence) / 5 weeks = 54
 - v0.4.0: (50 users × 2 impact × 0.8 confidence) / 1 week = 80
-- v0.4.1: (50 users × 1 impact × 0.9 confidence) / 0.5 week = 90 ← **Highest priority**
-- v0.5.0: (200 users × 4 impact × 0.7 confidence) / 8 weeks = 70
+- v0.4.1: (50 users × 1 impact × 0.9 confidence) / 0.5 week = 90
+- v0.5.0: (75 users × 3 impact × 0.85 confidence) / 2 weeks = 95 ← **Highest priority**
+- v0.6.0: (200 users × 4 impact × 0.7 confidence) / 8 weeks = 70
 
 ---
 

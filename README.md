@@ -17,6 +17,22 @@ A production-ready Django web application that leverages AI models to automate G
 - YAML-driven templates for customizable and consistent issue generation
 - Full REST API and web interface for issue management
 
+### 💬 AI Chat Interface
+
+- **React-based Web UI** for interactive AI conversations
+- Multi-provider support (OpenAI, XAI/Grok, Anthropic) with dynamic model selection
+- **Team Lead Dashboard**: Query repository context and get instant answers without reading documentation
+- Response caching to reduce API costs and improve latency
+- Message history with role-based styling
+- Accessible at `/chat` when running the frontend (`npm run dev` in `frontend/`)
+
+### 📝 Feedback Form for Contributors
+
+- Simple form interface for submitting bug reports and feature requests
+- AI generates well-formatted GitHub issues with proper labels and structure
+- REST API endpoint: `POST /api/issues/issues/create-from-feedback/`
+- Supports context files to provide additional repository context
+
 ### 📚 Automated Documentation Generation
 
 - Generates changelog entries from commit messages and diffs
