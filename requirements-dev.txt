@@ -17,7 +17,7 @@ django-celery-beat~=2.7.0
 django-celery-results~=2.5.0
 
 # AI and External APIs
-openai~=1.54.0
+openai>=1.56.0  # Requires >=1.56.0 for httpx 0.28+ compatibility
 PyGithub~=2.4.0
 requests~=2.32.0
 GitPython~=3.1.0

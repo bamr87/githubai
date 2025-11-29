@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     "django_celery_results",
     # Local apps
     "core.apps.CoreConfig",
+    "prd_machine.apps.PrdMachineConfig",
 ]
 
 MIDDLEWARE = [

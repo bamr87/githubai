@@ -7,6 +7,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2025-11-29
+
+### Added
+
+- **PRD MACHINE** - AI-powered Product Requirements Document automation system
+  - New Django app `apps/prd_machine/` with complete service layer architecture
+  - **Models**: `PRDState`, `PRDVersion`, `PRDEvent`, `PRDConflict`, `PRDExport` for full PRD lifecycle tracking
+  - **Core Service**: `PRDMachineService` with AI-powered capabilities:
+    - PRD synchronization from GitHub repositories
+    - AI-driven PRD distillation and evolution from repository signals
+    - PRD generation from scratch via repository analysis
+    - Conflict detection between PRD and actual code state
+    - Export to GitHub issues, changelog generation
+    - Zero-touch mode for fully automated PRD management
+  - **Celery Tasks**: 10 async tasks for GitHub webhook processing and scheduled operations
+    - `process_github_push_event` - Auto-distill PRD on commits
+    - `process_github_pr_event` - Update PRD on PR merges
+    - `process_github_issue_event` - Track issue lifecycle
+    - `scheduled_prd_distillation` - Periodic PRD refresh
+    - `scheduled_conflict_detection` - Automated conflict monitoring
+  - **REST API**: ViewSets and endpoints for PRD state, versions, events, conflicts
+    - GitHub webhook endpoint (`/api/prd-machine/webhook/github/`)
+    - Manual trigger endpoints for sync, distill, generate, export
+  - **Admin Panel**: Custom admin with actions for sync, distill, detect conflicts, export, toggle lock
+  - **Management Command**: `python manage.py prd_machine` with options:
+    - `--sync` / `--distill` / `--generate` / `--detect-conflicts`
+    - `--export-issues` / `--export-changelog` / `--bump-version`
+    - `--lock` / `--unlock` for zero-touch mode
+    - `--status` / `--dry-run` for inspection
+
+- **Implementation Plan Documentation**
+  - New `IP.md` documenting the PRD MACHINE implementation plan with status tracking
+
+### Changed
+
+- **Django Settings**: Added `prd_machine.apps.PrdMachineConfig` to `INSTALLED_APPS`
+- **URL Configuration**: Added `api/prd-machine/` URL namespace for PRD MACHINE API
+
+### Infrastructure
+
+- **Docker**: Updated docker-compose configurations with correct build contexts
+  - Fixed `docker-compose.dev.yml` context paths for all services
+  - Added `name: githubai` to docker-compose.yml
+  - Added `PATH=/root/.local/bin:$PATH` to Dockerfile builder stage
+
+### Dependencies
+
+- Updated `openai>=1.56.0` for httpx 0.28+ compatibility (from `~=1.54.0`)
+
+### Tests
+
+- Added comprehensive test suite in `tests/test_prd_machine.py`
+  - Model tests for all 5 PRD models
+  - Service tests for PRDMachineService methods
+  - Management command tests
+  - Integration tests (marked with `@pytest.mark.integration`)
+
 ## [0.4.1] - 2025-11-26
 
 ### Added

@@ -18,6 +18,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
     path('api/', include('core.urls')),
+    path('api/prd-machine/', include('prd_machine.urls')),
     path('api-auth/', include('rest_framework.urls')),
     path('health/', HealthCheckView.as_view(), name='health-check'),
 ]
