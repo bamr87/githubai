@@ -205,3 +205,280 @@ curl -X POST http://localhost:8000/api/chat/ \
 - [ ] QA verifies chat interface responds coherently to 5 test questions
 - [ ] Security audit confirms no secrets in logs/code (grep for `GITHUB_TOKEN`, `AI_API_KEY`)
 - [ ]
+
+---
+
+## 10. ERD (Entity Relationship Diagram)
+
+```mermaid
+erDiagram
+    %% AI Provider Configuration
+    AIProvider ||--o{ AIModel : "has models"
+    AIModel ||--o{ AIResponse : "generates"
+    AIModel ||--o{ PromptTemplate : "used by"
+    AIModel ||--o{ PromptExecution : "executes"
+
+    %% Issue Management
+    IssueTemplate ||--o{ Issue : "generates"
+    Issue ||--o{ Issue : "has sub-issues"
+    Issue ||--o{ IssueFileReference : "references"
+
+    %% Prompt Management
+    PromptTemplate ||--o{ PromptSchema : "validated by"
+    PromptTemplate ||--o{ PromptDataset : "tested by"
+    PromptTemplate ||--o{ PromptExecution : "executed as"
+    PromptTemplate ||--o{ PromptTemplate : "versions"
+    PromptDataset ||--o{ PromptDatasetEntry : "contains"
+
+    %% PRD Machine
+    PRDState ||--o{ PRDVersion : "has versions"
+    PRDState ||--o{ PRDEvent : "receives events"
+    PRDState ||--o{ PRDConflict : "has conflicts"
+    PRDState ||--o{ PRDExport : "exports to"
+
+    AIProvider {
+        int id PK
+        string name UK "openai, xai, anthropic"
+        string display_name
+        string api_base_url
+        boolean is_active
+        boolean is_default
+        datetime created_at
+        datetime updated_at
+    }
+
+    AIModel {
+        int id PK
+        int provider_id FK
+        string name "gpt-4o, grok-2"
+        string display_name
+        int max_tokens
+        float default_temperature
+        decimal cost_per_1k_input
+        decimal cost_per_1k_output
+        boolean is_active
+        boolean is_default
+    }
+
+    APILog {
+        int id PK
+        string api_type "ai, github"
+        string endpoint
+        string method
+        jsonb request_data
+        jsonb response_data
+        int status_code
+        text error_message
+        int duration_ms
+        datetime created_at
+    }
+
+    AIResponse {
+        int id PK
+        int ai_model_id FK
+        string prompt_hash UK
+        text system_prompt
+        text user_prompt
+        text response_content
+        string provider
+        string model
+        float temperature
+        int tokens_used
+        int cache_hit_count
+        datetime created_at
+    }
+
+    IssueTemplate {
+        int id PK
+        string name UK
+        text about
+        string title_prefix
+        jsonb labels
+        text prompt
+        text template_body
+        jsonb include_files
+        boolean is_active
+    }
+
+    Issue {
+        int id PK
+        int parent_issue_id FK
+        int template_id FK
+        int github_issue_number
+        string github_repo
+        string title
+        text body
+        string issue_type "feature, bug, readme"
+        jsonb labels
+        string state
+        boolean ai_generated
+        text ai_prompt_used
+        string html_url
+    }
+
+    IssueFileReference {
+        int id PK
+        int issue_id FK
+        string file_path
+        text content
+        string content_hash
+    }
+
+    PromptTemplate {
+        int id PK
+        int ai_model_id FK
+        int parent_version_id FK
+        string name UK
+        string category
+        text description
+        text system_prompt
+        text user_prompt_template
+        string provider
+        float temperature
+        int max_tokens
+        int version_number
+        boolean is_active
+        int usage_count
+        datetime last_used_at
+    }
+
+    PromptSchema {
+        int id PK
+        int prompt_id FK
+        string schema_type "json_schema, regex"
+        jsonb schema_definition
+        boolean validation_enabled
+        text description
+    }
+
+    PromptDataset {
+        int id PK
+        int prompt_id FK
+        string name
+        text description
+        boolean is_active
+    }
+
+    PromptDatasetEntry {
+        int id PK
+        int dataset_id FK
+        jsonb input_variables
+        text expected_output_pattern
+        jsonb tags
+        text notes
+    }
+
+    PromptExecution {
+        int id PK
+        int prompt_id FK
+        int ai_model_id FK
+        jsonb input_variables
+        text rendered_system_prompt
+        text rendered_user_prompt
+        text output_content
+        string provider_used
+        string model_used
+        int tokens_used
+        int duration_ms
+        boolean cache_hit
+        boolean success
+        int user_feedback_rating
+    }
+
+    ChangelogEntry {
+        int id PK
+        string entry_type "commit, pr, manual"
+        string commit_sha
+        int pr_number
+        text commit_message
+        text ai_generated_content
+        string file_path
+    }
+
+    DocumentationFile {
+        int id PK
+        string file_path UK
+        string language
+        jsonb docstrings
+        jsonb comments
+        text markdown_content
+        string content_hash
+    }
+
+    Version {
+        int id PK
+        string version_number UK
+        int major
+        int minor
+        int patch
+        string bump_type
+        string commit_sha
+        string git_tag
+        boolean is_published
+        datetime published_at
+    }
+
+    PRDState {
+        int id PK
+        string repo
+        string file_path
+        text content
+        string content_hash
+        string version
+        boolean is_locked
+        boolean auto_evolve
+        datetime last_distilled_at
+        datetime last_synced_at
+        string slack_webhook
+    }
+
+    PRDVersion {
+        int id PK
+        int prd_state_id FK
+        int reverted_to_id FK
+        string version
+        text content
+        string content_hash
+        text change_summary
+        string trigger_type
+        string trigger_ref
+        boolean is_human_edit
+    }
+
+    PRDEvent {
+        int id PK
+        int prd_state_id FK
+        string event_type "push, pr, issues"
+        jsonb event_data
+        boolean processed
+        datetime processed_at
+        text result
+    }
+
+    PRDConflict {
+        int id PK
+        int prd_state_id FK
+        string conflict_type
+        text description
+        string severity "low, medium, high"
+        string section_affected
+        text suggested_resolution
+        boolean resolved
+        string resolved_by
+    }
+
+    PRDExport {
+        int id PK
+        int prd_state_id FK
+        string export_type "github_issues, jira"
+        jsonb export_data
+        string status "pending, completed"
+        text result
+    }
+```
+
+**Legend**:
+
+- `PK` = Primary Key, `FK` = Foreign Key, `UK` = Unique Key
+- All models inherit from `TimeStampedModel` (auto `created_at`, `updated_at`)
+- `jsonb` fields store JSON arrays or objects

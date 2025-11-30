@@ -740,3 +740,303 @@ Summarize the changes."""
 
         major, minor, patch = parts
         return f"{major}.{minor}.{int(patch) + 1}"
+
+    # =========================================================================
+    # Cross-Document Synchronization
+    # =========================================================================
+
+    def get_or_create_document_state(
+        self,
+        file_path: str,
+        document_type: str = 'prd',
+    ) -> PRDState:
+        """Get or create document state for any document type.
+
+        Args:
+            file_path: Path to document file in repo.
+            document_type: Type of document ('prd', 'readme', 'ip').
+
+        Returns:
+            PRDState instance.
+        """
+        state, created = PRDState.objects.get_or_create(
+            repo=self.repo,
+            file_path=file_path,
+            defaults={
+                'document_type': document_type,
+                'version': '1.0.0',
+                'auto_evolve': True,
+            }
+        )
+
+        if created:
+            logger.info(f"Created new {document_type} state for {self.repo}:{file_path}")
+
+        return state
+
+    def sync_readme_from_prd(self, prd_state: PRDState) -> PRDState:
+        """Sync README.md content from PRD.md.
+
+        Updates README sections based on PRD content:
+        - Features section from PRD MVP user stories
+        - API endpoints from PRD API section
+        - Project version from PRD ROAD section
+
+        Args:
+            prd_state: Source PRD state to sync from.
+
+        Returns:
+            Updated README PRDState.
+        """
+        logger.info(f"Syncing README from PRD for {self.repo}")
+
+        # Get or create README state
+        readme_state = self.get_or_create_document_state('README.md', 'readme')
+        readme_state.parent_document = prd_state
+
+        # Fetch current README from GitHub
+        try:
+            current_readme = self.github_service.fetch_file_contents(self.repo, 'README.md')
+        except Exception:
+            logger.warning("README.md not found, cannot sync")
+            return readme_state
+
+        # Extract PRD sections for sync
+        prd_mvp = self._extract_section(prd_state.content, 'MVP')
+        prd_api = self._extract_section(prd_state.content, 'API')
+        prd_road = self._extract_section(prd_state.content, 'ROAD')
+
+        # Use AI to update README sections
+        system_prompt = """You are a documentation synchronization assistant.
+Update the README.md to align with the PRD content while preserving README structure and style.
+
+Rules:
+1. Keep the existing README format and tone
+2. Update the Features section to reflect MVP user stories
+3. Update API Endpoints section if it differs from PRD API
+4. Keep installation, quick start, and other sections unchanged
+5. Output the complete updated README.md
+
+Do NOT change:
+- Project name/title
+- Installation instructions
+- Quick start guide
+- Docker/development sections"""
+
+        user_prompt = f"""Current README.md:
+{current_readme}
+
+---
+
+PRD MVP Section (source of truth for features):
+{prd_mvp}
+
+PRD API Section (source of truth for endpoints):
+{prd_api}
+
+PRD ROAD Section (current version info):
+{prd_road}
+
+Update the README to align with the PRD. Output the complete updated README.md."""
+
+        updated_readme = self.ai_service.call_ai_chat(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+        )
+
+        # Update README state
+        readme_state.content = updated_readme
+        readme_state.last_aligned_at = timezone.now()
+        readme_state.save()
+
+        # Create version record
+        PRDVersion.objects.create(
+            prd_state=readme_state,
+            version=readme_state.version,
+            content=updated_readme,
+            content_hash=readme_state.content_hash,
+            trigger_type='manual_sync',
+            trigger_ref=f"Synced from PRD v{prd_state.version}",
+            change_summary=f"Aligned with PRD v{prd_state.version}",
+        )
+
+        logger.info(f"README synced from PRD v{prd_state.version}")
+        return readme_state
+
+    def sync_ip_from_prd(self, prd_state: PRDState) -> PRDState:
+        """Sync IP.md (Implementation Plan) from PRD.md.
+
+        Updates IP deliverables and status based on PRD ROAD section.
+
+        Args:
+            prd_state: Source PRD state to sync from.
+
+        Returns:
+            Updated IP PRDState.
+        """
+        logger.info(f"Syncing IP from PRD for {self.repo}")
+
+        # Get or create IP state
+        ip_state = self.get_or_create_document_state('IP.md', 'ip')
+        ip_state.parent_document = prd_state
+
+        # Fetch current IP from GitHub
+        try:
+            current_ip = self.github_service.fetch_file_contents(self.repo, 'IP.md')
+        except Exception:
+            logger.warning("IP.md not found, cannot sync")
+            return ip_state
+
+        # Extract PRD ROAD section for sync
+        prd_road = self._extract_section(prd_state.content, 'ROAD')
+        prd_done = self._extract_section(prd_state.content, 'DONE')
+
+        # Use AI to update IP
+        system_prompt = """You are an Implementation Plan synchronization assistant.
+Update the IP.md to align deliverable status with PRD ROAD milestones.
+
+Rules:
+1. Keep the IP table structure (# | Deliverable | Owner | Deadline | Dep | Risk | Status)
+2. Update Status column to match PRD ROAD completion status
+3. Add new deliverables from PRD ROAD if missing from IP
+4. Mark completed items with ✅ DONE
+5. Keep IP automation rules and NFR sections unchanged
+6. Output the complete updated IP.md"""
+
+        user_prompt = f"""Current IP.md:
+{current_ip}
+
+---
+
+PRD ROAD Section (milestones and dates):
+{prd_road}
+
+PRD DONE Section (completion criteria):
+{prd_done}
+
+Update the IP to align deliverable status with PRD. Output the complete updated IP.md."""
+
+        updated_ip = self.ai_service.call_ai_chat(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+        )
+
+        # Update IP state
+        ip_state.content = updated_ip
+        ip_state.last_aligned_at = timezone.now()
+        ip_state.save()
+
+        # Create version record
+        PRDVersion.objects.create(
+            prd_state=ip_state,
+            version=ip_state.version,
+            content=updated_ip,
+            content_hash=ip_state.content_hash,
+            trigger_type='manual_sync',
+            trigger_ref=f"Synced from PRD v{prd_state.version}",
+            change_summary=f"Aligned deliverables with PRD v{prd_state.version}",
+        )
+
+        logger.info(f"IP synced from PRD v{prd_state.version}")
+        return ip_state
+
+    def align_all_documents(self) -> Dict[str, PRDState]:
+        """Align all documents (PRD, README, IP) for consistency.
+
+        Syncs README and IP from PRD as source of truth.
+
+        Returns:
+            Dict with 'prd', 'readme', 'ip' PRDState instances.
+        """
+        logger.info(f"Aligning all documents for {self.repo}")
+
+        # Sync PRD from GitHub first
+        prd_state = self.sync_from_github('PRD.md')
+
+        # Sync README and IP from PRD
+        readme_state = self.sync_readme_from_prd(prd_state)
+        ip_state = self.sync_ip_from_prd(prd_state)
+
+        logger.info("All documents aligned successfully")
+        return {
+            'prd': prd_state,
+            'readme': readme_state,
+            'ip': ip_state,
+        }
+
+    def detect_document_drift(self) -> List[PRDConflict]:
+        """Detect inconsistencies between PRD, README, and IP.
+
+        Compares key sections across documents to find drift.
+
+        Returns:
+            List of PRDConflict instances for detected drift.
+        """
+        logger.info(f"Detecting document drift for {self.repo}")
+
+        conflicts = []
+
+        # Get all document states
+        prd_state = self.get_or_create_prd_state('PRD.md')
+        readme_state = self.get_or_create_document_state('README.md', 'readme')
+        ip_state = self.get_or_create_document_state('IP.md', 'ip')
+
+        # Fetch current content from GitHub
+        try:
+            prd_content = self.github_service.fetch_file_contents(self.repo, 'PRD.md')
+            readme_content = self.github_service.fetch_file_contents(self.repo, 'README.md')
+            ip_content = self.github_service.fetch_file_contents(self.repo, 'IP.md')
+        except Exception as e:
+            logger.error(f"Failed to fetch documents for drift detection: {e}")
+            return conflicts
+
+        # AI-powered drift detection
+        system_prompt = """You are a document consistency analyzer.
+Compare the PRD, README, and IP documents to find inconsistencies.
+
+For each inconsistency found, output in this format:
+DRIFT|<source_doc>|<target_doc>|<severity>|<section>|<description>
+
+Source/Target: PRD, README, IP
+Severity: low, medium, high
+Section: Features, API, Version, Structure, Other
+
+Only output drift issues, one per line. If documents are consistent, output: NO_DRIFT"""
+
+        user_prompt = f"""PRD.md:
+{prd_content[:3000]}
+
+---
+
+README.md:
+{readme_content[:3000]}
+
+---
+
+IP.md:
+{ip_content[:3000]}
+
+Analyze for inconsistencies between documents."""
+
+        response = self.ai_service.call_ai_chat(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+        )
+
+        # Parse drift issues
+        for line in response.strip().split('\n'):
+            if line.startswith('DRIFT|'):
+                parts = line.split('|')
+                if len(parts) >= 6:
+                    conflict = PRDConflict.objects.create(
+                        prd_state=prd_state,
+                        conflict_type='version_mismatch' if 'version' in parts[4].lower() else 'other',
+                        severity=parts[3],
+                        section_affected=f"{parts[1]}↔{parts[2]}: {parts[4]}",
+                        description=parts[5],
+                        suggested_resolution=f"Sync {parts[2]} from {parts[1]}",
+                    )
+                    conflicts.append(conflict)
+
+        logger.info(f"Detected {len(conflicts)} document drift issues")
+        return conflicts

@@ -46,6 +46,16 @@ A production-ready Django web application that leverages AI models to automate G
 - Syncs with Git tags for consistency
 - Version history tracking with database persistence
 
+### 📄 PRD MACHINE - Living Document Automation
+
+- **AI-powered PRD management**: Automatically distills and evolves PRD.md from repository signals
+- **Multi-document sync**: Keeps README.md, PRD.md, and IP.md aligned and consistent
+- **Zero-touch mode**: Optional lock to prevent human edits ("I got this, meatbag")
+- **Conflict detection**: AI-powered comparison of documentation vs actual codebase
+- **Export to GitHub**: Generate issues from MVP user stories, changelog from version diffs
+- **Slack alerts**: Real-time notifications for high-severity conflicts
+- Management command: `python manage.py prd_machine --distill --repo owner/repo`
+
 ### ⚡ Modern Architecture
 
 - **Django 4.2+** with PostgreSQL database
@@ -187,22 +197,25 @@ Access Django admin at `http://localhost:8000/admin/`:
 
 ```
 githubai/
-├── documentation/              # Project documentation
-├── infra/                      # Infrastructure configuration
-│   ├── docker/                 # Docker files
-│   ├── nginx/                  # Nginx configuration
-│   └── scripts/                # Utility scripts
+├── apps/                       # Django applications
+│   ├── core/                   # Consolidated app (models, services, views)
+│   │   ├── models.py           # All domain models (AI, GitHub, Issues)
+│   │   ├── services/           # Business logic (AIService, GitHubService, etc.)
+│   │   ├── views.py            # REST API endpoints
+│   │   └── admin.py            # Django admin with custom actions
+│   ├── prd_machine/            # PRD MACHINE automation
+│   │   ├── services/core.py    # PRDMachineService (distill, sync, export)
+│   │   ├── models.py           # PRDState, PRDVersion, PRDConflict
+│   │   └── tasks.py            # Celery tasks for GitHub webhooks
+│   └── githubai/               # Django project settings
+├── frontend/                   # React + Vite UI for AI chat
+├── docs/                       # Project documentation
+├── infra/                      # Infrastructure (Docker, nginx, scripts)
+├── tests/                      # Test suite
 ├── manage.py                   # Django entry point
-├── pyproject.toml              # Project configuration
-│
-├── project/           # Django project settings
-├── core/                       # Shared models (APILog, base classes)
-├── issues/                     # Issue management app
-├── docs/                       # Documentation generation app
-├── versioning/                 # Semantic versioning app
-├── ai_services/                # AI integration with caching
-├── github_integration/         # GitHub API wrapper
-└── tests/                      # Test suite
+├── PRD.md                      # Product Requirements Document
+├── IP.md                       # Implementation Plan
+└── VERSION                     # Current version (0.5.0)
 ```
 
 ## Docker Services

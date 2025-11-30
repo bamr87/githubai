@@ -5,28 +5,44 @@ from core.models import TimeStampedModel
 
 
 class PRDState(TimeStampedModel):
-    """Current state of a PRD document.
+    """Current state of a document (PRD, README, or IP).
 
-    Tracks the PRD.md file state, version, and automation configuration.
+    Tracks document file state, version, and automation configuration.
+    Supports multi-document sync between PRD.md, README.md, and IP.md.
 
     Attributes:
         repo: GitHub repository (owner/repo format)
-        file_path: Path to PRD.md in the repo
-        content: Current PRD content (Markdown)
+        file_path: Path to document in the repo
+        document_type: Type of document (prd, readme, ip)
+        content: Current document content (Markdown)
         content_hash: Hash of content for change detection
-        version: Semantic version of the PRD
-        is_locked: Whether PRD is locked from human edits (zero-touch mode)
-        last_distilled_at: Last time PRD was distilled from repo signals
-        last_synced_at: Last time PRD was synced with GitHub
-        auto_evolve: Whether to auto-evolve PRD on repo changes
+        version: Semantic version of the document
+        is_locked: Whether document is locked from human edits (zero-touch mode)
+        last_distilled_at: Last time document was distilled from repo signals
+        last_synced_at: Last time document was synced with GitHub
+        auto_evolve: Whether to auto-evolve document on repo changes
         slack_webhook: Optional Slack webhook for notifications
+        parent_document: Link to source document for sync (e.g., README links to PRD)
     """
 
+    DOCUMENT_TYPES = [
+        ('prd', 'Product Requirements Document'),
+        ('readme', 'README'),
+        ('ip', 'Implementation Plan'),
+    ]
+
     repo = models.CharField(max_length=255, db_index=True, help_text='GitHub repository (owner/repo)')
-    file_path = models.CharField(max_length=500, default='PRD.md', help_text='Path to PRD file in repo')
-    content = models.TextField(blank=True, help_text='Current PRD content (Markdown)')
+    file_path = models.CharField(max_length=500, default='PRD.md', help_text='Path to document file in repo')
+    document_type = models.CharField(
+        max_length=10,
+        choices=DOCUMENT_TYPES,
+        default='prd',
+        db_index=True,
+        help_text='Type of document'
+    )
+    content = models.TextField(blank=True, help_text='Current document content (Markdown)')
     content_hash = models.CharField(max_length=64, blank=True, help_text='SHA256 hash of content')
-    version = models.CharField(max_length=50, default='1.0.0', help_text='PRD version')
+    version = models.CharField(max_length=50, default='1.0.0', help_text='Document version')
 
     # Automation settings
     is_locked = models.BooleanField(default=False, db_index=True, help_text='Zero-touch mode - no human edits')
@@ -37,11 +53,25 @@ class PRDState(TimeStampedModel):
     # Notifications
     slack_webhook = models.URLField(max_length=500, blank=True, help_text='Slack webhook for alerts')
 
+    # Cross-document sync
+    parent_document = models.ForeignKey(
+        'self',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='derived_documents',
+        help_text='Source document for sync (e.g., README derives from PRD)'
+    )
+    last_aligned_at = models.DateTimeField(null=True, blank=True, help_text='Last cross-document alignment time')
+
     class Meta:
-        verbose_name = 'PRD State'
-        verbose_name_plural = 'PRD States'
+        verbose_name = 'Document State'
+        verbose_name_plural = 'Document States'
         unique_together = ['repo', 'file_path']
         ordering = ['-updated_at']
+        indexes = [
+            models.Index(fields=['repo', 'document_type']),
+        ]
 
     def __str__(self):
         return f"{self.repo}:{self.file_path} v{self.version}"

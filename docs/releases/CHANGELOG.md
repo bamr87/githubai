@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2025-11-29
+
+### Added
+
+- **Multi-Document Sync** - Cross-document synchronization for PRD MACHINE
+  - New `document_type` field on `PRDState` model supporting `prd`, `readme`, `ip` document types
+  - New `parent_document` ForeignKey for linking derived documents to source
+  - New `last_aligned_at` timestamp for tracking sync operations
+  - **Sync Methods** in `PRDMachineService`:
+    - `sync_readme_from_prd()` - AI-powered README sync from PRD MVP/API sections
+    - `sync_ip_from_prd()` - AI-powered IP sync from PRD ROAD/DONE sections
+    - `align_all_documents()` - Sync all documents in one operation
+    - `detect_document_drift()` - Find inconsistencies between PRD↔README↔IP
+    - `get_or_create_document_state()` - Support for multi-document tracking
+  - **Management Command Flags**:
+    - `--sync-readme` - Sync README.md from PRD.md
+    - `--sync-ip` - Sync IP.md from PRD.md
+    - `--align-all` - Align all documents (PRD, README, IP)
+    - `--detect-drift` - Detect cross-document inconsistencies
+  - **Celery Tasks** for automated synchronization:
+    - `sync_all_documents_task` - Full document alignment
+    - `sync_readme_from_prd_task` - Async README sync
+    - `sync_ip_from_prd_task` - Async IP sync
+    - `detect_document_drift_task` - Async drift detection
+    - `scheduled_document_drift_check` - Daily cron for all repos
+  - **Tests**: 13 new tests covering all cross-document sync functionality
+
+### Changed
+
+- **README.md**: Added PRD MACHINE feature section with documentation
+- **README.md**: Updated project structure to reflect actual `apps/` layout
+- **PRD.md**: Added Entity Relationship Diagram (ERD) section
+
+### Fixed
+
+- **apps/VERSION**: Updated to 0.5.0 to match PRD.md version
+
 ## [0.5.0] - 2025-11-29
 
 ### Added

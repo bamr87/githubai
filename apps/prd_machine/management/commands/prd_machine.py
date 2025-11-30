@@ -79,6 +79,27 @@ class Command(BaseCommand):
             action='store_true',
             help='Show what would be done without making changes'
         )
+        # Cross-document sync flags
+        parser.add_argument(
+            '--sync-readme',
+            action='store_true',
+            help='Sync README.md from PRD.md (PRD is source of truth)'
+        )
+        parser.add_argument(
+            '--sync-ip',
+            action='store_true',
+            help='Sync IP.md from PRD.md (PRD is source of truth)'
+        )
+        parser.add_argument(
+            '--align-all',
+            action='store_true',
+            help='Align all documents (PRD, README, IP) for consistency'
+        )
+        parser.add_argument(
+            '--detect-drift',
+            action='store_true',
+            help='Detect inconsistencies between PRD, README, and IP'
+        )
 
     def handle(self, *args, **options):
         service = PRDMachineService(repo=options['repo'])
@@ -96,6 +117,23 @@ class Command(BaseCommand):
         # Generate new PRD from scratch
         if options['generate']:
             self._generate_prd(service, options)
+            return
+
+        # Cross-document sync operations
+        if options['align_all']:
+            self._align_all_documents(service, options)
+            return
+
+        if options['sync_readme']:
+            self._sync_readme(service, options)
+            return
+
+        if options['sync_ip']:
+            self._sync_ip(service, options)
+            return
+
+        if options['detect_drift']:
+            self._detect_drift(service, options)
             return
 
         # Sync from GitHub
@@ -353,3 +391,116 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(
             f"✅ Bumped version: {old_version} → {new_version}"
         ))
+
+    # =========================================================================
+    # Cross-Document Sync Methods
+    # =========================================================================
+
+    def _align_all_documents(self, service: PRDMachineService, options: dict):
+        """Align all documents (PRD, README, IP)."""
+        if options['dry_run']:
+            self.stdout.write(self.style.WARNING(
+                f"🏃 DRY RUN: Would align all documents for {service.repo}"
+            ))
+            self.stdout.write("   Would sync README.md from PRD.md")
+            self.stdout.write("   Would sync IP.md from PRD.md")
+            return
+
+        self.stdout.write(f"🔄 Aligning all documents for {service.repo}...")
+
+        try:
+            result = service.align_all_documents()
+
+            self.stdout.write(self.style.SUCCESS(f"\n✅ All documents aligned!"))
+            self.stdout.write(f"   📄 PRD: v{result['prd'].version} (hash: {result['prd'].content_hash[:8]}...)")
+            self.stdout.write(f"   📖 README: synced at {result['readme'].last_aligned_at}")
+            self.stdout.write(f"   📋 IP: synced at {result['ip'].last_aligned_at}")
+
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(f"❌ Document alignment failed: {e}"))
+            raise
+
+    def _sync_readme(self, service: PRDMachineService, options: dict):
+        """Sync README.md from PRD.md."""
+        if options['dry_run']:
+            self.stdout.write(self.style.WARNING(
+                f"🏃 DRY RUN: Would sync README.md from PRD.md for {service.repo}"
+            ))
+            return
+
+        prd_state = service.get_or_create_prd_state(options['file_path'])
+
+        self.stdout.write(f"📖 Syncing README.md from PRD v{prd_state.version}...")
+
+        try:
+            readme_state = service.sync_readme_from_prd(prd_state)
+
+            self.stdout.write(self.style.SUCCESS(
+                f"✅ README synced from PRD v{prd_state.version}"
+            ))
+            self.stdout.write(f"   Content hash: {readme_state.content_hash[:12]}...")
+            self.stdout.write(f"   Aligned at: {readme_state.last_aligned_at}")
+
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(f"❌ README sync failed: {e}"))
+            raise
+
+    def _sync_ip(self, service: PRDMachineService, options: dict):
+        """Sync IP.md from PRD.md."""
+        if options['dry_run']:
+            self.stdout.write(self.style.WARNING(
+                f"🏃 DRY RUN: Would sync IP.md from PRD.md for {service.repo}"
+            ))
+            return
+
+        prd_state = service.get_or_create_prd_state(options['file_path'])
+
+        self.stdout.write(f"📋 Syncing IP.md from PRD v{prd_state.version}...")
+
+        try:
+            ip_state = service.sync_ip_from_prd(prd_state)
+
+            self.stdout.write(self.style.SUCCESS(
+                f"✅ IP synced from PRD v{prd_state.version}"
+            ))
+            self.stdout.write(f"   Content hash: {ip_state.content_hash[:12]}...")
+            self.stdout.write(f"   Aligned at: {ip_state.last_aligned_at}")
+
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(f"❌ IP sync failed: {e}"))
+            raise
+
+    def _detect_drift(self, service: PRDMachineService, options: dict):
+        """Detect document drift between PRD, README, and IP."""
+        self.stdout.write(f"🔍 Detecting document drift for {service.repo}...")
+
+        try:
+            conflicts = service.detect_document_drift()
+
+            if not conflicts:
+                self.stdout.write(self.style.SUCCESS(
+                    "✅ No document drift detected - all documents are consistent!"
+                ))
+                return
+
+            self.stdout.write(self.style.WARNING(
+                f"\n⚠️  Found {len(conflicts)} document drift issues:"
+            ))
+
+            for conflict in conflicts:
+                severity_emoji = {
+                    'low': '🔵',
+                    'medium': '🟡',
+                    'high': '🟠',
+                    'critical': '🔴',
+                }.get(conflict.severity, '⚠️')
+
+                self.stdout.write(f"\n{severity_emoji} [{conflict.severity.upper()}] {conflict.section_affected}")
+                self.stdout.write(f"   {conflict.description}")
+                self.stdout.write(f"   💡 {conflict.suggested_resolution}")
+
+            self.stdout.write(f"\n📝 Run `--align-all` to fix drift automatically")
+
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(f"❌ Drift detection failed: {e}"))
+            raise

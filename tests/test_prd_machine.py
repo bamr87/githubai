@@ -278,6 +278,136 @@ class TestPRDMachineService:
         assert conflict.slack_notified is True
         mock_post.assert_called_once()
 
+    def test_get_or_create_document_state(self):
+        """Test get_or_create_document_state for different document types."""
+        service = PRDMachineService(repo="test/repo")
+
+        # Create README state
+        readme_state = service.get_or_create_document_state("README.md", "readme")
+        assert readme_state.repo == "test/repo"
+        assert readme_state.file_path == "README.md"
+        assert readme_state.document_type == "readme"
+
+        # Create IP state
+        ip_state = service.get_or_create_document_state("IP.md", "ip")
+        assert ip_state.document_type == "ip"
+
+        # Calling again returns same instance
+        readme_state2 = service.get_or_create_document_state("README.md", "readme")
+        assert readme_state.id == readme_state2.id
+
+    @patch("prd_machine.services.core.AIService")
+    @patch("prd_machine.services.core.GitHubService")
+    def test_sync_readme_from_prd(self, mock_github_class, mock_ai_class):
+        """Test syncing README from PRD."""
+        mock_ai = MagicMock()
+        mock_ai.call_ai_chat.return_value = "# Updated README\n\nSynced from PRD"
+        mock_ai_class.return_value = mock_ai
+
+        mock_github = MagicMock()
+        mock_github.fetch_file_contents.return_value = "# Original README"
+        mock_github_class.return_value = mock_github
+
+        service = PRDMachineService(repo="test/repo")
+        service.ai_service = mock_ai
+        service.github_service = mock_github
+
+        # Create PRD state with content
+        prd_state = PRDState.objects.create(
+            repo="test/repo",
+            file_path="PRD.md",
+            document_type="prd",
+            content="## 1. MVP\n\nUser stories here\n\n## 3. API\n\nEndpoints here",
+            version="1.0.0",
+        )
+
+        readme_state = service.sync_readme_from_prd(prd_state)
+
+        assert readme_state.content == "# Updated README\n\nSynced from PRD"
+        assert readme_state.parent_document == prd_state
+        assert readme_state.last_aligned_at is not None
+        mock_ai.call_ai_chat.assert_called_once()
+
+    @patch("prd_machine.services.core.AIService")
+    @patch("prd_machine.services.core.GitHubService")
+    def test_sync_ip_from_prd(self, mock_github_class, mock_ai_class):
+        """Test syncing IP from PRD."""
+        mock_ai = MagicMock()
+        mock_ai.call_ai_chat.return_value = "# Updated IP\n\nSynced deliverables"
+        mock_ai_class.return_value = mock_ai
+
+        mock_github = MagicMock()
+        mock_github.fetch_file_contents.return_value = "# Original IP"
+        mock_github_class.return_value = mock_github
+
+        service = PRDMachineService(repo="test/repo")
+        service.ai_service = mock_ai
+        service.github_service = mock_github
+
+        # Create PRD state with content
+        prd_state = PRDState.objects.create(
+            repo="test/repo",
+            file_path="PRD.md",
+            document_type="prd",
+            content="## 7. ROAD\n\nMilestones here\n\n## 9. DONE\n\nDone criteria",
+            version="1.0.0",
+        )
+
+        ip_state = service.sync_ip_from_prd(prd_state)
+
+        assert ip_state.content == "# Updated IP\n\nSynced deliverables"
+        assert ip_state.parent_document == prd_state
+        assert ip_state.last_aligned_at is not None
+
+    @patch("prd_machine.services.core.AIService")
+    @patch("prd_machine.services.core.GitHubService")
+    def test_align_all_documents(self, mock_github_class, mock_ai_class):
+        """Test aligning all documents."""
+        mock_ai = MagicMock()
+        mock_ai.call_ai_chat.return_value = "# Synced Content"
+        mock_ai_class.return_value = mock_ai
+
+        mock_github = MagicMock()
+        mock_github.fetch_file_contents.return_value = "# File content"
+        mock_github_class.return_value = mock_github
+
+        service = PRDMachineService(repo="test/repo")
+        service.ai_service = mock_ai
+        service.github_service = mock_github
+
+        result = service.align_all_documents()
+
+        assert "prd" in result
+        assert "readme" in result
+        assert "ip" in result
+        assert result["readme"].parent_document == result["prd"]
+        assert result["ip"].parent_document == result["prd"]
+
+    @patch("prd_machine.services.core.AIService")
+    @patch("prd_machine.services.core.GitHubService")
+    def test_detect_document_drift(self, mock_github_class, mock_ai_class):
+        """Test detecting document drift."""
+        mock_ai = MagicMock()
+        mock_ai.call_ai_chat.return_value = (
+            "DRIFT|PRD|README|medium|Features|Feature list out of sync\n"
+            "DRIFT|PRD|IP|low|Version|Version numbers differ"
+        )
+        mock_ai_class.return_value = mock_ai
+
+        mock_github = MagicMock()
+        mock_github.fetch_file_contents.return_value = "# Content"
+        mock_github_class.return_value = mock_github
+
+        service = PRDMachineService(repo="test/repo")
+        service.ai_service = mock_ai
+        service.github_service = mock_github
+
+        conflicts = service.detect_document_drift()
+
+        assert len(conflicts) == 2
+        assert "PRD↔README" in conflicts[0].section_affected
+        assert "PRD↔IP" in conflicts[1].section_affected
+
 
 # ============================================================================
 # Management Command Tests
@@ -374,6 +504,50 @@ class TestPRDMachineCommand:
         captured = capsys.readouterr()
         assert "DRY RUN" in captured.out
         assert "Would bump version" in captured.out
+
+    @patch("prd_machine.services.core.GitHubService")
+    def test_align_all_dry_run(self, mock_github_class, capsys):
+        """Test align-all with dry-run flag."""
+        call_command("prd_machine", "--repo", "test/repo", "--align-all", "--dry-run")
+
+        captured = capsys.readouterr()
+        assert "DRY RUN" in captured.out
+        assert "Would align all documents" in captured.out
+
+    @patch("prd_machine.services.core.GitHubService")
+    def test_sync_readme_dry_run(self, mock_github_class, capsys):
+        """Test sync-readme with dry-run flag."""
+        call_command("prd_machine", "--repo", "test/repo", "--sync-readme", "--dry-run")
+
+        captured = capsys.readouterr()
+        assert "DRY RUN" in captured.out
+        assert "Would sync README.md from PRD.md" in captured.out
+
+    @patch("prd_machine.services.core.GitHubService")
+    def test_sync_ip_dry_run(self, mock_github_class, capsys):
+        """Test sync-ip with dry-run flag."""
+        call_command("prd_machine", "--repo", "test/repo", "--sync-ip", "--dry-run")
+
+        captured = capsys.readouterr()
+        assert "DRY RUN" in captured.out
+        assert "Would sync IP.md from PRD.md" in captured.out
+
+    @patch("prd_machine.services.core.AIService")
+    @patch("prd_machine.services.core.GitHubService")
+    def test_detect_drift_no_drift(self, mock_github_class, mock_ai_class, capsys):
+        """Test detect-drift when documents are consistent."""
+        mock_ai = MagicMock()
+        mock_ai.call_ai_chat.return_value = "NO_DRIFT"
+        mock_ai_class.return_value = mock_ai
+
+        mock_github = MagicMock()
+        mock_github.fetch_file_contents.return_value = "# Content"
+        mock_github_class.return_value = mock_github
+
+        call_command("prd_machine", "--repo", "test/repo", "--detect-drift")
+
+        captured = capsys.readouterr()
+        assert "No document drift detected" in captured.out
 
 
 # ============================================================================

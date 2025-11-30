@@ -1,4 +1,5 @@
 """PRD MACHINE Celery tasks - GitHub event listeners and scheduled tasks."""
+from typing import List, Optional
 from celery import shared_task
 from django.conf import settings
 from django.utils import timezone
@@ -146,7 +147,7 @@ def process_github_pr_event(self, repo: str, pr_number: int, action: str, title:
 
 
 @shared_task(bind=True, max_retries=3)
-def process_github_issue_event(self, repo: str, issue_number: int, action: str, title: str, labels: list = None):
+def process_github_issue_event(self, repo: str, issue_number: int, action: str, title: str, labels: Optional[List[str]] = None):
     """Process GitHub issue event.
 
     Args:
@@ -218,7 +219,7 @@ def process_github_issue_event(self, repo: str, issue_number: int, action: str, 
 # ============================================================================
 
 @shared_task(bind=True)
-def scheduled_prd_distillation(self, repo: str = None):
+def scheduled_prd_distillation(self, repo: Optional[str] = None):
     """Scheduled task to distill PRD periodically.
 
     Runs on a schedule (e.g., daily) to keep PRD fresh.
@@ -267,7 +268,7 @@ def scheduled_prd_distillation(self, repo: str = None):
 
 
 @shared_task(bind=True)
-def scheduled_conflict_detection(self, repo: str = None):
+def scheduled_conflict_detection(self, repo: Optional[str] = None):
     """Scheduled task to detect PRD conflicts.
 
     Runs periodically to catch PRD drift from reality.
@@ -403,7 +404,7 @@ def sync_prd_from_github_task(self, repo: str, file_path: str = 'PRD.md'):
 
 
 @shared_task(bind=True)
-def generate_prd_task(self, repo: str, project_name: str = None):
+def generate_prd_task(self, repo: str, project_name: Optional[str] = None):
     """Async task to generate PRD from scratch.
 
     Args:
@@ -426,3 +427,147 @@ def generate_prd_task(self, repo: str, project_name: str = None):
     except Exception as exc:
         logger.error(f"PRD generation failed: {exc}")
         raise
+
+
+# ============================================================================
+# Cross-Document Sync Tasks
+# ============================================================================
+
+@shared_task(bind=True, max_retries=3)
+def sync_all_documents_task(self, repo: str):
+    """Async task to align all documents (PRD, README, IP).
+
+    Triggered when PRD.md changes are pushed, ensuring README and IP
+    stay consistent with PRD as source of truth.
+
+    Args:
+        repo: Repository in owner/repo format.
+    """
+    try:
+        from prd_machine.services.core import PRDMachineService
+
+        logger.info(f"Syncing all documents for {repo}")
+        service = PRDMachineService(repo=repo)
+        result = service.align_all_documents()
+
+        return {
+            'status': 'success',
+            'repo': repo,
+            'prd_version': result['prd'].version,
+            'readme_aligned_at': str(result['readme'].last_aligned_at),
+            'ip_aligned_at': str(result['ip'].last_aligned_at),
+        }
+
+    except Exception as exc:
+        logger.error(f"Document sync failed: {exc}")
+        raise self.retry(exc=exc, countdown=60)
+
+
+@shared_task(bind=True, max_retries=3)
+def sync_readme_from_prd_task(self, repo: str, prd_file_path: str = 'PRD.md'):
+    """Async task to sync README.md from PRD.md.
+
+    Args:
+        repo: Repository in owner/repo format.
+        prd_file_path: Path to PRD file.
+    """
+    try:
+        from prd_machine.services.core import PRDMachineService
+
+        logger.info(f"Syncing README from PRD for {repo}")
+        service = PRDMachineService(repo=repo)
+        prd_state = service.get_or_create_prd_state(prd_file_path)
+        readme_state = service.sync_readme_from_prd(prd_state)
+
+        return {
+            'status': 'success',
+            'repo': repo,
+            'readme_hash': readme_state.content_hash,
+            'aligned_at': str(readme_state.last_aligned_at),
+        }
+
+    except Exception as exc:
+        logger.error(f"README sync failed: {exc}")
+        raise self.retry(exc=exc, countdown=60)
+
+
+@shared_task(bind=True, max_retries=3)
+def sync_ip_from_prd_task(self, repo: str, prd_file_path: str = 'PRD.md'):
+    """Async task to sync IP.md from PRD.md.
+
+    Args:
+        repo: Repository in owner/repo format.
+        prd_file_path: Path to PRD file.
+    """
+    try:
+        from prd_machine.services.core import PRDMachineService
+
+        logger.info(f"Syncing IP from PRD for {repo}")
+        service = PRDMachineService(repo=repo)
+        prd_state = service.get_or_create_prd_state(prd_file_path)
+        ip_state = service.sync_ip_from_prd(prd_state)
+
+        return {
+            'status': 'success',
+            'repo': repo,
+            'ip_hash': ip_state.content_hash,
+            'aligned_at': str(ip_state.last_aligned_at),
+        }
+
+    except Exception as exc:
+        logger.error(f"IP sync failed: {exc}")
+        raise self.retry(exc=exc, countdown=60)
+
+
+@shared_task(bind=True)
+def detect_document_drift_task(self, repo: str):
+    """Async task to detect drift between PRD, README, and IP.
+
+    Args:
+        repo: Repository in owner/repo format.
+    """
+    try:
+        from prd_machine.services.core import PRDMachineService
+
+        logger.info(f"Detecting document drift for {repo}")
+        service = PRDMachineService(repo=repo)
+        conflicts = service.detect_document_drift()
+
+        # Notify on high-severity conflicts
+        for conflict in conflicts:
+            if conflict.severity in ['high', 'critical']:
+                service.send_slack_alert(conflict)
+
+        return {
+            'status': 'success',
+            'repo': repo,
+            'conflicts_found': len(conflicts),
+            'high_severity': sum(1 for c in conflicts if c.severity in ['high', 'critical']),
+        }
+
+    except Exception as exc:
+        logger.error(f"Drift detection failed: {exc}")
+        raise
+
+
+@shared_task
+def scheduled_document_drift_check():
+    """Scheduled task to check document drift across all repos.
+
+    Run daily via Celery Beat to catch drift early.
+    """
+    from prd_machine.models import PRDState
+
+    logger.info("Running scheduled document drift check")
+
+    repos_checked = 0
+    total_conflicts = 0
+
+    for prd_state in PRDState.objects.filter(auto_evolve=True, document_type='prd'):
+        try:
+            result = detect_document_drift_task.delay(prd_state.repo)
+            repos_checked += 1
+        except Exception as e:
+            logger.error(f"Failed to queue drift check for {prd_state.repo}: {e}")
+
+    logger.info(f"Queued drift checks for {repos_checked} repositories")
