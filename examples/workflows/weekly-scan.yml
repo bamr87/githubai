@@ -1,0 +1,33 @@
+name: Weekly repo scan (agentic)
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'   # Mondays 06:00 UTC
+  workflow_dispatch:
+    inputs:
+      chore_type:
+        description: Chore type to scan
+        type: choice
+        default: general_review
+        options:
+          - code_quality
+          - todo_scan
+          - doc_gaps
+          - dependency_check
+          - test_coverage
+          - general_review
+      dry_run:
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  issues: write
+  models: read
+
+jobs:
+  scan:
+    uses: bamr87/githubai/.github/workflows/agentic-analyze.yml@main
+    with:
+      chore-type: ${{ inputs.chore_type || 'general_review' }}
+      dry-run: ${{ inputs.dry_run || false }}

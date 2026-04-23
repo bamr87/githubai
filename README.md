@@ -2,6 +2,14 @@
 
 A production-ready Django web application that leverages AI models to automate GitHub workflows including AI-driven issue management, automated documentation generation, semantic versioning, and code documentation extraction.
 
+> ## 🚀 Also a drop-in agentic template
+>
+> This repo doubles as a **GitHub-native template** you can adopt in any other repo to add AI-assisted code review, issue triage, scheduled repo analysis, doc generation, version bumping, and PRD upkeep — **without running any of the Django stack below**.
+>
+> - **What's in it:** reusable workflows in `.github/workflows/agentic-*.yml`, prompt files in `.github/prompts/`, path-scoped instructions in `.github/instructions/`, and caller examples in `examples/workflows/`.
+> - **Start here:** [`docs/template/USAGE.md`](docs/template/USAGE.md) · [`AGENTS.md`](AGENTS.md) · [`docs/template/MIGRATION.md`](docs/template/MIGRATION.md)
+> - **Status:** Phase 1 — the agentic toolkit is added alongside the legacy Django app. Phases 2–4 (port functionality, make it a real GitHub Template, decommission legacy) are in flight.
+
 ## Features
 
 ### 🤖 AI-Driven Issue Management

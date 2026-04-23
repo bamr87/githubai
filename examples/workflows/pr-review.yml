@@ -1,0 +1,19 @@
+name: PR Review (agentic)
+
+# Drop-in caller. Replace @main with a tagged version once the template publishes one.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
+  models: read
+
+jobs:
+  review:
+    if: github.event.pull_request.draft == false
+    uses: bamr87/githubai/.github/workflows/agentic-review.yml@main
+    with:
+      model: openai/gpt-4o-mini

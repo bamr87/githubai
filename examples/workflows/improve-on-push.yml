@@ -1,0 +1,17 @@
+name: Improve on push (agentic)
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+  models: read
+
+jobs:
+  improve:
+    uses: bamr87/githubai/.github/workflows/agentic-improve.yml@main
+    with:
+      run-docs: true
+      run-version: true

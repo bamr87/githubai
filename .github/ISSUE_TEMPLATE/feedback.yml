@@ -1,0 +1,53 @@
+name: 💬 Feedback
+description: Quick form to submit a bug, feature, doc fix, or question. The intake bot will refine and label it.
+title: "[Feedback] "
+labels: ["feedback", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to share feedback! Fill in what you can — our intake bot
+        will rewrite this into the right structure (bug / feature / docs / question) and apply
+        the right labels. You'll be tagged on the refined issue.
+  - type: dropdown
+    id: feedback_type
+    attributes:
+      label: Type of feedback
+      options:
+        - bug
+        - feature
+        - docs
+        - question
+    validations:
+      required: true
+  - type: input
+    id: summary
+    attributes:
+      label: One-sentence summary
+      placeholder: "The login button does nothing on Safari 17"
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Details
+      description: What happened, what did you expect, and any context that would help us understand.
+      placeholder: "When I click… I expected… instead I saw…"
+    validations:
+      required: true
+  - type: textarea
+    id: repro_steps
+    attributes:
+      label: Steps to reproduce (bugs only)
+      placeholder: "1.\n2.\n3."
+  - type: input
+    id: environment
+    attributes:
+      label: Environment (bugs only)
+      placeholder: "macOS 14.4, Safari 17.3, app v0.5.0"
+  - type: textarea
+    id: context_files
+    attributes:
+      label: Related files (optional)
+      description: One repo path per line. The intake bot will pull in excerpts as context.
+      placeholder: "src/auth/login.ts\nREADME.md"

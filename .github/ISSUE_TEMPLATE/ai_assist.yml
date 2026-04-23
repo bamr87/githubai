@@ -1,0 +1,37 @@
+name: 🤖 AI assist
+description: Ask the AI agent to handle a task (decomposition, scaffold, doc, refactor).
+title: "[AI Assist] "
+labels: ["ai-assist", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Open this issue to delegate work to the project's AI agents (Copilot coding agent
+        and / or the reusable agentic workflows). A human will review the agent's PR.
+  - type: dropdown
+    id: ask
+    attributes:
+      label: What do you want the agent to do?
+      options:
+        - Decompose into sub-issues
+        - Draft an implementation
+        - Generate / update documentation
+        - Refactor for readability
+        - Add tests
+        - Other (explain below)
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: Files, modules, or behavior to focus on. Be explicit about what is *out* of scope.
+    validations:
+      required: true
+  - type: textarea
+    id: success
+    attributes:
+      label: Definition of done
+      placeholder: "- [ ] …"
+    validations:
+      required: true

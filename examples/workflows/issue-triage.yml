@@ -1,0 +1,17 @@
+name: Issue triage (agentic)
+
+on:
+  issues:
+    types: [opened, reopened, edited]
+
+permissions:
+  contents: read
+  issues: write
+  models: read
+
+jobs:
+  triage:
+    uses: bamr87/githubai/.github/workflows/agentic-track.yml@main
+    with:
+      apply-labels: true
+      create-sub-issues: false

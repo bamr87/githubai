@@ -1,0 +1,16 @@
+name: Weekly PRD sync (agentic)
+
+on:
+  schedule:
+    - cron: '0 12 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  models: read
+
+jobs:
+  prd:
+    uses: bamr87/githubai/.github/workflows/agentic-prd-sync.yml@main
