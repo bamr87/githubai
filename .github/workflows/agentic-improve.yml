@@ -1,0 +1,193 @@
+name: Agentic Improve (Docs & Versioning)
+
+# Reusable workflow: on push to default branch, generate doc updates and a
+# semver bump, opening a PR with the changes.
+#
+# Caller example:
+#   on:
+#     push:
+#       branches: [main]
+#   jobs:
+#     improve:
+#       uses: bamr87/githubai/.github/workflows/agentic-improve.yml@main
+#       permissions:
+#         contents: write
+#         pull-requests: write
+#         models: read
+
+on:
+  workflow_call:
+    inputs:
+      model:
+        type: string
+        required: false
+        default: "openai/gpt-4o-mini"
+      docs-prompt-file:
+        type: string
+        required: false
+        default: ".github/prompts/generate-docs.prompt.md"
+      version-prompt-file:
+        type: string
+        required: false
+        default: ".github/prompts/bump-version.prompt.md"
+      run-docs:
+        type: boolean
+        required: false
+        default: true
+      run-version:
+        type: boolean
+        required: false
+        default: true
+      base-branch:
+        type: string
+        required: false
+        default: "main"
+
+permissions:
+  contents: write
+  pull-requests: write
+  models: read
+
+jobs:
+  improve:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build context
+        env:
+          BASE_BRANCH: ${{ inputs.base-branch }}
+        run: |
+          set -euo pipefail
+          mkdir -p .agentic
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          {
+            echo "## Last tag"
+            echo "${LAST_TAG:-(no tags)}"
+            echo
+            echo "## Commits since last tag"
+            echo '```'
+            if [ -n "$LAST_TAG" ]; then
+              git log "$LAST_TAG"..HEAD --pretty=format:'%h %s%n%b%n---' | head -c 20000
+            else
+              git log --pretty=format:'%h %s%n%b%n---' | head -c 20000
+            fi
+            echo '```'
+            echo
+            echo "## Files changed since last tag"
+            echo '```'
+            if [ -n "$LAST_TAG" ]; then
+              git diff --name-status "$LAST_TAG"..HEAD | head -n 200
+            else
+              git ls-files | head -n 200
+            fi
+            echo '```'
+          } > .agentic/user-prompt.md
+
+      - name: Docs — load system prompt
+        if: ${{ inputs.run-docs }}
+        env:
+          PROMPT_FILE: ${{ inputs.docs-prompt-file }}
+        run: |
+          set -euo pipefail
+          awk 'BEGIN{fm=0} /^---$/{fm++; next} fm==1{next} {print}' "$PROMPT_FILE" > .agentic/docs-system.md
+
+      - name: Docs — run AI
+        id: docs
+        if: ${{ inputs.run-docs }}
+        uses: actions/ai-inference@v1
+        with:
+          model: ${{ inputs.model }}
+          system-prompt-file: .agentic/docs-system.md
+          prompt-file: .agentic/user-prompt.md
+          max-tokens: 4000
+
+      - name: Docs — apply edits
+        if: ${{ inputs.run-docs }}
+        env:
+          AI_OUTPUT: ${{ steps.docs.outputs.response }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$AI_OUTPUT" > .agentic/docs.json
+          python3 - <<'PY'
+          import json, re, pathlib, sys
+          raw = pathlib.Path(".agentic/docs.json").read_text()
+          m = re.search(r"\{[\s\S]*\}", raw)
+          if not m: sys.exit(0)
+          try: data = json.loads(m.group(0))
+          except Exception: sys.exit(0)
+          for e in data.get("edits", []):
+              p = pathlib.Path(e["path"])
+              p.parent.mkdir(parents=True, exist_ok=True)
+              p.write_text(e.get("content", ""))
+              print(f"Wrote {p}")
+          PY
+
+      - name: Version — load system prompt
+        if: ${{ inputs.run-version }}
+        env:
+          PROMPT_FILE: ${{ inputs.version-prompt-file }}
+        run: |
+          set -euo pipefail
+          awk 'BEGIN{fm=0} /^---$/{fm++; next} fm==1{next} {print}' "$PROMPT_FILE" > .agentic/ver-system.md
+
+      - name: Version — run AI
+        id: ver
+        if: ${{ inputs.run-version }}
+        uses: actions/ai-inference@v1
+        with:
+          model: ${{ inputs.model }}
+          system-prompt-file: .agentic/ver-system.md
+          prompt-file: .agentic/user-prompt.md
+
+      - name: Version — apply edits
+        if: ${{ inputs.run-version }}
+        env:
+          AI_OUTPUT: ${{ steps.ver.outputs.response }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$AI_OUTPUT" > .agentic/ver.json
+          python3 - <<'PY'
+          import json, re, pathlib, sys
+          raw = pathlib.Path(".agentic/ver.json").read_text()
+          m = re.search(r"\{[\s\S]*\}", raw)
+          if not m: sys.exit(0)
+          try: data = json.loads(m.group(0))
+          except Exception: sys.exit(0)
+          if data.get("bump") == "skip":
+              print("No version bump.")
+              sys.exit(0)
+          for f in data.get("files_to_update", []):
+              p = pathlib.Path(f["path"])
+              op = f.get("operation", "replace")
+              content = f.get("content", "")
+              if op == "prepend-section" and p.exists():
+                  p.write_text(content + "\n" + p.read_text())
+              else:
+                  p.parent.mkdir(parents=True, exist_ok=True)
+                  p.write_text(content)
+              print(f"Wrote {p} ({op})")
+          PY
+
+      - name: Open PR with improvements
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: agentic/improve-${{ github.run_id }}
+          base: ${{ inputs.base-branch }}
+          title: "chore(agentic): docs & version updates"
+          commit-message: "chore(agentic): docs & version updates"
+          body: |
+            Automated improvements proposed by `agentic-improve.yml`.
+
+            - Docs updates: ${{ inputs.run-docs }}
+            - Version bump: ${{ inputs.run-version }}
+
+            Review carefully — generated by AI.
+          labels: |
+            agentic
+            automated
+          delete-branch: true

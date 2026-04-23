@@ -1,0 +1,107 @@
+name: Agentic PR Review
+
+# Reusable workflow: AI-assisted code review on a pull request.
+# Uses actions/ai-inference (GitHub-hosted models) by default.
+#
+# Caller example:
+#   jobs:
+#     review:
+#       uses: bamr87/githubai/.github/workflows/agentic-review.yml@main
+#       permissions:
+#         contents: read
+#         pull-requests: write
+#         models: read
+
+on:
+  workflow_call:
+    inputs:
+      model:
+        description: "Model id to use (e.g. openai/gpt-4o-mini, anthropic/claude-3-5-sonnet)."
+        type: string
+        required: false
+        default: "openai/gpt-4o-mini"
+      prompt-file:
+        description: "Path to the Copilot prompt file to use as the system prompt."
+        type: string
+        required: false
+        default: ".github/prompts/review-pr.prompt.md"
+      max-diff-bytes:
+        description: "Maximum diff size to send to the model (bytes)."
+        type: number
+        required: false
+        default: 60000
+    secrets:
+      ai-token:
+        description: "Optional override token for actions/ai-inference. If omitted, GITHUB_TOKEN is used."
+        required: false
+
+permissions:
+  contents: read
+  pull-requests: write
+  models: read
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute diff
+        id: diff
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          MAX_BYTES: ${{ inputs.max-diff-bytes }}
+        run: |
+          set -euo pipefail
+          mkdir -p .agentic
+          git diff --no-color "$BASE_SHA...$HEAD_SHA" > .agentic/full.diff
+          head -c "$MAX_BYTES" .agentic/full.diff > .agentic/diff.txt
+          {
+            echo "## Changed files"
+            git diff --name-status "$BASE_SHA...$HEAD_SHA"
+            echo
+            echo "## Diff (truncated to ${MAX_BYTES} bytes)"
+            echo '```diff'
+            cat .agentic/diff.txt
+            echo '```'
+          } > .agentic/user-prompt.md
+
+      - name: Load system prompt
+        id: sys
+        env:
+          PROMPT_FILE: ${{ inputs.prompt-file }}
+        run: |
+          set -euo pipefail
+          if [ ! -f "$PROMPT_FILE" ]; then
+            echo "::error::Prompt file not found: $PROMPT_FILE"
+            exit 1
+          fi
+          # Strip YAML frontmatter if present
+          awk 'BEGIN{fm=0} /^---$/{fm++; next} fm==1{next} {print}' "$PROMPT_FILE" > .agentic/system-prompt.md
+
+      - name: Run AI review
+        id: ai
+        uses: actions/ai-inference@v1
+        with:
+          model: ${{ inputs.model }}
+          system-prompt-file: .agentic/system-prompt.md
+          prompt-file: .agentic/user-prompt.md
+          token: ${{ secrets.ai-token || secrets.GITHUB_TOKEN }}
+
+      - name: Post review comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REVIEW: ${{ steps.ai.outputs.response }}
+        run: |
+          set -euo pipefail
+          if [ -z "${REVIEW:-}" ]; then
+            echo "No review produced; skipping comment."
+            exit 0
+          fi
+          printf '%s\n' "$REVIEW" > .agentic/review.md
+          gh pr comment "$PR_NUMBER" --body-file .agentic/review.md

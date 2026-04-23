@@ -1,0 +1,166 @@
+name: Agentic PRD Sync
+
+# Reusable workflow: scheduled sync of PRD.md / README.md / IP.md.
+#
+# Caller example:
+#   on:
+#     schedule:
+#       - cron: '0 12 * * 1'
+#     workflow_dispatch:
+#   jobs:
+#     prd:
+#       uses: bamr87/githubai/.github/workflows/agentic-prd-sync.yml@main
+#       permissions:
+#         contents: write
+#         issues: write
+#         pull-requests: write
+#         models: read
+
+on:
+  workflow_call:
+    inputs:
+      model:
+        type: string
+        required: false
+        default: "openai/gpt-4o-mini"
+      prompt-file:
+        type: string
+        required: false
+        default: ".github/prompts/prd-distill.prompt.md"
+      base-branch:
+        type: string
+        required: false
+        default: "main"
+      open-followup-issues:
+        type: boolean
+        required: false
+        default: true
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  models: read
+
+jobs:
+  prd-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build context
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          mkdir -p .agentic
+          for f in PRD.md README.md IP.md; do
+            if [ -f "$f" ]; then
+              echo "## ${f}"
+              echo '```markdown'
+              head -c 30000 "$f"
+              echo
+              echo '```'
+              echo
+            fi
+          done > .agentic/docs-context.md
+
+          {
+            cat .agentic/docs-context.md
+            echo "## Recently merged PRs (last 20)"
+            gh pr list --state merged --limit 20 --json number,title,mergedAt 2>/dev/null || echo "[]"
+            echo
+            echo "## Recently closed issues (last 20)"
+            gh issue list --state closed --limit 20 --json number,title,closedAt 2>/dev/null || echo "[]"
+          } > .agentic/user-prompt.md
+
+      - name: Load system prompt
+        env:
+          PROMPT_FILE: ${{ inputs.prompt-file }}
+        run: |
+          set -euo pipefail
+          awk 'BEGIN{fm=0} /^---$/{fm++; next} fm==1{next} {print}' "$PROMPT_FILE" > .agentic/system-prompt.md
+
+      - name: Run AI distill
+        id: ai
+        uses: actions/ai-inference@v1
+        with:
+          model: ${{ inputs.model }}
+          system-prompt-file: .agentic/system-prompt.md
+          prompt-file: .agentic/user-prompt.md
+          max-tokens: 4000
+
+      - name: Apply edits & open follow-ups
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AI_OUTPUT: ${{ steps.ai.outputs.response }}
+          OPEN_FOLLOWUPS: ${{ inputs.open-followup-issues }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$AI_OUTPUT" > .agentic/prd.json
+          python3 - <<'PY'
+          import json, re, pathlib, sys
+          raw = pathlib.Path(".agentic/prd.json").read_text()
+          m = re.search(r"\{[\s\S]*\}", raw)
+          if not m: sys.exit(0)
+          try: data = json.loads(m.group(0))
+          except Exception: sys.exit(0)
+          for e in data.get("edits", []):
+              p = pathlib.Path(e["path"])
+              op = e.get("operation", "replace")
+              content = e.get("content", "")
+              if op == "replace-section" and p.exists() and "section" in e:
+                  text = p.read_text()
+                  # naive section replace — replaces the named heading and content until the next heading of equal/higher level
+                  import re as _r
+                  heading = e["section"].strip()
+                  level = len(heading.split(' ', 1)[0])
+                  pattern = _r.compile(
+                      _r.escape(heading) + r"[\s\S]*?(?=^#{1," + str(level) + r"} |\Z)",
+                      _r.MULTILINE,
+                  )
+                  if pattern.search(text):
+                      text = pattern.sub(content.rstrip() + "\n\n", text, count=1)
+                  else:
+                      text = text.rstrip() + "\n\n" + content + "\n"
+                  p.write_text(text)
+              else:
+                  p.parent.mkdir(parents=True, exist_ok=True)
+                  p.write_text(content)
+              print(f"Updated {p}")
+          pathlib.Path(".agentic/followups.json").write_text(
+              json.dumps(data.get("follow_up_issues", []))
+          )
+          PY
+
+          if [ "$OPEN_FOLLOWUPS" = "true" ] && [ -s .agentic/followups.json ]; then
+            COUNT=$(jq -r 'length' .agentic/followups.json)
+            for i in $(seq 0 $((COUNT-1))); do
+              T=$(jq -r ".[$i].title" .agentic/followups.json)
+              B=$(jq -r ".[$i].body"  .agentic/followups.json)
+              mapfile -t L < <(jq -r ".[$i].labels[]?" .agentic/followups.json)
+              ARGS=(--title "$T" --body "$B")
+              for lab in "${L[@]}"; do ARGS+=(--label "$lab"); done
+              gh issue create "${ARGS[@]}" || true
+            done
+          fi
+
+      - name: Open PR with PRD updates
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: agentic/prd-sync-${{ github.run_id }}
+          base: ${{ inputs.base-branch }}
+          title: "docs(prd): scheduled PRD sync"
+          commit-message: "docs(prd): scheduled PRD sync"
+          body: |
+            Automated PRD distill/sync proposed by `agentic-prd-sync.yml`.
+            Review the diff carefully — AI-generated.
+          labels: |
+            agentic
+            docs
+            prd
+          delete-branch: true

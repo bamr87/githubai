@@ -1,0 +1,120 @@
+name: Agentic Feedback → Issue
+
+# Reusable workflow: convert a feedback-form issue (created via the
+# 'feedback' issue template) into a polished, well-labeled issue.
+# Trigger when a new issue is opened with the 'feedback' label.
+#
+# Caller example:
+#   on:
+#     issues:
+#       types: [opened, labeled]
+#   jobs:
+#     refine:
+#       if: contains(github.event.issue.labels.*.name, 'feedback')
+#       uses: bamr87/githubai/.github/workflows/agentic-feedback-to-issue.yml@main
+#       permissions:
+#         contents: read
+#         issues: write
+#         models: read
+
+on:
+  workflow_call:
+    inputs:
+      model:
+        type: string
+        required: false
+        default: "openai/gpt-4o-mini"
+      prompt-file:
+        type: string
+        required: false
+        default: ".github/prompts/feedback-to-issue.prompt.md"
+
+permissions:
+  contents: read
+  issues: write
+  models: read
+
+jobs:
+  refine:
+    runs-on: ubuntu-latest
+    if: github.event.issue != null
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build context
+        env:
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          set -euo pipefail
+          mkdir -p .agentic
+          {
+            echo "## Raw feedback (issue #${ISSUE_NUMBER})"
+            echo "### Title"
+            printf '%s\n' "$ISSUE_TITLE"
+            echo
+            echo "### Body"
+            printf '%s\n' "${ISSUE_BODY:-_(empty)_}"
+          } > .agentic/user-prompt.md
+
+      - name: Load system prompt
+        env:
+          PROMPT_FILE: ${{ inputs.prompt-file }}
+        run: |
+          set -euo pipefail
+          awk 'BEGIN{fm=0} /^---$/{fm++; next} fm==1{next} {print}' "$PROMPT_FILE" > .agentic/system-prompt.md
+
+      - name: Run AI refine
+        id: ai
+        uses: actions/ai-inference@v1
+        with:
+          model: ${{ inputs.model }}
+          system-prompt-file: .agentic/system-prompt.md
+          prompt-file: .agentic/user-prompt.md
+
+      - name: Apply refinements to issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          AI_OUTPUT: ${{ steps.ai.outputs.response }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$AI_OUTPUT" > .agentic/refine.json
+          python3 - <<'PY'
+          import json, re, pathlib, sys
+          raw = pathlib.Path(".agentic/refine.json").read_text()
+          m = re.search(r"\{[\s\S]*\}", raw)
+          if not m: sys.exit(0)
+          try: data = json.loads(m.group(0))
+          except Exception: sys.exit(0)
+          pathlib.Path(".agentic/refine.parsed.json").write_text(json.dumps(data))
+          PY
+
+          if [ ! -f .agentic/refine.parsed.json ]; then
+            echo "No structured output; leaving issue untouched."
+            exit 0
+          fi
+
+          NEEDS_CLAR=$(jq -r '.needs_clarification // false' .agentic/refine.parsed.json)
+          if [ "$NEEDS_CLAR" = "true" ]; then
+            jq -r '.clarifying_questions[]?' .agentic/refine.parsed.json > .agentic/q.txt
+            {
+              echo "Thanks for the feedback! A few clarifications would help us act on it:"
+              echo
+              while read -r q; do echo "- $q"; done < .agentic/q.txt
+            } > .agentic/comment.md
+            gh issue comment "$ISSUE_NUMBER" --body-file .agentic/comment.md || true
+            gh issue edit "$ISSUE_NUMBER" --add-label "needs-clarification" || true
+            exit 0
+          fi
+
+          NEW_TITLE=$(jq -r '.title' .agentic/refine.parsed.json)
+          NEW_BODY=$(jq -r '.body'  .agentic/refine.parsed.json)
+          printf '%s' "$NEW_BODY" > .agentic/body.md
+          gh issue edit "$ISSUE_NUMBER" --title "$NEW_TITLE" --body-file .agentic/body.md || true
+          mapfile -t LABELS < <(jq -r '.labels[]?' .agentic/refine.parsed.json)
+          for L in "${LABELS[@]}"; do
+            gh issue edit "$ISSUE_NUMBER" --add-label "$L" || true
+          done

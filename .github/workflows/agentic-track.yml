@@ -1,0 +1,144 @@
+name: Agentic Issue Triage
+
+# Reusable workflow: triage a newly opened or edited issue.
+#
+# Caller example:
+#   on:
+#     issues:
+#       types: [opened, reopened, edited]
+#   jobs:
+#     triage:
+#       uses: bamr87/githubai/.github/workflows/agentic-track.yml@main
+#       permissions:
+#         contents: read
+#         issues: write
+#         models: read
+
+on:
+  workflow_call:
+    inputs:
+      model:
+        type: string
+        required: false
+        default: "openai/gpt-4o-mini"
+      prompt-file:
+        type: string
+        required: false
+        default: ".github/prompts/triage-issue.prompt.md"
+      apply-labels:
+        description: "Apply suggested labels automatically."
+        type: boolean
+        required: false
+        default: true
+      create-sub-issues:
+        description: "Open suggested sub-issues automatically."
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+  issues: write
+  models: read
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    if: github.event.issue != null
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build context
+        env:
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_USER: ${{ github.event.issue.user.login }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          mkdir -p .agentic
+          gh label list --limit 200 --json name,description > .agentic/labels.json || echo "[]" > .agentic/labels.json
+          {
+            echo "## Issue #${ISSUE_NUMBER} by @${ISSUE_USER}"
+            echo "### Title"
+            printf '%s\n' "$ISSUE_TITLE"
+            echo
+            echo "### Body"
+            printf '%s\n' "${ISSUE_BODY:-_(empty)_}"
+            echo
+            echo "### Existing repo labels (JSON)"
+            echo '```json'
+            cat .agentic/labels.json
+            echo '```'
+          } > .agentic/user-prompt.md
+
+      - name: Load system prompt
+        env:
+          PROMPT_FILE: ${{ inputs.prompt-file }}
+        run: |
+          set -euo pipefail
+          awk 'BEGIN{fm=0} /^---$/{fm++; next} fm==1{next} {print}' "$PROMPT_FILE" > .agentic/system-prompt.md
+
+      - name: Run AI triage
+        id: ai
+        uses: actions/ai-inference@v1
+        with:
+          model: ${{ inputs.model }}
+          system-prompt-file: .agentic/system-prompt.md
+          prompt-file: .agentic/user-prompt.md
+
+      - name: Apply triage decisions
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          AI_OUTPUT: ${{ steps.ai.outputs.response }}
+          APPLY_LABELS: ${{ inputs.apply-labels }}
+          CREATE_SUB: ${{ inputs.create-sub-issues }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$AI_OUTPUT" > .agentic/triage.json
+
+          # Try to extract pure JSON if the model wrapped it in code fences
+          python3 - <<'PY'
+          import json, re, sys, pathlib
+          raw = pathlib.Path(".agentic/triage.json").read_text()
+          m = re.search(r"\{[\s\S]*\}", raw)
+          if not m:
+              print("No JSON object found in AI response", file=sys.stderr)
+              sys.exit(0)
+          try:
+              data = json.loads(m.group(0))
+          except json.JSONDecodeError as e:
+              print(f"Could not parse JSON: {e}", file=sys.stderr)
+              sys.exit(0)
+          pathlib.Path(".agentic/triage.parsed.json").write_text(json.dumps(data, indent=2))
+          PY
+
+          if [ ! -f .agentic/triage.parsed.json ]; then
+            echo "Skipping apply step (no parsed JSON)."
+            exit 0
+          fi
+
+          COMMENT=$(jq -r '.comment // empty' .agentic/triage.parsed.json)
+          if [ -n "$COMMENT" ]; then
+            printf '%s\n' "$COMMENT" > .agentic/comment.md
+            gh issue comment "$ISSUE_NUMBER" --body-file .agentic/comment.md || true
+          fi
+
+          if [ "$APPLY_LABELS" = "true" ]; then
+            mapfile -t LABELS < <(jq -r '.labels_to_add[]?' .agentic/triage.parsed.json)
+            for L in "${LABELS[@]}"; do
+              gh issue edit "$ISSUE_NUMBER" --add-label "$L" || true
+            done
+          fi
+
+          if [ "$CREATE_SUB" = "true" ]; then
+            COUNT=$(jq -r '.sub_issues | length' .agentic/triage.parsed.json)
+            for i in $(seq 0 $((COUNT-1))); do
+              T=$(jq -r ".sub_issues[$i].title" .agentic/triage.parsed.json)
+              B=$(jq -r ".sub_issues[$i].body"  .agentic/triage.parsed.json)
+              gh issue create --title "$T" --body "$B" || true
+            done
+          fi

@@ -1,0 +1,156 @@
+name: Agentic Repo Analysis
+
+# Reusable workflow: scheduled scan that opens GitHub issues for findings.
+#
+# Caller example:
+#   on:
+#     schedule:
+#       - cron: '0 6 * * 1'   # Mondays 06:00 UTC
+#     workflow_dispatch:
+#       inputs:
+#         chore_type:
+#           type: choice
+#           options: [code_quality, todo_scan, doc_gaps, dependency_check, test_coverage, general_review]
+#   jobs:
+#     scan:
+#       uses: bamr87/githubai/.github/workflows/agentic-analyze.yml@main
+#       with:
+#         chore-type: ${{ inputs.chore_type || 'general_review' }}
+#       permissions:
+#         contents: read
+#         issues: write
+#         models: read
+
+on:
+  workflow_call:
+    inputs:
+      model:
+        type: string
+        required: false
+        default: "openai/gpt-4o-mini"
+      prompt-file:
+        type: string
+        required: false
+        default: ".github/prompts/auto-issue-scan.prompt.md"
+      chore-type:
+        type: string
+        required: false
+        default: "general_review"
+      paths:
+        description: "Comma-separated globs to restrict the scan."
+        type: string
+        required: false
+        default: ""
+      max-issues:
+        type: number
+        required: false
+        default: 5
+      dry-run:
+        description: "If true, do not open issues — just print the proposal."
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+  issues: write
+  models: read
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build context
+        env:
+          CHORE_TYPE: ${{ inputs.chore-type }}
+          PATHS: ${{ inputs.paths }}
+          MAX_ISSUES: ${{ inputs.max-issues }}
+        run: |
+          set -euo pipefail
+          mkdir -p .agentic
+          {
+            echo "## Scan request"
+            echo "- chore_type: ${CHORE_TYPE}"
+            echo "- paths: ${PATHS:-(repo root)}"
+            echo "- max_issues: ${MAX_ISSUES}"
+            echo
+            echo "## Repository tree (top 200 entries)"
+            echo '```'
+            git ls-files | head -n 200
+            echo '```'
+            echo
+            echo "## Recent commits"
+            echo '```'
+            git log -n 20 --pretty=format:'%h %s'
+            echo '```'
+          } > .agentic/user-prompt.md
+
+      - name: Load system prompt
+        env:
+          PROMPT_FILE: ${{ inputs.prompt-file }}
+        run: |
+          set -euo pipefail
+          awk 'BEGIN{fm=0} /^---$/{fm++; next} fm==1{next} {print}' "$PROMPT_FILE" > .agentic/system-prompt.md
+
+      - name: Run AI scan
+        id: ai
+        uses: actions/ai-inference@v1
+        with:
+          model: ${{ inputs.model }}
+          system-prompt-file: .agentic/system-prompt.md
+          prompt-file: .agentic/user-prompt.md
+          max-tokens: 4000
+
+      - name: Open issues from findings
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AI_OUTPUT: ${{ steps.ai.outputs.response }}
+          DRY_RUN: ${{ inputs.dry-run }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$AI_OUTPUT" > .agentic/scan.json
+          python3 - <<'PY'
+          import json, re, pathlib, sys
+          raw = pathlib.Path(".agentic/scan.json").read_text()
+          m = re.search(r"\{[\s\S]*\}", raw)
+          if not m:
+              print("No JSON in scan output", file=sys.stderr); sys.exit(0)
+          try:
+              data = json.loads(m.group(0))
+          except Exception as e:
+              print(f"JSON parse error: {e}", file=sys.stderr); sys.exit(0)
+          pathlib.Path(".agentic/scan.parsed.json").write_text(json.dumps(data, indent=2))
+          PY
+
+          if [ ! -f .agentic/scan.parsed.json ]; then
+            echo "No structured findings; printing raw output:"
+            echo "$AI_OUTPUT"
+            exit 0
+          fi
+
+          echo "## Scan summary"
+          jq -r '.summary // "(no summary)"' .agentic/scan.parsed.json
+
+          COUNT=$(jq -r '.issues | length' .agentic/scan.parsed.json)
+          echo "Found $COUNT proposed issue(s). dry_run=$DRY_RUN"
+
+          if [ "$DRY_RUN" = "true" ]; then
+            jq '.issues' .agentic/scan.parsed.json
+            exit 0
+          fi
+
+          for i in $(seq 0 $((COUNT-1))); do
+            T=$(jq -r ".issues[$i].title" .agentic/scan.parsed.json)
+            B=$(jq -r ".issues[$i].body"  .agentic/scan.parsed.json)
+            mapfile -t L < <(jq -r ".issues[$i].labels[]?" .agentic/scan.parsed.json)
+            ARGS=(--title "$T" --body "$B")
+            for lab in "${L[@]}"; do
+              ARGS+=(--label "$lab")
+            done
+            gh issue create "${ARGS[@]}" || true
+          done
