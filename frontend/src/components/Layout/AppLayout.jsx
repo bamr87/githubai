@@ -15,6 +15,7 @@ import {
     MenuFoldOutlined,
     MenuUnfoldOutlined,
     GithubOutlined,
+    DashboardOutlined,
 } from '@ant-design/icons'
 import { Link, useLocation } from 'react-router-dom'
 
@@ -29,6 +30,11 @@ const menuItems = [
         key: '/',
         icon: <HomeOutlined />,
         label: <Link to="/">Home</Link>,
+    },
+    {
+        key: '/fleet',
+        icon: <DashboardOutlined />,
+        label: <Link to="/fleet">Fleet</Link>,
     },
     {
         key: '/chat',

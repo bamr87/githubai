@@ -273,5 +273,85 @@ export const healthApi = {
     },
 }
 
+/**
+ * DevOps Cockpit dashboard API methods (multi-repo registry + metrics)
+ */
+export const dashboardApi = {
+    /**
+     * Get the fleet overview: every tracked repo with its latest snapshot
+     * summary plus aggregate KPIs.
+     * @param {Object} [params] - Optional query params (e.g. { tracked: true })
+     * @returns {Promise<{totals: Object, repositories: Array}>}
+     */
+    fleetOverview: async (params = {}) => {
+        const response = await apiClient.get('/api/dashboard/fleet/overview/', { params })
+        return response.data
+    },
+
+    /**
+     * Get cross-cutting "needs attention" lists across the fleet:
+     * failing CI, open security alerts, and stale pull requests.
+     * @returns {Promise<Object>}
+     */
+    fleetAttention: async () => {
+        const response = await apiClient.get('/api/dashboard/fleet/attention/')
+        return response.data
+    },
+
+    /**
+     * Generate an org-wide fleet digest.
+     * @param {boolean} [useAi=true] - Use AI distillation (false = rule-based)
+     * @returns {Promise<Object>} The generated digest
+     */
+    generateFleetDigest: async (useAi = true) => {
+        const response = await apiClient.post('/api/dashboard/fleet/digest/', { use_ai: useAi })
+        return response.data
+    },
+
+    /**
+     * List registered repositories.
+     * @param {Object} [params] - Optional filters
+     * @returns {Promise<Object>} Paginated repositories
+     */
+    listRepositories: async (params = {}) => {
+        const response = await apiClient.get('/api/dashboard/repositories/', { params })
+        return response.data
+    },
+
+    /**
+     * Register a repository by owner/repo (requires authentication).
+     * @param {string} fullName - Repository in owner/repo format
+     * @param {boolean} [isTracked=true] - Add to the ingestion watchlist
+     * @returns {Promise<Object>} The registered repository
+     */
+    registerRepository: async (fullName, isTracked = true) => {
+        const response = await apiClient.post('/api/dashboard/repositories/register/', {
+            full_name: fullName,
+            is_tracked: isTracked,
+        })
+        return response.data
+    },
+
+    /**
+     * Collect a fresh metrics snapshot for a repository now (requires auth).
+     * @param {number} id - Repository ID
+     * @returns {Promise<Object>} The new snapshot
+     */
+    collectMetrics: async (id) => {
+        const response = await apiClient.post(`/api/dashboard/repositories/${id}/collect/`)
+        return response.data
+    },
+
+    /**
+     * List AI digests (per-repo and fleet).
+     * @param {Object} [params] - Optional filters (e.g. { scope: 'fleet' })
+     * @returns {Promise<Object>} Paginated digests
+     */
+    listDigests: async (params = {}) => {
+        const response = await apiClient.get('/api/dashboard/digests/', { params })
+        return response.data
+    },
+}
+
 // Export the base client for advanced usage
 export { apiClient, API_BASE_URL }

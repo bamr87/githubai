@@ -11,6 +11,7 @@ import IssueDetailPage from './pages/IssueDetailPage'
 import CreateIssuePage from './pages/CreateIssuePage'
 import AutoIssuePage from './pages/AutoIssuePage'
 import TemplatesPage from './pages/TemplatesPage'
+import FleetPage from './pages/FleetPage'
 import './App.css'
 
 // Ant Design theme configuration
@@ -28,6 +29,7 @@ function App() {
         <AppLayout>
           <Routes>
             <Route path="/" element={<HomePage />} />
+            <Route path="/fleet" element={<FleetPage />} />
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/issues" element={<IssuesPage />} />
             <Route path="/issues/create" element={<CreateIssuePage />} />
