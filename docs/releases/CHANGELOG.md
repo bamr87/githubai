@@ -7,7 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.5.1] - 2025-11-29
+## [0.6.0] - 2026-06-06
+
+### Added
+
+- **Multi-Repo DevOps Cockpit** - Evolve GitHubAI from single-repo automation into a fleet dashboard
+  - New `dashboard` Django app with first-class registry models: `Organization`, `Repository`, `RepoConnection`, plus time-series `RepoMetricSnapshot` and AI `RepoDigest`
+  - **`RepositoryService`** - register/discover repos via the GitHub API and curate a tracked watchlist (ETag-based metadata sync)
+  - **`MetricsCollectorService`** - ingest per-repo signals (open/stale PRs, open issues, CI success rate, security alerts, last release) into snapshots with a computed 0–100 `health_score`; collectors degrade gracefully per-signal
+  - **`FleetDigestService`** - AI-distilled per-repo and fleet-wide "what needs attention" digests with a deterministic rule-based fallback when no AI provider is configured
+  - **Celery tasks**: `ingest_repository_metrics`, `ingest_all_tracked_repositories`, `generate_repo_digest`, `generate_fleet_digest`
+  - **REST API** under `/api/dashboard/` (repositories, snapshots, digests, `fleet/overview`, `fleet/attention`, `fleet/digest`); read views public, write/orchestration actions authentication-gated
+  - **Management commands**: `register_repo`, `ingest_metrics`, `fleet_digest`
+  - **Fleet dashboard page** (`/fleet`) in the React frontend: aggregate KPIs, per-repo health grid, cross-cutting attention lists (failing CI, security alerts, stale PRs), and an AI fleet digest
+  - New guide: `docs/guides/cockpit-dashboard.md`
+- **Generalized `GitHubService`** - pagination, ETag/conditional GET, rate-limit awareness, and helpers for repos, pull requests, issues counts, workflow runs, releases, and code-scanning/Dependabot alerts (existing methods unchanged)
+
+### Changed
+
+- `PRD.md` north-star, OOS, and roadmap updated to reflect the multi-repo cockpit vision (multi-repo management and advanced analytics promoted from out-of-scope into scope)
 
 ### Added
 

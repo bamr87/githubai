@@ -2,7 +2,7 @@
 
 ## 0. WHY (What, How, and whY)
 
-**North Star**: Empower developers to automate GitHub workflows via AI-powered issue management, documentation, and maintenance.
+**North Star**: Empower developers to automate GitHub workflows via AI-powered issue management, documentation, and maintenance — evolving toward a **multi-repo DevOps cockpit**: a single place to observe, distill, and orchestrate the health of an entire fleet of GitHub repositories with AI.
 
 **KFI (Key Focus Indicator)**: >75% reduction in manual GitHub maintenance time (measured via weekly automated issue creation vs manual baseline).
 
@@ -149,10 +149,14 @@ curl -X POST http://localhost:8000/api/chat/ \
 - ❌ **Custom AI model training**: Use off-the-shelf providers (OpenAI, XAI, Anthropic).
 - ❌ **Mobile apps**: Web UI only (responsive design sufficient).
 - ❌ **Billing/subscriptions**: Free tier only (monetization post-MVP).
-- ❌ **Advanced analytics**: Basic usage tracking only (dashboard post-MVP).
-- ❌ **Webhook automation**: Manual triggers only (GitHub Actions integration post-MVP).
 
-**Note**: These are "won't-haves" until v0.5.0+.
+**Promoted into scope (DevOps Cockpit, v0.6.0+)** — these were previously OOS and are now being delivered incrementally as part of the multi-repo cockpit vision:
+
+- ✅ **Multi-repo management**: first-class `Organization`/`Repository`/`RepoConnection` registry with a tracked watchlist (was: single `owner/repo` per command).
+- ✅ **Advanced analytics**: time-series `RepoMetricSnapshot` store, fleet health scores, and a `/fleet` dashboard (was: basic usage tracking only).
+- 🚧 **Webhook automation**: event-driven ingestion to complement scheduled Celery collectors (initial scheduled ingestion delivered; webhook receiver in progress).
+
+**Note**: Remaining "won't-haves" (multi-language analysis, real-time collab, custom model training, mobile, billing) stay deferred.
 
 ---
 
@@ -164,7 +168,9 @@ curl -X POST http://localhost:8000/api/chat/ \
 | **v0.4.0** (Done) | Prompt Refinement - AI-powered prompt generation via admin | 2025-11-23 |
 | **v0.4.1** (Done) | Minor bug fixes and stability improvements | 2025-11-25 |
 | **v0.5.0** (Current) | PRD MACHINE - AI-powered PRD automation | 2025-11-29 |
-| **v0.6.0** (Next) | Authentication + API Tokens - Secure multi-user access | Q1 2026 |
+| **v0.6.0** (Next) | Cockpit Foundations - Repository registry + metrics ingestion + Fleet dashboard MVP + auth | Q1 2026 |
+| **v0.7.0** (Planned) | Cockpit Intelligence - per-repo & fleet AI digests, conversational fleet copilot, webhook-driven ingestion | Q2 2026 |
+| **v1.0.0** (Planned) | Orchestration + linting + alerting - agent framework, cross-repo quality aggregation, threshold alert engine, approval-gated actions | 2026 |
 
 **RICE Scoring** (Reach × Impact × Confidence / Effort):
 

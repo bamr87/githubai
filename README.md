@@ -17,6 +17,15 @@ A production-ready Django web application that leverages AI models to automate G
 - YAML-driven templates for customizable and consistent issue generation
 - Full REST API and web interface for issue management
 
+### 🛰️ Multi-Repo DevOps Cockpit (Fleet Dashboard)
+
+- **Repository registry**: register many GitHub repos as first-class entities (`Organization`, `Repository`, `RepoConnection`) and curate a tracked "watchlist"
+- **Signal ingestion**: scheduled Celery collectors capture per-repo signals — open/stale PRs, open issues, CI workflow success rate, security alerts, and latest release — into time-series `RepoMetricSnapshot` records
+- **Fleet dashboard**: a single React page (`/fleet`) with aggregate KPIs, a per-repo health grid (0–100 health score), and cross-cutting "needs attention" lists (failing CI, open security alerts, stale PRs)
+- **AI fleet digest**: AI-distilled "what needs attention" briefing across the whole portfolio, with a deterministic rule-based fallback when no AI provider is configured
+- REST API under `/api/dashboard/` and management commands: `register_repo`, `ingest_metrics`, `fleet_digest`
+- See the [Cockpit Dashboard guide](docs/guides/cockpit-dashboard.md) for details
+
 ### 💬 AI Chat Interface
 
 - **React-based Web UI** for interactive AI conversations
