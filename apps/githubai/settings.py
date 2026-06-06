@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     # Local apps
     "core.apps.CoreConfig",
     "prd_machine.apps.PrdMachineConfig",
+    "dashboard.apps.DashboardConfig",
 ]
 
 MIDDLEWARE = [
