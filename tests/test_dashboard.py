@@ -74,7 +74,7 @@ class TestModels:
         snap = _make_snapshot(repo, ci_success_rate=1.0, stale_pr_count=0, security_alert_count=0)
         assert snap.health_score == 100
 
-    def test_health_score_penalised(self):
+    def test_health_score_penalized(self):
         repo = _make_repo()
         snap = _make_snapshot(repo, ci_success_rate=0.5, stale_pr_count=2, security_alert_count=1)
         # 100 - 20 (ci) - 10 (security) - 6 (stale) = 64
