@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - '.editorconfig'
+      - '.github/**'
   workflow_dispatch:
     inputs:
       bump_type:
@@ -17,9 +22,13 @@ on:
         - minor
         - patch
 
+concurrency:
+  group: versioning-main
+
 jobs:
   versioning:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout repository
@@ -30,18 +39,24 @@ jobs:
 
       - name: Create environment file
         run: |
-          echo "DEBUG=True" > .env
-          echo "SECRET_KEY=github-actions-key" >> .env
-          echo "DATABASE_URL=sqlite:///db.sqlite3" >> .env
-          echo "AI_API_KEY=${{ secrets.AI_API_KEY }}" >> .env
-          echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> .env
+          {
+            echo "DEBUG=True"
+            echo "SECRET_KEY=github-actions-key"
+            echo "DATABASE_URL=sqlite:///db.sqlite3"
+            echo "AI_API_KEY=${{ secrets.AI_API_KEY }}"
+            echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}"
+          } > .env
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
 
-      - name: Build Docker image
+      - name: Install dependencies
         run: |
-          docker build -f infra/docker/Dockerfile -t githubai:latest .
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
 
       - name: Configure Git
         run: |
@@ -50,17 +65,17 @@ jobs:
 
       - name: Run Django migrations
         run: |
-          docker run --rm -v "$PWD":/app --env-file .env githubai:latest python manage.py migrate --run-syncdb
+          python manage.py migrate --run-syncdb
 
       - name: Run versioning with auto detection
         if: github.event.inputs.bump_type == 'auto' || github.event.inputs.bump_type == ''
         run: |
-          docker run --rm -v "$PWD":/app --env-file .env githubai:latest python manage.py bump_version
+          python manage.py bump_version
 
       - name: Run versioning with specific type
         if: github.event.inputs.bump_type != 'auto' && github.event.inputs.bump_type != ''
         run: |
-          docker run --rm -v "$PWD":/app --env-file .env githubai:latest python manage.py bump_version --type ${{ github.event.inputs.bump_type }}
+          python manage.py bump_version --type ${{ github.event.inputs.bump_type }}
 
       - name: Push version changes
         run: |

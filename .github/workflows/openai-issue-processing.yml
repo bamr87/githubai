@@ -8,10 +8,14 @@ permissions:
   issues: write
   contents: read
 
+concurrency:
+  group: issue-ai-${{ github.event.issue.number }}
+
 jobs:
   process-issue:
     if: contains(github.event.issue.labels.*.name, 'ai-assist') || contains(github.event.issue.labels.*.name, 'README-update')
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout repo
@@ -19,13 +23,15 @@ jobs:
 
       - name: Create environment file
         run: |
-          echo "DEBUG=True" > .env
-          echo "SECRET_KEY=github-actions-key" >> .env
-          echo "DATABASE_URL=sqlite:///db.sqlite3" >> .env
-          echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
-          echo "XAI_API_KEY=${{ secrets.XAI_API_KEY }}" >> .env
-          echo "AI_PROVIDER=openai" >> .env
-          echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> .env
+          {
+            echo "DEBUG=True"
+            echo "SECRET_KEY=github-actions-key"
+            echo "DATABASE_URL=sqlite:///db.sqlite3"
+            echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}"
+            echo "XAI_API_KEY=${{ secrets.XAI_API_KEY }}"
+            echo "AI_PROVIDER=openai"
+            echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}"
+          } > .env
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
