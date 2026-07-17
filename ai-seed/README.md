@@ -1,9 +1,6 @@
 # 🌱 AI-Seed: The Evolution Engine Repository
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Container First](https://img.shields.io/badge/Container-First-blue.svg)](https://docker.com)
-[![AI Powered](https://img.shields.io/badge/AI-Powered-purple.svg)](https://github.com/features/copilot)
-[![Path Based](https://img.shields.io/badge/Path-Based-green.svg)](#path-philosophy)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Container First](https://img.shields.io/badge/Container-First-blue.svg)](https://docker.com) [![AI Powered](https://img.shields.io/badge/AI-Powered-purple.svg)](https://github.com/features/copilot) [![Path Based](https://img.shields.io/badge/Path-Based-green.svg)](#path-philosophy)
 
 > **"Like water finding its way through terrain, code and information follow paths of least resistance, creating interconnected networks of knowledge and functionality."**
 

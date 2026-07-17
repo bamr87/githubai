@@ -423,18 +423,12 @@ def factorial(n):
 
 # Show command-line examples with prompts
 ```bash
-$ npm install
-$ npm run build
-$ npm test
+$ npm install $ npm run build $ npm test
 ```
 
 # Include expected output when helpful
 ```console
-$ ls -la
-total 24
-drwxr-xr-x  6 user staff  192 Jul 19 10:30 .
-drwxr-xr-x  3 user staff   96 Jul 19 10:29 ..
--rw-r--r--  1 user staff  123 Jul 19 10:30 README.md
+$ ls -la total 24 drwxr-xr-x  6 user staff  192 Jul 19 10:30 . drwxr-xr-x  3 user staff   96 Jul 19 10:29 .. -rw-r--r--  1 user staff  123 Jul 19 10:30 README.md
 ```
 
 # Use diff format for showing changes
@@ -729,24 +723,12 @@ classDiagram
 ```markdown
 # Simple diagrams using ASCII art
 ```
-┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-│   Client    │───▶│   Server    │───▶│  Database   │
-│             │    │             │    │             │
-└─────────────┘    └─────────────┘    └─────────────┘
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐ │   Client    │───▶│   Server    │───▶│  Database   │ │             │    │             │    │             │ └─────────────┘    └─────────────┘    └─────────────┘
 ```
 
 # File structure representation
 ```
-project/
-├── src/
-│   ├── components/
-│   │   ├── Header.js
-│   │   └── Footer.js
-│   └── utils/
-│       └── helpers.js
-├── tests/
-│   └── unit/
-└── docs/
+project/ ├── src/ │   ├── components/ │   │   ├── Header.js │   │   └── Footer.js │   └── utils/ │       └── helpers.js ├── tests/ │   └── unit/ └── docs/
     └── README.md
 ```
 ```
@@ -898,37 +880,22 @@ Creates a new user account.
 ### Request Example
 
 ```json
-{
-  "name": "John Doe",
-  "email": "john@example.com",
-  "password": "securePassword123",
-  "role": "admin"
-}
+{ "name": "John Doe", "email": "john@example.com", "password": "securePassword123", "role": "admin" }
 ```
 
 ### Response Examples
 
 #### Success (201 Created)
 ```json
-{
-  "id": "user_123",
-  "name": "John Doe",
-  "email": "john@example.com",
-  "role": "admin",
-  "createdAt": "2025-07-19T10:30:00Z"
-}
+{ "id": "user_123", "name": "John Doe", "email": "john@example.com", "role": "admin", "createdAt": "2025-07-19T10:30:00Z" }
 ```
 
 #### Error (400 Bad Request)
 ```json
-{
-  "error": "validation_failed",
-  "message": "Invalid email format",
-  "details": {
+{ "error": "validation_failed", "message": "Invalid email format", "details": {
     "field": "email",
     "code": "INVALID_FORMAT"
-  }
-}
+} }
 ```
 
 ### cURL Examples
@@ -962,10 +929,7 @@ Calculates the Euclidean distance between two points.
 ### Example
 
 ```javascript
-const pointA = { x: 0, y: 0 };
-const pointB = { x: 3, y: 4 };
-const distance = calculateDistance(pointA, pointB);
-console.log(distance); // Output: 5
+const pointA = { x: 0, y: 0 }; const pointB = { x: 3, y: 4 }; const distance = calculateDistance(pointA, pointB); console.log(distance); // Output: 5
 ```
 
 ### Notes
@@ -1070,22 +1034,13 @@ Write content for humans first, search engines second:
 ```html
 <!-- JSON-LD structured data -->
 <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "TechArticle",
-  "headline": "Markdown Documentation Best Practices",
-  "author": {
+{ "@context": "https://schema.org", "@type": "TechArticle", "headline": "Markdown Documentation Best Practices", "author": {
     "@type": "Person",
     "name": "AI-Seed Team"
-  },
-  "datePublished": "2025-07-19",
-  "dateModified": "2025-07-19",
-  "description": "Comprehensive guide to writing technical documentation in Markdown",
-  "mainEntityOfPage": {
+}, "datePublished": "2025-07-19", "dateModified": "2025-07-19", "description": "Comprehensive guide to writing technical documentation in Markdown", "mainEntityOfPage": {
     "@type": "WebPage",
     "@id": "https://example.com/markdown-guide"
-  }
-}
+} }
 </script>
 ```
 
@@ -1168,12 +1123,7 @@ Starting a new major topic.
 #### Jekyll Configuration
 ```yaml
 # _config.yml
-markdown: kramdown
-highlighter: rouge
-kramdown:
-  input: GFM
-  syntax_highlighter: rouge
-  syntax_highlighter_opts:
+markdown: kramdown highlighter: rouge kramdown: input: GFM syntax_highlighter: rouge syntax_highlighter_opts:
     block:
       line_numbers: true
 
@@ -1187,10 +1137,7 @@ plugins:
 #### MkDocs Configuration
 ```yaml
 # mkdocs.yml
-site_name: Documentation
-theme:
-  name: material
-  features:
+site_name: Documentation theme: name: material features:
     - navigation.sections
     - navigation.top
     - search.highlight
@@ -1249,12 +1196,7 @@ plugins:
 ```
 
 ```javascript
-// docusaurus.config.js
-module.exports = {
-  title: 'Documentation',
-  tagline: 'Comprehensive project documentation',
-  url: 'https://docs.example.com',
-  baseUrl: '/',
+// docusaurus.config.js module.exports = { title: 'Documentation', tagline: 'Comprehensive project documentation', url: 'https://docs.example.com', baseUrl: '/',
   
   presets: [
     [
@@ -1290,8 +1232,7 @@ module.exports = {
         },
       ],
     },
-  },
-};
+}, };
 ```
 
 ### Automated Quality Checks
@@ -1299,16 +1240,7 @@ module.exports = {
 #### Markdown Linting Configuration
 ```yaml
 # .markdownlint.yml
-default: true
-line-length:
-  line_length: 100
-  code_blocks: false
-  tables: false
-  headings: false
-no-duplicate-heading:
-  siblings_only: true
-no-inline-html:
-  allowed_elements:
+default: true line-length: line_length: 100 code_blocks: false tables: false headings: false no-duplicate-heading: siblings_only: true no-inline-html: allowed_elements:
     - 'br'
     - 'sub'
     - 'sup'
@@ -1319,15 +1251,12 @@ no-inline-html:
 #### Vale Style Guide
 ```yaml
 # .vale.ini
-StylesPath: styles
-MinAlertLevel: suggestion
+StylesPath: styles MinAlertLevel: suggestion
 
-[*.md]:
-  BasedOnStyles:
+[*.md]: BasedOnStyles:
     - Vale
     - Microsoft
-  Microsoft.Contractions: NO
-  Vale.Spelling: YES
+Microsoft.Contractions: NO Vale.Spelling: YES
 ```
 
 #### GitHub Actions Workflow
@@ -1335,14 +1264,12 @@ MinAlertLevel: suggestion
 # .github/workflows/docs-quality.yml
 name: Documentation Quality Check
 
-on:
-  pull_request:
+on: pull_request:
     paths:
       - 'docs/**'
       - '*.md'
 
-jobs:
-  markdown-lint:
+jobs: markdown-lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -1419,15 +1346,7 @@ jobs:
 #### Asset Organization
 ```markdown
 # Efficient asset structure
-assets/
-├── images/
-│   ├── optimized/          # Compressed versions
-│   ├── originals/          # Source files (not served)
-│   └── thumbnails/         # Small preview images
-├── videos/
-│   ├── compressed/         # Web-optimized videos
-│   └── captions/           # Subtitle files
-└── downloads/
+assets/ ├── images/ │   ├── optimized/          # Compressed versions │   ├── originals/          # Source files (not served) │   └── thumbnails/         # Small preview images ├── videos/ │   ├── compressed/         # Web-optimized videos │   └── captions/           # Subtitle files └── downloads/
     ├── pdfs/               # Documentation PDFs
     └── archives/           # Downloadable packages
 ```
@@ -1450,20 +1369,13 @@ assets/
 #### Commit Message Standards
 ```bash
 # Use conventional commit format
-docs: add markdown style guide
-docs(api): update endpoint documentation
-fix(docs): correct broken internal links
-feat(docs): add multi-language support
+docs: add markdown style guide docs(api): update endpoint documentation fix(docs): correct broken internal links feat(docs): add multi-language support
 ```
 
 #### Branch Strategy
 ```bash
 # Documentation branches
-main                    # Production documentation
-develop                # Development documentation
-docs/feature-name       # Feature-specific documentation
-docs/translation-es     # Translation branches
-hotfix/docs-typo       # Quick fixes
+main                    # Production documentation develop                # Development documentation docs/feature-name       # Feature-specific documentation docs/translation-es     # Translation branches hotfix/docs-typo       # Quick fixes
 ```
 
 #### Review Checklist
@@ -1538,12 +1450,10 @@ Complex scenario with detailed walkthrough.
 ## Troubleshooting
 
 ### Common Issue 1
-**Problem**: Description of the issue
-**Solution**: How to resolve it
+**Problem**: Description of the issue **Solution**: How to resolve it
 
 ### Common Issue 2
-**Problem**: Another common problem
-**Solution**: Resolution steps
+**Problem**: Another common problem **Solution**: Resolution steps
 
 ## Related Resources
 - [Related Feature 1](./related-feature-1.md)
@@ -1593,8 +1503,7 @@ This Markdown instruction file works in conjunction with:
 #### Path-Based Documentation Configuration
 ```yaml
 # docs-config.yml
-documentation:
-  paths:
+documentation: paths:
     content_creation:
       - planning
       - writing
@@ -1641,8 +1550,7 @@ documentation:
 #### Quality Assurance Configuration
 ```yaml
 # quality-config.yml
-quality_checks:
-  markdown_lint:
+quality_checks: markdown_lint:
     enabled: true
     rules:
       line_length: 100

@@ -191,10 +191,7 @@ Continue with clear, actionable steps...
 Provide simple, working examples that readers can follow:
 
 ```javascript
-// Path: basic-implementation
-const example = new ExampleClass();
-const result = example.performAction();
-console.log('Result:', result);
+// Path: basic-implementation const example = new ExampleClass(); const result = example.performAction(); console.log('Result:', result);
 ```
 
 ### Advanced Example
@@ -202,8 +199,7 @@ console.log('Result:', result);
 More complex scenarios for experienced users:
 
 ```javascript
-// Path: advanced-implementation-with-error-handling
-class AdvancedExample {
+// Path: advanced-implementation-with-error-handling class AdvancedExample {
     async performComplexAction() {
         try {
             const result = await this.complexOperation();
@@ -1223,9 +1219,7 @@ Brief description of the MCP server's purpose and capabilities.
 
 ### Container Configuration
 ```yaml
-version: '3.8'
-services:
-  mcp-server:
+version: '3.8' services: mcp-server:
     build: ./mcp-servers/[server-name]
     environment:
       - MCP_SERVER_NAME=[server-name]
@@ -1274,17 +1268,14 @@ async def list_resources():
 ### Tool Examples
 
 ```typescript
-// TypeScript client example
-const client = new PathAwareMCPClient("docker", ["exec", "-i", "mcp-[server-name]"]);
-await client.connect();
+// TypeScript client example const client = new PathAwareMCPClient("docker", ["exec", "-i", "mcp-[server-name]"]); await client.connect();
 
 const result = await client.callTool("[tool_name]", {
     param1: "example_value",
     param2: 42
 });
 
-console.log("Tool result:", result);
-await client.disconnect();
+console.log("Tool result:", result); await client.disconnect();
 ```
 
 ## Prompt Templates
@@ -1349,8 +1340,7 @@ docker-compose -f docker-compose.mcp.yml restart mcp-[server-name]
 ### Local Development Setup
 ```bash
 # Clone repository
-git clone [repository-url]
-cd [repository-name]
+git clone [repository-url] cd [repository-name]
 
 # Start development environment
 docker-compose -f docker-compose.mcp.yml up -d mcp-[server-name]
@@ -1430,8 +1420,7 @@ This guide provides comprehensive information about integrating Model Context Pr
 ### Installation
 ```bash
 # Clone the MCP-enabled repository
-git clone [repository-url]
-cd [repository-name]
+git clone [repository-url] cd [repository-name]
 
 # Start MCP server infrastructure
 docker-compose -f docker-compose.mcp.yml up -d
@@ -1445,16 +1434,13 @@ docker-compose -f docker-compose.mcp.yml up -d
 from src.mcp.clients.mcp_client import PathAwareMCPClient
 
 # Connect to filesystem MCP server
-client = PathAwareMCPClient("docker", ["exec", "-i", "mcp-filesystem"])
-await client.connect()
+client = PathAwareMCPClient("docker", ["exec", "-i", "mcp-filesystem"]) await client.connect()
 
 # List available resources
-resources = await client.listResources()
-print(f"Found {len(resources)} resources")
+resources = await client.listResources() print(f"Found {len(resources)} resources")
 
 # Read a specific file
-content = await client.readResource("file://src/main.py")
-print("File content:", content[:100], "...")
+content = await client.readResource("file://src/main.py") print("File content:", content[:100], "...")
 
 await client.disconnect()
 ```
@@ -1556,8 +1542,7 @@ cat config/mcp/validation_report.json | jq '.summary'
 ### Logging
 MCP operations are logged with path context:
 ```
-[2025-07-19 10:30:15] [INFO] [mcp_client] [resource_reading] Reading resource: file://src/main.py
-[2025-07-19 10:30:15] [INFO] [mcp_client] [tool_execution_list_directory] Executing tool: list_directory
+[2025-07-19 10:30:15] [INFO] [mcp_client] [resource_reading] Reading resource: file://src/main.py [2025-07-19 10:30:15] [INFO] [mcp_client] [tool_execution_list_directory] Executing tool: list_directory
 ```
 
 ## Best Practices

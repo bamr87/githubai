@@ -1545,16 +1545,11 @@ The MCP client configuration is available at: `config/mcp/client_config.json`
 ```typescript
 import { PathAwareMCPClient } from './src/mcp/clients/mcp-client';
 
-const client = new PathAwareMCPClient("docker", ["exec", "-i", "mcp-filesystem", "python", "-m", "mcp_servers.filesystem"]);
-await client.connect();
+const client = new PathAwareMCPClient("docker", ["exec", "-i", "mcp-filesystem", "python", "-m", "mcp_servers.filesystem"]); await client.connect();
 
-// List available resources
-const resources = await client.listResources();
-console.log("Available resources:", resources);
+// List available resources const resources = await client.listResources(); console.log("Available resources:", resources);
 
-// Read a specific resource
-const content = await client.readResource(resources[0].uri);
-console.log("Resource content:", content);
+// Read a specific resource const content = await client.readResource(resources[0].uri); console.log("Resource content:", content);
 
 await client.disconnect();
 ```
@@ -1562,8 +1557,7 @@ await client.disconnect();
 ### Python Client
 
 ```python
-import asyncio
-from src.mcp.clients.mcp_client_python import PathAwareMCPClient
+import asyncio from src.mcp.clients.mcp_client_python import PathAwareMCPClient
 
 async def main():
     client = PathAwareMCPClient("docker", ["exec", "-i", "mcp-filesystem", "python", "-m", "mcp_servers.filesystem"])

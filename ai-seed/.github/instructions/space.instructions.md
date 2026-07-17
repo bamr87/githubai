@@ -335,8 +335,7 @@ Include a new field for paths:
 ```
 
 ### Language-Specific Header Examples
-[Examples updated similarly, adding @paths section, e.g., 
-@paths
+[Examples updated similarly, adding @paths section, e.g., @paths
   - main-processing: Validates input, transforms data, with retry on failure.
   - error-recovery: Logs errors and falls back to default output.
 ]
