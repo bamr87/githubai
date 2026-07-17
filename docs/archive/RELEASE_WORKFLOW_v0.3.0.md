@@ -62,11 +62,7 @@
 
 **Version**: **0.3.0**
 
-**From**: 0.2.0 (current)
-**To**: 0.3.0 (recommended)
-**Type**: MINOR release
-**Breaking Changes**: None
-**Migration Required**: No
+**From**: 0.2.0 (current) **To**: 0.3.0 (recommended) **Type**: MINOR release **Breaking Changes**: None **Migration Required**: No
 
 ---
 
@@ -554,7 +550,4 @@ This release adds significant value through the new chat frontend while maintain
 
 ---
 
-**Document Version**: 1.0
-**Date**: 2025-11-22
-**Author**: Release Engineering
-**Status**: Ready for Review
+**Document Version**: 1.0 **Date**: 2025-11-22 **Author**: Release Engineering **Status**: Ready for Review

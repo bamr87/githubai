@@ -796,5 +796,4 @@ Adapt these channels to your organization:
 
 ---
 
-**Architecture Pattern**: Kea + React + TypeScript + Tailwind
-**Last Updated**: November 2025
+**Architecture Pattern**: Kea + React + TypeScript + Tailwind **Last Updated**: November 2025

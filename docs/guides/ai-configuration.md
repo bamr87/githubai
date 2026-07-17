@@ -221,20 +221,15 @@ print(f"Total cost: ${cost:.2f}")
 
 ## FAQ
 
-**Q: Can I still use settings.py for configuration?**
-A: Yes, the system falls back to settings.py if provider not in database.
+**Q: Can I still use settings.py for configuration?** A: Yes, the system falls back to settings.py if provider not in database.
 
-**Q: Do I need to update existing code?**
-A: No, all existing code is backward compatible.
+**Q: Do I need to update existing code?** A: No, all existing code is backward compatible.
 
-**Q: How do I add a new provider like Anthropic?**
-A: Use the admin interface or run `seed_ai_providers` (includes Anthropic).
+**Q: How do I add a new provider like Anthropic?** A: Use the admin interface or run `seed_ai_providers` (includes Anthropic).
 
-**Q: What happens if I delete a provider?**
-A: Models under that provider become inactive. Existing references preserved.
+**Q: What happens if I delete a provider?** A: Models under that provider become inactive. Existing references preserved.
 
-**Q: Can I have multiple API keys for the same provider?**
-A: Not currently. Use multiple provider entries with different names if needed.
+**Q: Can I have multiple API keys for the same provider?** A: Not currently. Use multiple provider entries with different names if needed.
 
 ## Next Steps
 

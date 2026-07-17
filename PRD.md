@@ -59,8 +59,7 @@
 User → Web UI (React) → REST API → AIService → Multi-provider AI → Response (cached)
 ```
 
-**Live Demo**: [http://localhost:8000/](http://localhost:8000/) (when running locally)
-**Admin Interface**: [http://localhost:8000/admin/](http://localhost:8000/admin/)
+**Live Demo**: [http://localhost:8000/](http://localhost:8000/) (when running locally) **Admin Interface**: [http://localhost:8000/admin/](http://localhost:8000/admin/)
 
 ---
 
