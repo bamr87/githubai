@@ -29,6 +29,16 @@ jobs:
   versioning:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # Real environment variables, not a .env file: settings.py resolves the
+    # .env file at BASE_DIR (= apps/), so a repo-root .env is never read on a
+    # bare runner. Docker only worked because `docker run --env-file` injected
+    # these as process env — job-level env reproduces that.
+    env:
+      DEBUG: 'True'
+      SECRET_KEY: github-actions-key
+      DATABASE_URL: sqlite:///db.sqlite3
+      AI_API_KEY: ${{ secrets.AI_API_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - name: Checkout repository
@@ -36,16 +46,6 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
-
-      - name: Create environment file
-        run: |
-          {
-            echo "DEBUG=True"
-            echo "SECRET_KEY=github-actions-key"
-            echo "DATABASE_URL=sqlite:///db.sqlite3"
-            echo "AI_API_KEY=${{ secrets.AI_API_KEY }}"
-            echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}"
-          } > .env
 
       - name: Set up Python
         uses: actions/setup-python@v5
