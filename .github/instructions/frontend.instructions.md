@@ -18,41 +18,7 @@ Instructions for GitHub Copilot when working with the GitHubAI frontend React ap
 
 ## Project Structure
 
-\`\`\`text
-frontend/
-├── src/
-│   ├── App.jsx              # Main app with routing
-│   ├── App.css              # Application styles
-│   ├── main.jsx             # Entry point
-│   ├── index.css            # Global styles
-│   ├── components/          # Reusable components
-│   │   ├── Chat/            # Chat interface components
-│   │   │   ├── index.js
-│   │   │   ├── ChatContainer.jsx
-│   │   │   ├── ChatMessage.jsx
-│   │   │   ├── MessageInput.jsx
-│   │   │   └── MessageList.jsx
-│   │   └── Layout/          # Layout components
-│   │       ├── index.js
-│   │       └── AppLayout.jsx
-│   ├── pages/               # Page components (routes)
-│   │   ├── index.js
-│   │   ├── HomePage.jsx
-│   │   ├── ChatPage.jsx
-│   │   ├── IssuesPage.jsx
-│   │   ├── IssueDetailPage.jsx
-│   │   ├── CreateIssuePage.jsx
-│   │   ├── AutoIssuePage.jsx
-│   │   ├── TemplatesPage.jsx
-│   │   └── SettingsPage.jsx
-│   ├── services/            # API client layer
-│   │   └── api.js
-│   └── assets/              # Static assets
-├── public/                  # Public static files
-├── package.json             # Dependencies and scripts
-├── vite.config.js           # Vite configuration
-└── eslint.config.js         # ESLint configuration
-\`\`\`
+\`\`\`text frontend/ ├── src/ │   ├── App.jsx              # Main app with routing │   ├── App.css              # Application styles │   ├── main.jsx             # Entry point │   ├── index.css            # Global styles │   ├── components/          # Reusable components │   │   ├── Chat/            # Chat interface components │   │   │   ├── index.js │   │   │   ├── ChatContainer.jsx │   │   │   ├── ChatMessage.jsx │   │   │   ├── MessageInput.jsx │   │   │   └── MessageList.jsx │   │   └── Layout/          # Layout components │   │       ├── index.js │   │       └── AppLayout.jsx │   ├── pages/               # Page components (routes) │   │   ├── index.js │   │   ├── HomePage.jsx │   │   ├── ChatPage.jsx │   │   ├── IssuesPage.jsx │   │   ├── IssueDetailPage.jsx │   │   ├── CreateIssuePage.jsx │   │   ├── AutoIssuePage.jsx │   │   ├── TemplatesPage.jsx │   │   └── SettingsPage.jsx │   ├── services/            # API client layer │   │   └── api.js │   └── assets/              # Static assets ├── public/                  # Public static files ├── package.json             # Dependencies and scripts ├── vite.config.js           # Vite configuration └── eslint.config.js         # ESLint configuration \`\`\`
 
 ## Routing Structure
 
@@ -71,52 +37,27 @@ frontend/
 
 ### Use Ant Design Components
 
-\`\`\`jsx
-// ✅ Correct: Use Ant Design components
-import { Layout, Button, Card, Input, List, Avatar, Space, Typography, message } from 'antd'
-import { SendOutlined, RobotOutlined, UserOutlined } from '@ant-design/icons'
+\`\`\`jsx // ✅ Correct: Use Ant Design components import { Layout, Button, Card, Input, List, Avatar, Space, Typography, message } from 'antd' import { SendOutlined, RobotOutlined, UserOutlined } from '@ant-design/icons'
 
-const { Header, Content, Footer } = Layout
-const { Title } = Typography
-\`\`\`
+const { Header, Content, Footer } = Layout const { Title } = Typography \`\`\`
 
 ### State Management with React Hooks
 
-\`\`\`jsx
-// ✅ Correct: Use useState for local state
-const [messages, setMessages] = useState([])
-const [inputValue, setInputValue] = useState('')
-const [loading, setLoading] = useState(false)
+\`\`\`jsx // ✅ Correct: Use useState for local state const [messages, setMessages] = useState([]) const [inputValue, setInputValue] = useState('') const [loading, setLoading] = useState(false)
 
-// Update state immutably
-setMessages(prev => [...prev, newMessage])
-\`\`\`
+// Update state immutably setMessages(prev => [...prev, newMessage]) \`\`\`
 
 ### API Integration with API Client
 
-\`\`\`jsx
-// ✅ Correct: Use the centralized API client service
-import { chatApi, issueApi, templateApi, providerApi, modelApi } from '../services/api'
+\`\`\`jsx // ✅ Correct: Use the centralized API client service import { chatApi, issueApi, templateApi, providerApi, modelApi } from '../services/api'
 
-// API calls with error handling
-try {
-  const response = await chatApi.sendMessage(inputValue, provider, model)
-  // Handle success
-} catch (error) {
+// API calls with error handling try { const response = await chatApi.sendMessage(inputValue, provider, model) // Handle success } catch (error) {
   message.error(error.displayMessage || 'Failed to send message')
-}
-\`\`\`
+} \`\`\`
 
 ### Loading States
 
-\`\`\`jsx
-// ✅ Correct: Track loading state for async operations
-setLoading(true)
-try {
-  await asyncOperation()
-} finally {
-  setLoading(false)
-}
+\`\`\`jsx // ✅ Correct: Track loading state for async operations setLoading(true) try { await asyncOperation() } finally { setLoading(false) }
 
 // Use loading state in UI
 <Button loading={loading} disabled={!inputValue.trim()}>
@@ -128,46 +69,27 @@ try {
 
 The API client is in \`src/services/api.js\` and provides typed methods for all endpoints:
 
-\`\`\`jsx
-import { chatApi, issueApi, templateApi, providerApi, modelApi, healthApi } from '../services/api'
+\`\`\`jsx import { chatApi, issueApi, templateApi, providerApi, modelApi, healthApi } from '../services/api'
 
-// Chat
-const response = await chatApi.sendMessage('Hello', provider, model)
+// Chat const response = await chatApi.sendMessage('Hello', provider, model)
 
-// Issues
-const issues = await issueApi.list({ state: 'open', issue_type: 'feature' })
-const issue = await issueApi.get(123)
-const newIssue = await issueApi.create({ title: '...', body: '...' })
-const autoIssue = await issueApi.createAutoIssue({ chore_type: 'code_quality' })
+// Issues const issues = await issueApi.list({ state: 'open', issue_type: 'feature' }) const issue = await issueApi.get(123) const newIssue = await issueApi.create({ title: '...', body: '...' }) const autoIssue = await issueApi.createAutoIssue({ chore_type: 'code_quality' })
 
-// Templates
-const templates = await templateApi.list()
+// Templates const templates = await templateApi.list()
 
-// AI Providers & Models
-const providers = await providerApi.list()
-const models = await modelApi.list({ provider: providerId })
+// AI Providers & Models const providers = await providerApi.list() const models = await modelApi.list({ provider: providerId })
 
-// Health
-const status = await healthApi.check()
-\`\`\`
+// Health const status = await healthApi.check() \`\`\`
 
 ## Styling Guidelines
 
 ### Prefer Ant Design Styling Props
 
-\`\`\`jsx
-// ✅ Correct: Use style props for component-specific styling
+\`\`\`jsx // ✅ Correct: Use style props for component-specific styling
 <Header style={{
-  background: '#fff',
-  padding: '0 24px',
-  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-}}>
+background: '#fff', padding: '0 24px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
 
-// ✅ Correct: Use Ant Design color tokens
-style={{ backgroundColor: '#1890ff' }}  // Primary blue
-style={{ backgroundColor: '#52c41a' }}  // Success green
-style={{ color: '#999' }}               // Secondary text
-\`\`\`
+// ✅ Correct: Use Ant Design color tokens style={{ backgroundColor: '#1890ff' }}  // Primary blue style={{ backgroundColor: '#52c41a' }}  // Success green style={{ color: '#999' }}               // Secondary text \`\`\`
 
 ### CSS Files for Global Styles
 
@@ -187,8 +109,7 @@ npm run build
 npm run preview
 
 # Run linting
-npm run lint
-\`\`\`
+npm run lint \`\`\`
 
 ## API Endpoints
 
@@ -230,43 +151,28 @@ Backend API is at \`http://localhost:8000\` by default. Configure via \`VITE_API
 
 ## Event Handling
 
-\`\`\`jsx
-// ✅ Correct: Handle keyboard events
-const handleKeyPress = (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) {
+\`\`\`jsx // ✅ Correct: Handle keyboard events const handleKeyPress = (e) => { if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault()
     sendMessage()
-  }
-}
+} }
 
 <TextArea onKeyPress={handleKeyPress} />
 \`\`\`
 
 ## Message/Notification Patterns
 
-\`\`\`jsx
-import { message } from 'antd'
+\`\`\`jsx import { message } from 'antd'
 
-// User feedback
-message.error('Failed to send message. Please try again.')
-message.success('Message sent successfully')
-message.info('Processing your request...')
-message.warning('Connection may be unstable')
-\`\`\`
+// User feedback message.error('Failed to send message. Please try again.') message.success('Message sent successfully') message.info('Processing your request...') message.warning('Connection may be unstable') \`\`\`
 
 ## Navigation Patterns
 
-\`\`\`jsx
-import { Link, useNavigate } from 'react-router-dom'
+\`\`\`jsx import { Link, useNavigate } from 'react-router-dom'
 
 // Declarative navigation
 <Link to="/issues">View Issues</Link>
 
-// Programmatic navigation
-const navigate = useNavigate()
-navigate('/issues/123')
-navigate(-1) // Go back
-\`\`\`
+// Programmatic navigation const navigate = useNavigate() navigate('/issues/123') navigate(-1) // Go back \`\`\`
 
 ## Future Considerations
 

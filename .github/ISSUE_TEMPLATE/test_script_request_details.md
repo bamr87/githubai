@@ -18,16 +18,13 @@ prompt: |
 
 **1. Test Plan Overview**
 
-**Purpose/Objective**
-Explain why the test plan is being created and what overall goals it aims to achieve (e.g., verifying critical functionality, identifying edge cases, ensuring performance meets expectations).
+**Purpose/Objective** Explain why the test plan is being created and what overall goals it aims to achieve (e.g., verifying critical functionality, identifying edge cases, ensuring performance meets expectations).
 
-**Scope**
-Describe the scope of the testing. Clearly outline the features, modules, or functionalities that are included, as well as any areas specifically out of scope.
+**Scope** Describe the scope of the testing. Clearly outline the features, modules, or functionalities that are included, as well as any areas specifically out of scope.
 
 ---
 
-**2. References**
-List any relevant documentation, requirements, or design specifications that will help clarify the features under test (e.g., project requirements, design diagrams, user stories, acceptance criteria).
+**2. References** List any relevant documentation, requirements, or design specifications that will help clarify the features under test (e.g., project requirements, design diagrams, user stories, acceptance criteria).
 
 ---
 
@@ -52,8 +49,7 @@ List any relevant documentation, requirements, or design specifications that wil
 
 ---
 
-**5. Test Data**
-Provide details about any mock or real data needed to execute the tests. If there are multiple data sets, specify each one's purpose and expected outcomes.
+**5. Test Data** Provide details about any mock or real data needed to execute the tests. If there are multiple data sets, specify each one's purpose and expected outcomes.
 
 ---
 
@@ -72,8 +68,7 @@ Provide details about any mock or real data needed to execute the tests. If ther
 
 ---
 
-**7. Detailed Test Cases**
-Outline each test case in a structured format. Below is an example table or list you might use:
+**7. Detailed Test Cases** Outline each test case in a structured format. Below is an example table or list you might use:
 
 | **Test Case ID** | **Test Case Title**                 | **Description**                                     | **Preconditions**                | **Steps**                                                                                                                                     | **Expected Result**                                                |
 |------------------|-------------------------------------|-----------------------------------------------------|----------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------|
@@ -84,8 +79,7 @@ Use as many rows as needed to cover all scenarios and edge cases.
 
 ---
 
-**8. Pass/Fail Criteria**
-Define the criteria that determines whether each test (or the overall test plan) has passed or failed. This often includes:
+**8. Pass/Fail Criteria** Define the criteria that determines whether each test (or the overall test plan) has passed or failed. This often includes:
 
 - The percentage of test cases passed.
 - Zero critical defects related to specific functionalities.
@@ -93,13 +87,11 @@ Define the criteria that determines whether each test (or the overall test plan)
 
 ---
 
-**9. Potential Risks and Mitigations**
-Identify risks that could hinder testing or compromise results, and how you plan to mitigate them (e.g., incomplete requirements, hardware constraints, limited test data, or resource availability).
+**9. Potential Risks and Mitigations** Identify risks that could hinder testing or compromise results, and how you plan to mitigate them (e.g., incomplete requirements, hardware constraints, limited test data, or resource availability).
 
 ---
 
-**10. Reporting and Documentation**
-Explain how and where test results will be recorded:
+**10. Reporting and Documentation** Explain how and where test results will be recorded:
 
 - **Test Execution Logs**: Where to log test results (e.g., in a test management tool, CI/CD pipeline logs, or a shared document).
 - **Defect Reporting**: The process for logging defects (e.g., using GitHub issues, Jira, or another bug-tracking system).
@@ -107,8 +99,7 @@ Explain how and where test results will be recorded:
 
 ---
 
-**11. Approval and Sign-Off**
-Identify key stakeholders who need to review and sign off on the plan and test results. Include names, roles, and confirmation checkpoints.
+**11. Approval and Sign-Off** Identify key stakeholders who need to review and sign off on the plan and test results. Include names, roles, and confirmation checkpoints.
 
 ---
 
@@ -121,8 +112,7 @@ Identify key stakeholders who need to review and sign off on the plan and test r
 
 ---
 
-**13. Conclusion**
-Summarize the expected outcomes and reaffirm the scope, approach, and success criteria. Provide a final statement on what successful completion of this plan/script will accomplish for the project or product.
+**13. Conclusion** Summarize the expected outcomes and reaffirm the scope, approach, and success criteria. Provide a final statement on what successful completion of this plan/script will accomplish for the project or product.
 
 ---
 

@@ -1550,6 +1550,4 @@ module.exports = {
 
 ---
 
-**Architecture Pattern**: React + TypeScript + Kea + Tailwind + Django REST
-**Document Type**: Technical Architecture Specification
-**Audience**: Frontend Developers, Full-Stack Engineers, Technical Architects
+**Architecture Pattern**: React + TypeScript + Kea + Tailwind + Django REST **Document Type**: Technical Architecture Specification **Audience**: Frontend Developers, Full-Stack Engineers, Technical Architects

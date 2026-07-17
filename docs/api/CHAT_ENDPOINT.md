@@ -19,9 +19,7 @@ This endpoint integrates seamlessly with the existing AIService, supporting mult
 
 ## Authentication
 
-**Current Status**: No authentication required
-**Permissions**: Open access (all requests accepted)
-**Recommended for Production**: Add authentication (`IsAuthenticated` permission class)
+**Current Status**: No authentication required **Permissions**: Open access (all requests accepted) **Recommended for Production**: Add authentication (`IsAuthenticated` permission class)
 
 **Future Implementation**:
 
@@ -385,8 +383,7 @@ chatWithAI('What is semantic versioning?').then(data => {
 
 ## Rate Limiting
 
-**Current Status**: No rate limiting implemented
-**Recommendation**: Implement rate limiting before production deployment
+**Current Status**: No rate limiting implemented **Recommendation**: Implement rate limiting before production deployment
 
 **Suggested Implementation**:
 

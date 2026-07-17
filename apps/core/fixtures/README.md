@@ -13,8 +13,7 @@ GitHubAI separates data into two categories:
 
 ### test_config.json
 
-**Purpose**: Test configuration for automated testing
-**Contains**:
+**Purpose**: Test configuration for automated testing **Contains**:
 
 - 2 AIProviders (OpenAI, XAI) with test API keys
 - 2 AIModels (gpt-4o-mini, grok-beta)
@@ -31,8 +30,7 @@ python manage.py loaddata apps/core/fixtures/test_config.json
 
 ### test_content.json
 
-**Purpose**: Sample content data for testing
-**Contains**:
+**Purpose**: Sample content data for testing **Contains**:
 
 - 2 PromptTemplates (chat, auto_issue)
 - 1 IssueTemplate
@@ -52,8 +50,7 @@ python manage.py loaddata apps/core/fixtures/test_content.json
 
 ### demo_prompts.yaml
 
-**Purpose**: Instructions for generating rich demo content
-**Contains**: Configuration for AI-powered content generation
+**Purpose**: Instructions for generating rich demo content **Contains**: Configuration for AI-powered content generation
 
 **Usage**:
 
@@ -64,8 +61,7 @@ python manage.py generate_content_data \
 
 ### generated_content_data.json (created on demand)
 
-**Purpose**: AI-generated content from `generate_content_data` command
-**Contains**: Custom-generated templates and sample data
+**Purpose**: AI-generated content from `generate_content_data` command **Contains**: Custom-generated templates and sample data
 
 **Usage**:
 

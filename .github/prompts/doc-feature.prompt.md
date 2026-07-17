@@ -132,8 +132,7 @@ Required authentication type and permissions.
 
 ### Headers
 ```
-Content-Type: application/json
-Authorization: Bearer <token>
+Content-Type: application/json Authorization: Bearer <token>
 ```
 
 ### Path Parameters
@@ -146,19 +145,14 @@ Authorization: Bearer <token>
 
 ### Request Body
 ```json
-{
-  "field": "value"
-}
+{ "field": "value" }
 ```
 
 ## Response
 
 ### Success Response (200)
 ```json
-{
-  "status": "success",
-  "data": {}
-}
+{ "status": "success", "data": {} }
 ```
 
 ### Error Responses
@@ -177,8 +171,7 @@ curl -X GET "http://api.example.com/api/path" \
 
 ### Python
 ```python
-import requests
-response = requests.get("http://api.example.com/api/path")
+import requests response = requests.get("http://api.example.com/api/path")
 ```
 ```
 
@@ -478,17 +471,12 @@ Thanks to @username for contributions!
 
 ### New Installation
 ```bash
-git clone https://github.com/bamr87/githubai.git
-cd githubai
-docker-compose up
+git clone https://github.com/bamr87/githubai.git cd githubai docker-compose up
 ```
 
 ### Upgrade from Previous Version
 ```bash
-git pull origin main
-docker-compose down
-docker-compose build
-docker-compose up
+git pull origin main docker-compose down docker-compose build docker-compose up
 ```
 
 ## 🔗 Links
