@@ -94,7 +94,10 @@ class ChangelogService:
         Migrated from auto_doc_generator.py
         """
         repo_path = repo_path or settings.BASE_DIR
-        repo = Repo(repo_path)
+        # BASE_DIR is <root>/apps, which is not itself a git repository —
+        # search parent directories so the enclosing repo root is found
+        # (works both in Docker at /app/apps and on bare runners).
+        repo = Repo(repo_path, search_parent_directories=True)
         head_commit = repo.head.commit
         diff_data = head_commit.diff(None, create_patch=True)
 
