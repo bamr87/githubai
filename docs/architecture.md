@@ -32,7 +32,7 @@ CLAUDE.md                                       │ merged config + prompt_conte
 
 **The app is a router, not a runtime.** App mode (see [app/README.md](../app/README.md)) converts webhooks to `repository_dispatch` into the same workflows. Trust stays per-repo (each repo's own OAuth secret); the relay holds no state and can be replaced without touching the framework. This is the intended growth path to the hosted GitHub App without ever moving execution out of the consumer's CI.
 
-**Framework refs at `@main`, pinnable at install.** Stubs and internal action references default to `@main` (fresh installs track latest); the installer's `--ref` rewrites every reference for pinning. Internal `uses:` between a reusable workflow and `load-config` intentionally match refs only per-release — the tradeoff (a PR here doesn't exercise its own loader changes in-workflow) is covered by the pytest suite instead.
+**The framework ships to the runner version-matched.** Each reusable workflow checks out `bamr87/githubai` at `${{ github.job_workflow_sha || github.sha }}` into `.githubai-framework/`, uses `load-config` from that checkout, and deletes the directory before Claude runs. `job_workflow_sha` is the commit of the *called* reusable workflow, so a consumer pinning `@v1` gets the loader and profiles of exactly `v1`; on this repo's own direct events the fallback `github.sha` makes every PR exercise its own loader changes. Stubs still reference workflows `@main` by default (fresh installs track latest) and the installer's `--ref` rewrites them for pinning — but there is no ref skew between a workflow and its action, ever.
 
 ## What guards the framework
 

@@ -113,6 +113,29 @@ def test_automation_prompts_mark_content_as_data(workflow_files):
         )
 
 
+def test_framework_checkout_is_version_matched(workflow_files):
+    """load-config must come from a framework checkout matched to the executing
+    workflow's ref - never from a floating remote ref like @main, which both
+    breaks pre-merge runs (bootstrap) and skews pinned consumers."""
+    for path in workflow_files:
+        if path.name not in AUTOMATION:
+            continue
+        text = path.read_text(encoding="utf-8")
+        assert "actions/load-config@" not in text, (
+            f"{path.name}: remote load-config ref reintroduces version skew"
+        )
+        assert "repository: bamr87/githubai" in text, f"{path.name}: framework checkout missing"
+        assert "ref: ${{ github.job_workflow_sha || github.sha }}" in text, (
+            f"{path.name}: framework checkout must be version-matched"
+        )
+        checkout_at = text.index("repository: bamr87/githubai")
+        use_at = text.index("uses: ./.githubai-framework/actions/load-config")
+        assert checkout_at < use_at, f"{path.name}: checkout must precede the local action use"
+        assert "rm -rf .githubai-framework" in text, (
+            f"{path.name}: framework checkout must be removed before Claude runs"
+        )
+
+
 def test_triage_and_auto_merge_evaluator_are_read_only(repo_root):
     """Tool allowlists back the security docs: no Edit/Write in triage or the merge evaluator."""
     for name in ("claude-triage.yml", "claude-auto-merge.yml"):

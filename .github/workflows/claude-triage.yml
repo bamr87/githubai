@@ -63,11 +63,25 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Check out GitHubAI framework (version-matched)
+        uses: actions/checkout@v4
+        with:
+          repository: bamr87/githubai
+          # Reusable call: SHA of the called workflow's ref; direct run in
+          # this repo: the current SHA. Action + profiles always match the
+          # workflow that is executing (no @main skew, testable in PRs).
+          ref: ${{ github.job_workflow_sha || github.sha }}
+          path: .githubai-framework
+          persist-credentials: false
+
       - name: Load GitHubAI config
         id: cfg
-        uses: bamr87/githubai/actions/load-config@main
+        uses: ./.githubai-framework/actions/load-config
         with:
           config_path: ${{ inputs.config_path || '.github/githubai.yml' }}
+
+      - name: Remove framework checkout
+        run: rm -rf .githubai-framework
 
       - name: Triage with Claude
         if: steps.cfg.outputs.triage_enabled == 'true'
