@@ -1,0 +1,39 @@
+# Profile: github-action — a repository that ships a GitHub Action or reusable workflows.
+
+profile:
+  name: github-action
+  description: A repository whose product is a GitHub Action, composite action, or reusable workflows.
+  guidance: |
+    Standards for GitHub Action repositories:
+    - Inputs and outputs in action.yml (and workflow_call signatures) are a public API: removing or renaming one is a breaking change.
+    - Every input needs a description and a sensible default; required-without-default inputs must be justified.
+    - Pin third-party actions by major version tag at minimum; prefer full commit SHAs for anything with write access to secrets or contents.
+    - Declare least-privilege permissions blocks in every workflow; a missing permissions block is a finding.
+    - Untrusted input (issue bodies, PR titles, branch names) must never be interpolated into run: scripts directly; use environment variables.
+    - Test via a self-referencing workflow in this repo so every PR exercises the action end to end.
+
+repo:
+  type: github-action
+
+automation:
+  review:
+    focus:
+      - input/output compatibility in action.yml and workflow_call signatures
+      - least-privilege permissions blocks
+      - script injection via untrusted event context in run steps
+      - third-party action pinning
+      - README accuracy for inputs, outputs, and examples
+  auto_merge:
+    # Actions run in other people's CI with their secrets; keep the automatic
+    # lane to documentation only.
+    allowed_paths:
+      - "docs/**"
+      - "**/*.md"
+
+standards:
+  required_files:
+    - README.md
+    - LICENSE
+  docs_expectations:
+    - README documents every input, output, and required permission, with a copy-pasteable usage example.
+    - Versioning and release tagging strategy (vN moving tag) is documented.

@@ -1,9 +1,9 @@
 name: CI
 
-# Adopted from bamr87/bamr87 via standardize-fanout.yml. This is a thin caller —
-# the gate logic is shared and versioned in
-# bamr87/bamr87/.github/workflows/standard-ci.yml. Don't edit the logic here.
-# (main is substituted with the repo's default branch on adoption.)
+# GitHubAI self-tests: validate profiles, config loader, workflow
+# conventions (OAuth-first auth, permissions, pinning), template stubs,
+# and the installer. Markdown prose style is enforced separately by
+# markdown-oneline.yml.
 
 on:
   pull_request:
@@ -18,6 +18,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  ci:
-    uses: bamr87/bamr87/.github/workflows/standard-ci.yml@main
-    secrets: inherit
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dev dependencies
+        run: python -m pip install --quiet -r requirements-dev.txt
+      - name: Run test suite
+        run: python -m pytest -q
+
+  shell:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax-check and lint shell scripts
+        run: |
+          bash -n setup/install.sh
+          shellcheck setup/install.sh

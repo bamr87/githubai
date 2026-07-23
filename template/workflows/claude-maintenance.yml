@@ -1,0 +1,33 @@
+name: Claude Maintenance
+
+# Installed by GitHubAI (github.com/bamr87/githubai). Thin caller - logic
+# lives in the reusable workflow. Weekly upkeep: docs drift, TODO sweep,
+# dependency report, stale nudges, health report. The schedule lives HERE
+# (schedules only fire on the default branch of the repo owning the file);
+# adjust the cron to taste. Pin the ref to a tag for stability.
+
+on:
+  schedule:
+    - cron: "23 6 * * 1"
+  workflow_dispatch:
+    inputs:
+      tasks:
+        description: Comma-separated task subset (default = all enabled in config)
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  maintain:
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      id-token: write
+      actions: read
+    uses: bamr87/githubai/.github/workflows/claude-maintenance.yml@main
+    with:
+      tasks: ${{ inputs.tasks }}
+    secrets: inherit

@@ -1,0 +1,33 @@
+# Profile: template — a template/framework repo that other repositories adopt.
+
+profile:
+  name: template
+  description: A template, starter, or framework repository that other repos copy from or depend on at a ref.
+  guidance: |
+    Standards for template/framework repositories:
+    - Consumers reference this repo at a ref: treat file paths, workflow names, action inputs, and config schemas as public API; renames are breaking changes.
+    - Everything shipped to consumers must be self-contained: no references to files, secrets, or services that only exist in this repo.
+    - Every template file needs a header comment saying what it is, where it came from, and how to customize it.
+    - Dogfood relentlessly: this repo should run its own machinery; a feature that is not exercised here is presumed broken.
+    - Backward compatibility on the config schema: new keys need defaults so existing consumer configs keep working unchanged.
+    - The installer and docs are part of every change: if a change alters what gets installed or how it behaves, the same PR updates installer and docs.
+
+repo:
+  type: template
+
+automation:
+  review:
+    focus:
+      - consumer-facing compatibility (paths, workflow names, inputs, config schema)
+      - self-containment of everything under template/
+      - least-privilege permissions and untrusted-input handling in workflows
+      - installer and docs kept in sync with behavior changes
+      - test coverage for changed behavior
+
+standards:
+  required_files:
+    - README.md
+    - LICENSE
+  docs_expectations:
+    - README shows adoption in one copy-pasteable step and links a configuration reference.
+    - Every workflow, profile, and config key is documented.

@@ -1,0 +1,34 @@
+# Profile: service — a backend service or API without its own UI.
+
+profile:
+  name: service
+  description: A backend service, API, worker, or daemon operated in production.
+  guidance: |
+    Standards for service repositories:
+    - API contracts are versioned: breaking changes to request/response shapes require a version bump or explicit consumer coordination noted in the PR.
+    - Every endpoint and background job needs a failure story: what happens on timeout, retry, and partial failure?
+    - Observability is part of the change: new behavior should be visible in logs or metrics; flag silent code paths.
+    - Migrations follow expand/contract; never couple a schema change and the code that requires it in a single deploy step.
+    - Idempotency and at-least-once delivery assumptions must be stated for anything consuming queues or webhooks.
+    - Secrets and connection strings come from the environment or a secret manager, never from committed code.
+
+repo:
+  type: service
+
+automation:
+  review:
+    focus:
+      - API contract compatibility
+      - failure modes, retries, and idempotency
+      - security (authn/authz, injection, secrets)
+      - migration safety
+      - observability of new behavior
+      - test coverage for changed behavior
+
+standards:
+  required_files:
+    - README.md
+    - LICENSE
+  docs_expectations:
+    - README covers how to run the service locally and its configuration surface.
+    - API endpoints or consumed queues/topics are documented.

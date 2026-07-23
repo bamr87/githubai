@@ -1,0 +1,9 @@
+# GitHubAI relay — Cloudflare Worker config.
+# Deploy: wrangler deploy
+# Secrets: wrangler secret put GITHUB_APP_ID
+#          wrangler secret put GITHUB_APP_PRIVATE_KEY   (PKCS#8 PEM)
+#          wrangler secret put WEBHOOK_SECRET
+
+name = "githubai-relay"
+main = "worker.js"
+compatibility_date = "2026-01-01"

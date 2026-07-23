@@ -1,0 +1,32 @@
+name: Claude Implement
+
+# Installed by GitHubAI (github.com/bamr87/githubai). Thin caller - logic
+# lives in the reusable workflow. Applying the `claude:implement` label to
+# an issue authorizes Claude to build it and open a PR. Pin the ref to a
+# tag for stability.
+
+on:
+  issues:
+    types: [labeled]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: Issue number to implement
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  implement:
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      id-token: write
+      actions: read
+    uses: bamr87/githubai/.github/workflows/claude-implement.yml@main
+    with:
+      issue_number: ${{ inputs.issue_number }}
+    secrets: inherit

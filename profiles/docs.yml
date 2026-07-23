@@ -1,0 +1,38 @@
+# Profile: docs — a documentation site or knowledge base.
+
+profile:
+  name: docs
+  description: A repository whose product is documentation - a docs site, handbook, or knowledge base.
+  guidance: |
+    Standards for documentation repositories:
+    - Accuracy beats completeness: wrong docs are worse than missing docs; verify claims against the systems they describe when possible.
+    - Every page needs a clear audience and purpose in its opening lines.
+    - Internal links must not break: treat a broken link as a failing test.
+    - Prefer task-oriented structure ("how to X") over feature-oriented dumps.
+    - Examples must be runnable as written; review code blocks as if they were code.
+    - Keep a consistent voice and terminology; flag new terms that conflict with the existing glossary.
+
+repo:
+  type: docs
+
+automation:
+  review:
+    focus:
+      - technical accuracy of changed content
+      - broken or missing links
+      - runnability of code examples
+      - structure, audience fit, and terminology consistency
+  auto_merge:
+    enabled: true
+    # The whole repo is prose; typo-class fixes may land automatically.
+    allowed_paths:
+      - "**/*.md"
+      - "**/*.mdx"
+      - "docs/**"
+
+standards:
+  required_files:
+    - README.md
+  docs_expectations:
+    - README explains how to build and preview the site locally.
+    - Navigation/sidebar stays in sync with added or removed pages.

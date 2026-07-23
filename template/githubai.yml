@@ -1,0 +1,47 @@
+# GitHubAI configuration for this repository.
+# Installed by GitHubAI (github.com/bamr87/githubai) - full schema reference:
+# https://github.com/bamr87/githubai/blob/main/docs/configuration.md
+#
+# Everything here overrides the framework defaults (profiles/_base.yml) and
+# your repo type's profile. Delete keys you don't need - absent keys fall
+# back to profile defaults.
+
+version: 1
+
+repo:
+  # One of: library, webapp, service, cli, github-action, docs, data, template
+  # (set by the installer; change it if the detection guessed wrong)
+  type: GHAI_REPO_TYPE
+  # One or two sentences on what this repo is FOR. Claude reads this in every
+  # triage, review, and maintenance run - specific beats generic.
+  purpose: ""
+  primary_language: ""
+
+claude:
+  # Model override for automation runs; empty = claude-code-action default.
+  model: ""
+  max_turns: 50
+
+automation:
+  triage:
+    enabled: true
+    # Let triage chain straight into implementation for trivial issues by
+    # listing labels it may add, e.g. ["claude:implement"]. Empty = never.
+    auto_implement_labels: []
+  implement:
+    enabled: true
+  review:
+    enabled: true
+  auto_merge:
+    # Off by default. Read docs/security.md before enabling: requires branch
+    # protection with required checks plus repo auto-merge setting.
+    enabled: false
+  maintenance:
+    enabled: true
+  release:
+    enabled: true
+
+standards:
+  # Commands Claude runs to validate its own changes before opening a PR.
+  test_command: ""
+  lint_command: ""

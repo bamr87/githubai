@@ -1,384 +1,97 @@
-# GitHubAI: AI-Powered GitHub Automation
+# GitHubAI — the Claude Code SDLC framework
 
-A production-ready Django web application that leverages AI models to automate GitHub workflows including AI-driven issue management, automated documentation generation, semantic versioning, and code documentation extraction.
+Wire [Claude Code](https://claude.com/claude-code) into every stage of a repository's lifecycle with one install command. Claude triages every issue, implements approved work, reviews every PR, safely auto-merges minor updates, runs weekly maintenance, and drafts releases — as GitHub Actions, with **Claude Code OAuth as the default auth**, no servers required.
 
-## Features
+GitHubAI is three things at once:
 
-### 🤖 AI-Driven Issue Management
+- **A framework** — reusable, hardened workflows and a composite action you reference at a ref, so every adopting repo upgrades by bumping one tag.
+- **A template** — repo-type profiles (library, webapp, service, cli, github-action, docs, data, template) that set standards based on what your repo *is* and what it's *for*.
+- **The seed of a GitHub App** — an [app manifest and webhook relay](app/) that route org-wide events into the same workflows; the hosted multi-tenant app is the [roadmap](PRD.md).
 
-- Automatically generates structured sub-issues (functional requirements, test plans, etc.) from parent issues
-- Creates AI-powered README updates by analyzing repository files
-- **Auto-Issue Generation**: Automatically analyzes repository for maintenance tasks and creates GitHub issues
-  - Code quality analysis
-  - TODO/FIXME scanning
-  - Documentation gap detection
-  - Dependency checks
-  - Test coverage analysis
-- YAML-driven templates for customizable and consistent issue generation
-- Full REST API and web interface for issue management
+## How it works
 
-### 💬 AI Chat Interface
+```mermaid
+flowchart LR
+    I[Issue opened] --> T[Claude triages<br/>labels, dedupe, questions]
+    T -->|"claude:implement" label| M[Claude implements<br/>branch + PR]
+    M --> R[Claude reviews<br/>standards + inline findings]
+    H[Human PRs] --> R
+    D[dependabot / renovate] --> A[Claude safety gate<br/>structured verdict]
+    R -->|minor + clean| A
+    A -->|approve + auto-merge<br/>waits for checks| G[Merged]
+    S[Weekly cron] --> W[Claude maintenance<br/>docs drift, TODOs, health]
+    V[Tag push] --> N[Claude release notes]
+```
 
-- **React-based Web UI** for interactive AI conversations
-- Multi-provider support (OpenAI, XAI/Grok, Anthropic) with dynamic model selection
-- **Team Lead Dashboard**: Query repository context and get instant answers without reading documentation
-- Response caching to reduce API costs and improve latency
-- Message history with role-based styling
-- Accessible at `/chat` when running the frontend (`npm run dev` in `frontend/`)
+Every box runs `anthropics/claude-code-action@v1` authenticated OAuth-first, and every prompt is grounded in your repo's resolved standards: framework defaults ← repo-type profile ← your `.github/githubai.yml`.
 
-### 📝 Feedback Form for Contributors
-
-- Simple form interface for submitting bug reports and feature requests
-- AI generates well-formatted GitHub issues with proper labels and structure
-- REST API endpoint: `POST /api/issues/issues/create-from-feedback/`
-- Supports context files to provide additional repository context
-
-### 📚 Automated Documentation Generation
-
-- Generates changelog entries from commit messages and diffs
-- Extracts and documents Python code docstrings and comments
-- Supports both push and pull request events
-- Database-backed documentation tracking
-
-### 🔢 Semantic Versioning
-
-- Intelligent version bumping based on commit message tags (`[major]`, `[minor]`, `[patch]`)
-- Syncs with Git tags for consistency
-- Version history tracking with database persistence
-
-### 📄 PRD MACHINE - Living Document Automation
-
-- **AI-powered PRD management**: Automatically distills and evolves PRD.md from repository signals
-- **Multi-document sync**: Keeps README.md, PRD.md, and IP.md aligned and consistent
-- **Zero-touch mode**: Optional lock to prevent human edits ("I got this, meatbag")
-- **Conflict detection**: AI-powered comparison of documentation vs actual codebase
-- **Export to GitHub**: Generate issues from MVP user stories, changelog from version diffs
-- **Slack alerts**: Real-time notifications for high-severity conflicts
-- Management command: `python manage.py prd_machine --distill --repo owner/repo`
-
-### ⚡ Modern Architecture
-
-- **Django 4.2+** with PostgreSQL database
-- **Docker containerization** for easy deployment
-- **REST API** with Django REST Framework
-- **Async processing** with Celery and Redis
-- **Admin interface** for all operations
-- **API caching** to reduce AI API costs
-- **Comprehensive logging** for auditing
-
-## Quick Start
-
-### Prerequisites
-
-- Docker and Docker Compose
-- AI API key (e.g., [OpenAI](https://platform.openai.com/api-keys), [Anthropic](https://console.anthropic.com/), etc.)
-- GitHub personal access token
-
-### Installation
+## Quickstart (any repo, ~2 minutes)
 
 ```bash
-# Clone repository
-git clone https://github.com/bamr87/githubai.git
-cd githubai
+# from your repo's root
+curl -fsSL https://raw.githubusercontent.com/bamr87/githubai/main/setup/install.sh | bash -s -- --labels
 
-# Setup environment
-cp .env.example .env
-# Edit .env and add your AI_API_KEY and GITHUB_TOKEN
-
-# Run automated setup
-chmod +x start.sh
-./start.sh
-
-# Access application
-open http://localhost:8000/admin/
+# authenticate: Claude Code OAuth token is the default for every workflow
+claude setup-token
+gh secret set CLAUDE_CODE_OAUTH_TOKEN
 ```
 
-### Manual Setup
+Then install the [Claude GitHub App](https://github.com/apps/claude) on the repo, set `repo.purpose` in the generated `.github/githubai.yml`, and open an issue — Claude triages it within minutes. Full walkthrough: [docs/getting-started.md](docs/getting-started.md).
 
-```bash
-# Build containers
-./build.sh
+## The automation surface
 
-# Start services
-docker-compose up -d
+| Workflow | Trigger | What Claude does |
+|----------|---------|------------------|
+| [`claude.yml`](.github/workflows/claude.yml) | `@claude` mention, issue assignment | Interactive: answers, fixes, implements whatever you ask |
+| [`claude-triage.yml`](.github/workflows/claude-triage.yml) | issue opened/reopened | Labels type/priority/size, finds duplicates, asks clarifying questions |
+| [`claude-implement.yml`](.github/workflows/claude-implement.yml) | `claude:implement` label | Builds the issue on a branch, runs your tests, opens a PR |
+| [`claude-review.yml`](.github/workflows/claude-review.yml) | PR opened/ready, `claude:review` label | Reviews against your repo type's standards, inline comments + verdict |
+| [`claude-auto-merge.yml`](.github/workflows/claude-auto-merge.yml) | `claude:auto-merge` label, trusted bot PRs | Read-only safety verdict; approves and enables auto-merge only for low-risk minor changes |
+| [`claude-maintenance.yml`](.github/workflows/claude-maintenance.yml) | weekly cron, manual | Docs drift, TODO sweep, dependency report, stale nudges, health report |
+| [`claude-release.yml`](.github/workflows/claude-release.yml) | tag push, manual | Categorized release notes; version-bump release PRs |
 
-# Initialize database
-./init.sh
+Each workflow doubles as a reusable workflow (`workflow_call`), which is exactly how installed repos consume them — details in [docs/workflows.md](docs/workflows.md).
 
-# Create superuser
-docker-compose exec web python manage.py createsuperuser
+## Standards from repo type and purpose
+
+The [profiles](profiles/) encode what "good" means per repo type — a library gets semver-compatibility review focus, a webapp gets migration-safety and security focus, a GitHub Action repo gets injection and pinning focus. Your `.github/githubai.yml` picks the type, states the purpose, and overrides anything:
+
+```yaml
+repo:
+  type: library
+  purpose: "Date-parsing library consumed by our billing services."
+automation:
+  auto_merge:
+    enabled: true            # dependabot patch bumps merge themselves when green
+standards:
+  test_command: npm test
 ```
 
-## Usage
+Schema reference: [docs/configuration.md](docs/configuration.md). Labels are the control plane: `claude:implement` authorizes work, `claude:auto-merge` nominates a PR for the merge lane, `claude:skip` opts anything out, `claude:needs-human` is Claude escalating to you.
 
-### Management Commands
+## Auth: Claude Code OAuth by default
 
-```bash
-# Create AI-generated sub-issue
-docker-compose exec web python manage.py create_issue \
-    --repo owner/repo \
-    --parent 123
+Every workflow authenticates with `CLAUDE_CODE_OAUTH_TOKEN` (from `claude setup-token` — included in Claude subscriptions) and falls back to `ANTHROPIC_API_KEY` only when the OAuth token is absent. One org-level secret can power every repo. Threat model, permissions, and the auto-merge safety design: [docs/security.md](docs/security.md).
 
-# Create README update
-docker-compose exec web python manage.py create_issue \
-    --repo owner/repo \
-    --issue-number 456 \
-    --readme-update
+## Repository layout
 
-# Generate documentation
-docker-compose exec web python manage.py generate_docs --file path/to/file.py
-docker-compose exec web python manage.py generate_docs --commit HEAD
-
-# Bump version
-docker-compose exec web python manage.py bump_version
-docker-compose exec web python manage.py bump_version --type minor
-
-# Auto-generate repository maintenance issues
-docker-compose exec web python manage.py auto_issue --list-chores
-docker-compose exec web python manage.py auto_issue --chore-type code_quality
-docker-compose exec web python manage.py auto_issue --chore-type todo_scan --files "apps/core/services/*.py"
-docker-compose exec web python manage.py auto_issue --chore-type general_review --dry-run
+```text
+.github/workflows/   the framework: reusable claude-*.yml + this repo's CI
+actions/load-config/ composite action resolving profile + repo config
+profiles/            repo-type standards (the "based on type and purpose" part)
+template/            what the installer copies into adopting repos
+setup/install.sh     the one-command installer
+app/                 GitHub App manifest + webhook relay (app mode)
+docs/                getting started, configuration, workflows, security, architecture
+tests/               self-tests keeping the framework honest
 ```
 
-### REST API
+This repo runs its own framework — the workflows above are live here, configured by [.github/githubai.yml](.github/githubai.yml) with the `template` profile. If the machinery doesn't work on itself, it doesn't ship.
 
-```bash
-# Health check
-curl http://localhost:8000/health/
+## Migrating from GitHubAI v0.x
 
-# List issues
-curl http://localhost:8000/api/issues/issues/
-
-# Create sub-issue via API
-curl -X POST http://localhost:8000/api/issues/issues/create-sub-issue/ \
-    -H "Content-Type: application/json" \
-    -d '{
-        "repo": "owner/repo",
-        "parent_issue_number": 123,
-        "file_refs": ["README.md"]
-    }'
-
-# Create GitHub issue from user feedback
-curl -X POST http://localhost:8000/api/issues/issues/create-from-feedback/ \
-    -H "Content-Type: application/json" \
-    -d '{
-        "feedback_type": "bug",
-        "summary": "Login button not working",
-        "description": "When I click the login button on the homepage, nothing happens.",
-        "repo": "owner/repo",
-        "context_files": ["README.md"]
-    }'
-
-# Auto-generate repository maintenance issue
-curl -X POST http://localhost:8000/api/issues/issues/create-auto-issue/ \
-    -H "Content-Type: application/json" \
-    -d '{
-        "chore_type": "code_quality",
-        "repo": "bamr87/githubai",
-        "context_files": ["apps/core/services/issue_service.py"],
-        "auto_submit": true
-    }'
-
-# List templates
-curl http://localhost:8000/api/issues/templates/
-```
-
-### Admin Interface
-
-Access Django admin at `http://localhost:8000/admin/`:
-
-- Manage issues and templates
-- View AI response cache and hit rates
-- Monitor API logs
-- Track version history
-- Review changelog entries
-
-## Project Structure
-
-```
-githubai/
-├── apps/                       # Django applications
-│   ├── core/                   # Consolidated app (models, services, views)
-│   │   ├── models.py           # All domain models (AI, GitHub, Issues)
-│   │   ├── services/           # Business logic (AIService, GitHubService, etc.)
-│   │   ├── views.py            # REST API endpoints
-│   │   └── admin.py            # Django admin with custom actions
-│   ├── prd_machine/            # PRD MACHINE automation
-│   │   ├── services/core.py    # PRDMachineService (distill, sync, export)
-│   │   ├── models.py           # PRDState, PRDVersion, PRDConflict
-│   │   └── tasks.py            # Celery tasks for GitHub webhooks
-│   └── githubai/               # Django project settings
-├── frontend/                   # React + Vite UI for AI chat
-├── docs/                       # Project documentation
-├── infra/                      # Infrastructure (Docker, nginx, scripts)
-├── tests/                      # Test suite
-├── manage.py                   # Django entry point
-├── PRD.md                      # Product Requirements Document
-├── IP.md                       # Implementation Plan
-└── VERSION                     # Current version (0.5.0)
-```
-
-## Docker Services
-
-The application includes 6 containerized services:
-
-- **web**: Django application server
-- **db**: PostgreSQL database
-- **redis**: Cache and message broker
-- **celery_worker**: Background task processor
-- **celery_beat**: Scheduled task scheduler
-- **nginx**: Reverse proxy and static file server
-
-## Configuration
-
-Key environment variables in `.env`:
-
-```env
-# Django
-DJANGO_SECRET_KEY=your-secret-key
-DJANGO_DEBUG=True
-DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
-
-# Database
-DATABASE_URL=postgresql://user:pass@db:5432/githubai
-
-# APIs
-AI_API_KEY=your-ai-key
-GITHUB_TOKEN=your-github-token
-
-# OpenAI
-AI_MODEL=gpt-4o-mini
-AI_TEMPERATURE=0.2
-AI_MAX_TOKENS=2500
-```
-
-## Development
-
-### Run in Development Mode
-
-```bash
-docker-compose -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.dev.yml up
-```
-
-Features hot-reload, debug mode, and verbose logging.
-
-### Run Tests
-
-```bash
-docker-compose -f infra/docker/docker-compose.yml exec web pytest
-docker-compose -f infra/docker/docker-compose.yml exec web pytest --cov
-```
-
-### View Logs
-
-```bash
-# All services
-docker-compose -f infra/docker/docker-compose.yml logs -f
-
-# Specific service
-docker-compose -f infra/docker/docker-compose.yml logs -f web
-docker-compose -f infra/docker/docker-compose.yml logs -f celery_worker
-```
-
-## API Endpoints
-
-### Issues
-
-- `GET /api/issues/issues/` - List all issues
-- `POST /api/issues/issues/` - Create new issue
-- `GET /api/issues/issues/{id}/` - Get issue details
-- `POST /api/issues/issues/create-sub-issue/` - Create sub-issue
-- `POST /api/issues/issues/create-readme-update/` - Create README update
-- `POST /api/issues/issues/create-from-feedback/` - Create issue from user feedback
-- `POST /api/issues/issues/create-auto-issue/` - Auto-generate maintenance issue
-- `GET /api/issues/templates/` - List issue templates
-
-### System
-
-- `GET /health/` - Health check endpoint
-- `GET /admin/` - Django admin interface
-
-## GitHub Actions Integration
-
-The Django management commands can be used in GitHub Actions workflows. See [Development Documentation](docs/development/) for examples.
-
-## Documentation
-
-### 📚 Comprehensive Documentation
-
-- **[Getting Started](docs/GETTING_STARTED.md)** - Quick setup guide for new users
-- **[Documentation Index](docs/README.md)** - Complete documentation navigation
-
-### 📖 User Guides
-
-- **[Auto Issue Feature](docs/guides/auto-issue-feature.md)** - Automated repository analysis
-- **[AI Chat Interface](docs/guides/chat-interface.md)** - Using the web chat interface
-- **[AI Provider Configuration](docs/guides/ai-provider-configuration.md)** - Configure OpenAI, XAI, etc.
-- **[Troubleshooting](docs/guides/troubleshooting.md)** - Common issues and solutions
-
-### 🔌 API Reference
-
-- **[Auto Issue Endpoints](docs/api/AUTO_ISSUE_ENDPOINTS.md)** - REST API for auto-issue generation
-- **[Chat Endpoint](docs/api/CHAT_ENDPOINT.md)** - Conversational AI API
-- **[Interactive API](http://localhost:8000/api/)** - Browse API when server is running
-
-### 🛠️ Development
-
-- **[Django Implementation](docs/development/django-implementation.md)** - Architecture and design
-- **[Testing Guide](docs/development/testing-guide.md)** - How to test features
-- **[Contributing](docs/development/contributing.md)** - How to contribute
-
-### 📋 Release Notes
-
-- **[Changelog](docs/releases/CHANGELOG.md)** - All version changes
-- **[v0.3.0 Release](docs/releases/v0.3.0.md)** - AI Chat Frontend
-- **[v0.2.0 Release](docs/releases/v0.2.0.md)** - Auto Issue Generation
-
-## Contributing
-
-Contributions are welcome! Please see our [Contributing Guide](docs/development/contributing.md) for details on:
-
-- Development setup
-- Coding standards
-- Testing guidelines
-- Pull request process
-
-Quick start:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
-4. Add tests for new functionality
-5. Submit a pull request
-
-See [docs/development/contributing.md](docs/development/contributing.md) for complete guidelines.
-
-## Troubleshooting
-
-### Database connection errors
-
-```bash
-docker-compose -f infra/docker/docker-compose.yml down
-docker-compose -f infra/docker/docker-compose.yml up -d db
-# Wait 10 seconds
-docker-compose -f infra/docker/docker-compose.yml up
-```
-
-### Reset database
-
-```bash
-docker-compose -f infra/docker/docker-compose.yml down -v
-docker-compose -f infra/docker/docker-compose.yml up -d db
-docker-compose -f infra/docker/docker-compose.yml exec web python manage.py migrate
-```
-
-### View service status
-
-```bash
-docker-compose -f infra/docker/docker-compose.yml ps
-curl http://localhost:8000/health/
-```
+The Django/React application that previously lived here (last release v0.5.3) was replaced by this framework; every v0 capability has a lighter successor. See [docs/migration-v0.md](docs/migration-v0.md).
 
 ## License
 
-MIT License
+[MIT](LICENSE)

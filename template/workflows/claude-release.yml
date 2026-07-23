@@ -1,0 +1,33 @@
+name: Claude Release
+
+# Installed by GitHubAI (github.com/bamr87/githubai). Thin caller - logic
+# lives in the reusable workflow. Push a v* tag to publish AI-drafted
+# release notes; run manually to prepare a version-bump release PR. Pin the
+# ref to a tag for stability.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Semver bump for the release PR
+        required: false
+        default: auto
+        type: choice
+        options: [auto, major, minor, patch]
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: read
+      id-token: write
+    uses: bamr87/githubai/.github/workflows/claude-release.yml@main
+    with:
+      bump: ${{ inputs.bump || 'auto' }}
+    secrets: inherit

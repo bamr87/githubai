@@ -1,0 +1,39 @@
+# Profile: webapp — a deployable web application or user-facing product.
+
+profile:
+  name: webapp
+  description: A deployable web application (frontend, backend, or full-stack) serving end users.
+  guidance: |
+    Standards for web application repositories:
+    - User-facing changes need a note on UX impact: what does the user see differently after this change?
+    - Security review is non-negotiable: authentication, authorization, session handling, injection surfaces, and secrets never ship unreviewed.
+    - Database migrations must be backward compatible with the previous release (expand/contract pattern) unless the PR explicitly declares a coordinated deploy.
+    - Configuration belongs in environment variables, never in committed code; flag hardcoded URLs, keys, or credentials.
+    - Accessibility matters: interactive UI changes should preserve keyboard navigation and reasonable ARIA semantics.
+    - Performance-sensitive paths (queries, hot endpoints, bundle size) deserve a comment on expected impact.
+
+repo:
+  type: webapp
+
+automation:
+  review:
+    focus:
+      - security (authn/authz, injection, secrets, unsafe input handling)
+      - migration safety and rollback story
+      - correctness and edge cases
+      - error handling and user-visible failure modes
+      - test coverage for changed behavior
+      - performance impact on hot paths
+  auto_merge:
+    # Web apps carry deploy risk; keep the automatic lane to docs only.
+    allowed_paths:
+      - "docs/**"
+      - "**/*.md"
+
+standards:
+  required_files:
+    - README.md
+    - LICENSE
+  docs_expectations:
+    - README covers local development setup, environment variables, and deploy process.
+    - An architecture note explains the main components and how requests flow through them.

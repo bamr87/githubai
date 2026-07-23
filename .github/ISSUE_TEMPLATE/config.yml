@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Interactive help from Claude
+    url: https://github.com/bamr87/githubai/blob/main/docs/getting-started.md
+    about: Open any issue and mention @claude in it, or comment @claude on existing threads.

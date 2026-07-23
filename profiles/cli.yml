@@ -1,0 +1,33 @@
+# Profile: cli — a command-line tool distributed to end users.
+
+profile:
+  name: cli
+  description: A command-line tool installed and run by end users.
+  guidance: |
+    Standards for CLI repositories:
+    - The flag and subcommand surface is a public API: renaming or removing flags is a breaking change and needs a deprecation period.
+    - Every command and flag must appear in --help output; review flags help-text drift alongside code changes.
+    - Exit codes are a contract: 0 for success, distinct non-zero codes for distinct failure classes, documented in the README.
+    - Output intended for pipes (stdout) stays machine-stable; human niceties go to stderr.
+    - Startup time and binary/package size matter; flag changes that add heavy dependencies.
+    - Errors must be actionable: an error message should tell the user what to do next.
+
+repo:
+  type: cli
+
+automation:
+  review:
+    focus:
+      - flag/subcommand compatibility and deprecation handling
+      - help text and README accuracy for changed commands
+      - exit codes and stdout/stderr discipline
+      - correctness and edge cases
+      - test coverage for changed behavior
+
+standards:
+  required_files:
+    - README.md
+    - LICENSE
+  docs_expectations:
+    - README shows installation and the most common invocations with real output.
+    - Every subcommand and flag is documented in --help and the README.
