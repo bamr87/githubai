@@ -1,0 +1,84 @@
+name: Claude Dispatch
+
+# Installed by GitHubAI (github.com/bamr87/githubai) - GitHub App mode only.
+# The GitHubAI relay (app/relay/) converts GitHub App webhook deliveries
+# into repository_dispatch events; this workflow routes them to the same
+# reusable workflows the Actions-only mode uses. You do not need this file
+# unless you run the relay - the standard per-event stubs cover everything.
+
+on:
+  repository_dispatch:
+    types:
+      - githubai-triage
+      - githubai-implement
+      - githubai-review
+      - githubai-auto-merge
+      - githubai-maintenance
+
+permissions:
+  contents: read
+
+jobs:
+  triage:
+    if: github.event.action == 'githubai-triage'
+    permissions:
+      contents: read
+      issues: write
+      id-token: write
+    uses: bamr87/githubai/.github/workflows/claude-triage.yml@main
+    with:
+      issue_number: ${{ github.event.client_payload.issue_number }}
+    secrets: inherit
+
+  implement:
+    if: github.event.action == 'githubai-implement'
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      id-token: write
+      actions: read
+    uses: bamr87/githubai/.github/workflows/claude-implement.yml@main
+    with:
+      issue_number: ${{ github.event.client_payload.issue_number }}
+    secrets: inherit
+
+  review:
+    if: github.event.action == 'githubai-review'
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: read
+      id-token: write
+      actions: read
+    uses: bamr87/githubai/.github/workflows/claude-review.yml@main
+    with:
+      pr_number: ${{ github.event.client_payload.pr_number }}
+    secrets: inherit
+
+  auto-merge:
+    if: github.event.action == 'githubai-auto-merge'
+    permissions:
+      contents: write
+      pull-requests: write
+      checks: read
+      issues: read
+      id-token: write
+      actions: read
+    uses: bamr87/githubai/.github/workflows/claude-auto-merge.yml@main
+    with:
+      pr_number: ${{ github.event.client_payload.pr_number }}
+    secrets: inherit
+
+  maintenance:
+    if: github.event.action == 'githubai-maintenance'
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      id-token: write
+      actions: read
+    uses: bamr87/githubai/.github/workflows/claude-maintenance.yml@main
+    with:
+      tasks: ${{ github.event.client_payload.tasks }}
+    secrets: inherit

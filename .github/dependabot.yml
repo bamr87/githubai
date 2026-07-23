@@ -1,0 +1,18 @@
+# Keep the pinned actions fresh; dependabot PRs flow through the GitHubAI
+# auto-merge lane (claude-auto-merge.yml) - Claude's safety gate evaluates
+# each bump and low-risk ones merge themselves once checks pass.
+
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    labels:
+      - "type:chore"
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+    labels:
+      - "type:chore"

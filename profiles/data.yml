@@ -1,0 +1,31 @@
+# Profile: data — datasets, pipelines, notebooks, and analytics code.
+
+profile:
+  name: data
+  description: A repository of data pipelines, datasets, notebooks, or analytics/ML code.
+  guidance: |
+    Standards for data repositories:
+    - Reproducibility is the bar: a pipeline change must state how to re-run it and what inputs it assumes.
+    - Schema changes are breaking changes: call out added/removed/retyped columns and their downstream consumers.
+    - No data in git that shouldn't be there: flag committed credentials, PII, or large binary files that belong in object storage.
+    - Notebooks are code: they should run top to bottom cleanly; strip stray outputs and dead cells during review.
+    - Every metric or transformation with business meaning needs a definition comment or doc entry.
+    - Pin dependency versions for anything that affects numerical results.
+
+repo:
+  type: data
+
+automation:
+  review:
+    focus:
+      - schema and contract changes with downstream impact
+      - reproducibility of pipelines and notebooks
+      - committed data hygiene (PII, credentials, large binaries)
+      - correctness of transformations and metric definitions
+      - dependency pinning where results depend on versions
+
+standards:
+  required_files:
+    - README.md
+  docs_expectations:
+    - README documents data sources, output schemas, and how to run the pipeline end to end.

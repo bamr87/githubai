@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -m pytest:*)",
+      "Bash(pytest:*)",
+      "Bash(python3 tools/unwrap-prose.py:*)",
+      "Bash(python3 actions/load-config/load_config.py:*)",
+      "Bash(bash -n:*)",
+      "Bash(shellcheck:*)",
+      "Bash(node --check:*)"
+    ]
+  }
+}

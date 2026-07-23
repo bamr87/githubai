@@ -1,0 +1,29 @@
+name: Claude Triage
+
+# Installed by GitHubAI (github.com/bamr87/githubai). Thin caller - logic
+# lives in the reusable workflow. Claude triages every new issue: labels,
+# dedupe, clarifying questions. Pin the ref to a tag for stability.
+
+on:
+  issues:
+    types: [opened, reopened]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: Issue number to triage (backfill)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  triage:
+    permissions:
+      contents: read
+      issues: write
+      id-token: write
+    uses: bamr87/githubai/.github/workflows/claude-triage.yml@main
+    with:
+      issue_number: ${{ inputs.issue_number }}
+    secrets: inherit

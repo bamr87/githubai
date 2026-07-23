@@ -1,0 +1,27 @@
+{
+  "name": "GitHubAI",
+  "url": "https://github.com/bamr87/githubai",
+  "description": "Wires Claude Code into the whole SDLC: triage, implementation, review, auto-merge, maintenance, and releases.",
+  "hook_attributes": {
+    "url": "https://YOUR-RELAY.example.workers.dev/webhook",
+    "active": true
+  },
+  "redirect_url": "https://YOUR-RELAY.example.workers.dev/setup",
+  "public": false,
+  "default_permissions": {
+    "contents": "write",
+    "issues": "write",
+    "pull_requests": "write",
+    "checks": "read",
+    "actions": "read",
+    "metadata": "read"
+  },
+  "default_events": [
+    "issues",
+    "issue_comment",
+    "pull_request",
+    "pull_request_review",
+    "pull_request_review_comment",
+    "release"
+  ]
+}

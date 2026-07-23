@@ -1,0 +1,61 @@
+name: GitHubAI - Load Config
+description: >-
+  Resolve the effective GitHubAI configuration for the current repository by
+  merging framework defaults, the repo-type profile, and the repo's
+  .github/githubai.yml. Exposes the merged config and a prompt-ready
+  standards block for Claude Code workflows.
+
+inputs:
+  config_path:
+    description: Path to the repo's GitHubAI config file, relative to the workspace.
+    required: false
+    default: .github/githubai.yml
+
+outputs:
+  config:
+    description: Merged configuration as single-line JSON.
+    value: ${{ steps.load.outputs.config }}
+  type:
+    description: Resolved repo type (profile name).
+    value: ${{ steps.load.outputs.type }}
+  model:
+    description: Claude model override; empty string means the action default.
+    value: ${{ steps.load.outputs.model }}
+  max_turns:
+    description: Maximum Claude Code turns for automation runs.
+    value: ${{ steps.load.outputs.max_turns }}
+  triage_enabled:
+    description: '"true" if issue triage automation is enabled.'
+    value: ${{ steps.load.outputs.triage_enabled }}
+  implement_enabled:
+    description: '"true" if label-driven implementation is enabled.'
+    value: ${{ steps.load.outputs.implement_enabled }}
+  review_enabled:
+    description: '"true" if automated PR review is enabled.'
+    value: ${{ steps.load.outputs.review_enabled }}
+  auto_merge_enabled:
+    description: '"true" if the auto-merge lane is enabled.'
+    value: ${{ steps.load.outputs.auto_merge_enabled }}
+  maintenance_enabled:
+    description: '"true" if scheduled maintenance is enabled.'
+    value: ${{ steps.load.outputs.maintenance_enabled }}
+  release_enabled:
+    description: '"true" if release automation is enabled.'
+    value: ${{ steps.load.outputs.release_enabled }}
+  prompt_context:
+    description: Markdown standards block to inject into Claude prompts.
+    value: ${{ steps.load.outputs.prompt_context }}
+
+runs:
+  using: composite
+  steps:
+    - name: Resolve configuration
+      id: load
+      shell: bash
+      env:
+        CONFIG_PATH: ${{ inputs.config_path }}
+      run: |
+        python3 -c 'import yaml' 2>/dev/null || python3 -m pip install --quiet --user pyyaml
+        python3 "${GITHUB_ACTION_PATH}/load_config.py" \
+          --config "${CONFIG_PATH}" \
+          --profiles-dir "${GITHUB_ACTION_PATH}/../../profiles"

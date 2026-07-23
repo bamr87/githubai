@@ -1,0 +1,3 @@
+# Dev/test dependencies for the framework's self-tests.
+pytest>=8
+PyYAML>=6

@@ -1,0 +1,35 @@
+name: Claude Auto-Merge
+
+# Installed by GitHubAI (github.com/bamr87/githubai). Thin caller - logic
+# lives in the reusable workflow. Label a PR `claude:auto-merge` (or let
+# dependabot/renovate open one) and Claude's safety gate decides whether it
+# may auto-merge once required checks pass. Off by default - enable
+# automation.auto_merge in .github/githubai.yml. Pin the ref to a tag for
+# stability.
+
+on:
+  pull_request:
+    types: [opened, labeled]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: Pull request number to evaluate
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  auto-merge:
+    permissions:
+      contents: write
+      pull-requests: write
+      checks: read
+      issues: read
+      id-token: write
+      actions: read
+    uses: bamr87/githubai/.github/workflows/claude-auto-merge.yml@main
+    with:
+      pr_number: ${{ inputs.pr_number }}
+    secrets: inherit

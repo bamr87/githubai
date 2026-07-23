@@ -1,0 +1,36 @@
+# Profile: library — a package published for other code to depend on.
+
+profile:
+  name: library
+  description: A reusable package (npm, PyPI, crates.io, gems, ...) consumed by other projects.
+  guidance: |
+    Standards for library repositories:
+    - The public API is a contract: breaking changes require a major version bump and must be called out loudly in the PR and release notes.
+    - Semantic versioning is mandatory; classify every change as major, minor, or patch when triaging and reviewing.
+    - Every exported function, class, or endpoint needs API documentation; flag undocumented public surface during review.
+    - Prefer zero or minimal runtime dependencies; treat any new dependency as a design decision that needs justification in the PR.
+    - The test suite is the spec: behavior changes without test changes are suspicious.
+    - Keep a changelog entry for every user-visible change.
+
+repo:
+  type: library
+
+automation:
+  review:
+    focus:
+      - public API compatibility (is this change breaking?)
+      - semantic versioning classification (major / minor / patch)
+      - correctness and edge cases
+      - test coverage for changed behavior
+      - new dependencies and their justification
+      - API documentation for any new public surface
+
+standards:
+  required_files:
+    - README.md
+    - LICENSE
+    - CHANGELOG.md
+  docs_expectations:
+    - README shows installation and a minimal working usage example.
+    - Public API is documented (docstrings, JSDoc, or a docs site).
+    - CHANGELOG records every user-visible change per release.

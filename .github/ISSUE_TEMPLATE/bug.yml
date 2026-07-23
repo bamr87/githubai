@@ -1,0 +1,26 @@
+name: Bug report
+description: Something is broken. Claude triages this automatically - the more precise, the faster it moves.
+labels: ["type:bug"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you do, what did you expect, what happened instead?
+      placeholder: Steps to reproduce, expected vs actual.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Where
+      description: Workflow run link, file, or command involved - anything that locates the failure.
+    validations:
+      required: false
+  - type: checkboxes
+    id: claude-ok
+    attributes:
+      label: Automation
+      options:
+        - label: If triage finds this well-specified and small, Claude may implement the fix directly (adds `claude:implement`).
+          required: false

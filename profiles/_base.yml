@@ -1,0 +1,150 @@
+# GitHubAI base profile — defaults shared by every repo type.
+# Repo-type profiles (library.yml, webapp.yml, ...) override these keys, and the
+# consumer repo's .github/githubai.yml overrides both. Merge is deep for maps;
+# lists are replaced, not concatenated.
+
+version: 1
+
+profile:
+  name: base
+  description: Framework-wide defaults applied to every repository type.
+  guidance: |
+    General standards that apply to every repository:
+    - Every change lands through a pull request; nothing is committed directly to the default branch.
+    - Commit messages follow the repo's commit convention (default: Conventional Commits).
+    - The README must stay accurate: if a change alters behavior described in the README, the same PR updates the README.
+    - New behavior needs tests when a test suite exists; a fix for a bug should include a regression test.
+    - Keep diffs minimal and focused on the stated intent of the issue or PR.
+
+repo:
+  type: base
+  purpose: ""
+  primary_language: ""
+
+claude:
+  # Model override passed to Claude Code as --model. Empty string means
+  # "use the claude-code-action default".
+  model: ""
+  max_turns: 50
+
+labels:
+  prefix: "claude:"
+  taxonomy:
+    - name: "type:bug"
+      color: "d73a4a"
+      description: Something is broken
+    - name: "type:feature"
+      color: "a2eeef"
+      description: New capability or enhancement
+    - name: "type:docs"
+      color: "0075ca"
+      description: Documentation only
+    - name: "type:chore"
+      color: "cfd3d7"
+      description: Maintenance, refactoring, dependencies
+    - name: "type:question"
+      color: "d876e3"
+      description: Question or discussion, no code change expected
+    - name: "priority:high"
+      color: "b60205"
+      description: Urgent — address before other work
+    - name: "priority:medium"
+      color: "fbca04"
+      description: Normal queue
+    - name: "priority:low"
+      color: "c2e0c6"
+      description: Nice to have
+    - name: "size:xs"
+      color: "ededed"
+      description: Trivial change (minutes)
+    - name: "size:s"
+      color: "ededed"
+      description: Small change (under an hour)
+    - name: "size:m"
+      color: "ededed"
+      description: Medium change (hours)
+    - name: "size:l"
+      color: "ededed"
+      description: Large change (days)
+    - name: "claude:triaged"
+      color: "5319e7"
+      description: Claude has triaged this issue
+    - name: "claude:implement"
+      color: "5319e7"
+      description: Approved for Claude to implement — applying this label starts work
+    - name: "claude:in-progress"
+      color: "5319e7"
+      description: Claude is working on this
+    - name: "claude:needs-human"
+      color: "e11d21"
+      description: Claude determined a human decision is required
+    - name: "claude:auto-merge"
+      color: "0e8a16"
+      description: Eligible for automated safety check and auto-merge
+    - name: "claude:skip"
+      color: "ededed"
+      description: Exclude this item from Claude automation
+
+automation:
+  triage:
+    enabled: true
+    dedupe: true
+    ask_clarifying: true
+    # Labels triage may add to chain straight into implementation, e.g.
+    # ["claude:implement"]. Empty means triage never self-authorizes work.
+    auto_implement_labels: []
+  implement:
+    enabled: true
+    trigger_label: "claude:implement"
+    branch_prefix: "claude/"
+    draft_pr: false
+  review:
+    enabled: true
+    inline_comments: true
+    review_bot_prs: true
+    focus:
+      - correctness and edge cases
+      - security (injection, secrets, unsafe input handling)
+      - test coverage for changed behavior
+      - documentation drift caused by the change
+  auto_merge:
+    enabled: false
+    trigger_label: "claude:auto-merge"
+    # Highest risk verdict that may still merge: only "low" is allowed to land.
+    max_risk: low
+    # PR authors whose PRs are checked automatically without the trigger label.
+    allowed_authors:
+      - "dependabot[bot]"
+      - "renovate[bot]"
+    # Paths considered low-risk; changes outside these make a PR ineligible
+    # unless a maintainer applied the trigger label explicitly.
+    allowed_paths:
+      - "docs/**"
+      - "**/*.md"
+      - ".github/**"
+    method: squash
+  maintenance:
+    enabled: true
+    tasks:
+      - docs_drift
+      - todo_sweep
+      - dependency_report
+      - stale_nudge
+      - health_report
+    max_issues_per_run: 3
+    auto_fix_docs: false
+  release:
+    enabled: true
+    draft: true
+    update_changelog: true
+
+standards:
+  required_files:
+    - README.md
+    - LICENSE
+  test_command: ""
+  lint_command: ""
+  commit_convention: conventional
+  branching: trunk-based with short-lived feature branches
+  docs_expectations:
+    - README explains what the project is, how to install or adopt it, and how to run it.

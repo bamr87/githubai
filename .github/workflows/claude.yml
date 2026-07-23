@@ -1,11 +1,18 @@
 name: Claude
 
-# @claude mention handler, seeded from bamr87/bamr87 templates/agent-context/.
-# Mention @claude in an issue or PR comment and Claude Code picks up the task.
+# GitHubAI - interactive entry point. Mention @claude in an issue or PR
+# comment (or open/assign an issue containing @claude) and Claude Code picks
+# up the task with full repo context. Repo standards reach Claude through
+# CLAUDE.md in the checkout; the automation workflows (claude-*.yml) inject
+# profile standards explicitly.
 #
-# Auth (house convention): CLAUDE_CODE_OAUTH_TOKEN (from `claude setup-token`)
-# preferred; ANTHROPIC_API_KEY used only when the OAuth token is absent.
-# See bamr87/bamr87 docs/AI-INTEGRATION.md.
+# Auth (framework convention): CLAUDE_CODE_OAUTH_TOKEN (from
+# `claude setup-token`) is the default; ANTHROPIC_API_KEY is used only when
+# the OAuth token is absent. See docs/security.md.
+#
+# Reusable: call from any repo as
+#   uses: bamr87/githubai/.github/workflows/claude.yml@main
+#   secrets: inherit
 
 on:
   issue_comment:
@@ -16,6 +23,14 @@ on:
     types: [submitted]
   issues:
     types: [opened, assigned]
+  workflow_call:
+    secrets:
+      CLAUDE_CODE_OAUTH_TOKEN:
+        description: Claude Code OAuth token from `claude setup-token` (preferred)
+        required: false
+      ANTHROPIC_API_KEY:
+        description: Anthropic API key, used only when no OAuth token is set
+        required: false
 
 permissions:
   contents: read

@@ -1,0 +1,10 @@
+# GitHubAI ships no Python package; this file configures the dev tooling for
+# the framework's self-tests (config loader + structure validation).
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 120
+extend-exclude = ["tools/unwrap-prose.py"]
