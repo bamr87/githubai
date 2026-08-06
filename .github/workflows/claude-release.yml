@@ -59,12 +59,12 @@ jobs:
       issues: read
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Check out GitHubAI framework (version-matched)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: bamr87/githubai
           # Reusable call: SHA of the called workflow's ref; direct run in
