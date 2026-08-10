@@ -1,0 +1,35 @@
+name: shell
+
+# Shell lint for the installer. Split out of ci.yml when the generic Python
+# half of that workflow moved to the shared reusable gate
+# (bamr87/bamr87/.github/workflows/standard-ci.yml), which has no shell-lint
+# step — this preserves that coverage verbatim.
+#
+# Triggers are deliberately left unfiltered, matching the job's behaviour when
+# it lived in ci.yml, so this migration drops no check on any ref.
+#
+# Note: `bash -n setup/install.sh` is also asserted by tests/test_installer.py,
+# but shellcheck is only ever run here. Fix locally: shellcheck setup/install.sh
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: shell-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shell:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - name: Syntax-check and lint shell scripts
+        run: |
+          bash -n setup/install.sh
+          shellcheck setup/install.sh
