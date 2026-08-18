@@ -1,0 +1,77 @@
+name: "triage-on-failure"
+
+on:
+  workflow_run:
+    workflows: ["CI", "ci-cd-pipeline", "docs-build-deploy", "evolve-on-issue", "scheduled-evolution"]
+    types: ["completed"]
+
+permissions:
+  contents: read
+  issues: write
+  actions: read
+
+jobs:
+  triage:
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install minimal dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml requests
+
+      - name: Ensure unzip is available
+        run: |
+          sudo apt-get update -y && sudo apt-get install -y unzip
+
+      - name: Verify GitHub CLI
+        run: |
+          gh --version || (sudo apt-get update -y && sudo apt-get install -y gh && gh --version)
+
+      - name: Download logs for failed run
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p logs
+          echo "Downloading logs for run ID: ${{ github.event.workflow_run.id }}"
+          gh api \
+            -H "Accept: application/zip" \
+            repos/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}/logs > logs.zip || true
+          unzip -o logs.zip -d logs || true
+          echo "Extracted log files:" && find logs -type f | wc -l || true
+          echo "Sample of extracted files:" && find logs -type f | head -n 25 || true
+
+      - name: Create triage issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python scripts/triage_failure.py \
+            --workflow-name "${{ github.event.workflow_run.name }}" \
+            --run-url "${{ github.event.workflow_run.html_url }}" \
+            --git-ref "${{ github.event.workflow_run.head_branch }}" \
+            --commit-sha "${{ github.event.workflow_run.head_sha }}" \
+            --logs-root logs \
+            --tail-lines 200
+
+      - name: Upload logs artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failed-run-logs-${{ github.event.workflow_run.id }}
+          path: logs
+          if-no-files-found: warn
+          retention-days: 7
