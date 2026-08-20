@@ -1,0 +1,390 @@
+# =============================================================================
+# seed-grow.yml — the AI-Seed increment loop (kernel v0.1.0)
+# =============================================================================
+# One tick = one bounded increment = one DRAFT pull request. OFF by default:
+#   1. Idle until the SEED_GROW_ENABLED repo variable is "true" — the variable
+#      is the consent, for scheduled and manual runs alike.
+#   2. A separate gate job honors .seed/pause.yml (the kill switch) and
+#      validates dispatch inputs, so a paused repo or a malformed input can
+#      never reach the model passes or the publish steps.
+#   3. Model passes run OAuth-first (CLAUDE_CODE_OAUTH_TOKEN via
+#      anthropics/claude-code-action@v1); the ANTHROPIC_API_KEY fallback fires
+#      only on evidence — an empty tick or is_error in a pass's output.
+#   4. The WORKFLOW — never the model — commits, pushes (SEED_PAT preferred so
+#      CI fires on the PR; github.token pushes fire no workflow events), opens
+#      the draft PR, appends telemetry, and reverts any agent edit to
+#      .github/workflows/** (workflows are not agent-writable).
+#   5. A tick that publishes nothing FAILS LOUDLY, naming the failure class:
+#      auth/setup (re-mint the token) vs stalled growth (the plan chose
+#      nothing). Never merges — humans merge.
+# Policy (model tiers, cadence) lives in .seed/seed.yml — edit there, not here.
+# Kernel-managed: rendered from seed/kernel/ by the AI-Seed planter; `seed.py
+# check` flags drift against the kernel.
+
+name: seed-grow
+
+on:
+  schedule:
+    - cron: '17 4 * * 1'
+  workflow_dispatch:
+    inputs:
+      focus:
+        description: 'Optional steering for this tick (plain prose; no shell metacharacters)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+# Shared repo write-lock: every seed workflow that writes this repo joins this
+# same group (cancel-in-progress false — a superseded tick queues, it is never
+# killed mid-publish).
+concurrency:
+  group: seed-write-${{ github.repository }}
+  cancel-in-progress: false
+
+env:
+  # ---- Pass 1: PLAN (no writes beyond the plan file, no commits) -----------
+  PLAN_PROMPT: |
+    You are the PLAN pass (tier 1 of 3: plan -> build -> verify) of an AI-Seed
+    grow tick. Read CONCEPT.md in full — §8 is the Evolution Log of what
+    already happened; §2 lists the capabilities to grow toward; §5 defines the
+    quality bars. Read CLAUDE.md (the guardrails bind you) and skim the repo
+    state. Then select exactly ONE bounded increment for this tick: the
+    smallest next step that advances §2, is reviewable in one sitting, and
+    does not touch .github/workflows/**. ${{ inputs.focus }}
+    Write your selection to .seed/tick-plan.md: the increment, why it is next,
+    the files you expect to touch, and how the verify pass should prove it
+    works. Do NOT implement it, do NOT commit, do NOT push. Overwrite any
+    existing .seed/tick-plan.md. Then stop.
+  # ---- Pass 2: BUILD (implement; leave everything uncommitted) -------------
+  BUILD_PROMPT: |
+    You are the BUILD pass (tier 2 of 3) of an in-progress AI-Seed grow tick.
+    .seed/tick-plan.md holds the selected increment (run `git status` to see
+    any drafts). Implement it completely: code AND tests, following CLAUDE.md
+    and CONCEPT.md §5 quality bars and §7 conventions. Never create or modify
+    anything under .github/workflows/. Never edit .seed/pause.yml, the
+    guardrails block of .seed/seed.yml, or CONCEPT.md §8. Leave every change
+    uncommitted — the workflow publishes. If .seed/tick-plan.md is missing,
+    write it first (one bounded increment), then implement it. Then stop.
+  # ---- Pass 3: VERIFY (prove it, polish it, log it; no commits) ------------
+  VERIFY_PROMPT: |
+    You are the VERIFY pass (tier 3 of 3) of an in-progress AI-Seed grow tick.
+    Uncommitted changes implement the increment described in
+    .seed/tick-plan.md. Finish the tick (do NOT commit or push):
+      1. Run the repo's checks (CONCEPT.md §5 lists them, including
+         `python3 .seed/tools/seed.py check .`) and fix what they surface.
+      2. Polish: docs updated (README-Last), CONCEPT.md §2/§4 updated if
+         capabilities or structure changed, conventions per §7.
+      3. Append ONE new entry to CONCEPT.md "## §8 Evolution Log", at the same
+         heading level as the existing entries, exact format:
+         "### G<gen>-T<seq> — <YYYY-MM-DD> — Tick <N>: <short summary>"
+         (increment T<seq> from the last entry; never rewrite existing
+         entries), followed by a one-line **Action** describing what landed.
+      4. Honesty rule: if the build pass produced nothing workable, revert the
+         leftovers (git checkout -- <paths>) instead of inventing filler.
+    Then stop. The workflow commits, pushes, and opens the draft PR.
+  # ---- Fallback: one complete tick on the API key (no commits) -------------
+  FALLBACK_PROMPT: |
+    The OAuth grow passes produced no publishable changes (the subscription
+    token may have failed). Run ONE complete AI-Seed grow tick now: read
+    CONCEPT.md (§8 = history, §2 = capabilities, §5 = quality bars) and
+    CLAUDE.md; select ONE bounded increment; write .seed/tick-plan.md;
+    implement it with tests; run the checks; append the CONCEPT.md §8 entry
+    ("### G<gen>-T<seq> — <YYYY-MM-DD> — Tick <N>: <summary>"). Never touch
+    .github/workflows/**, .seed/pause.yml, or the guardrails block of
+    .seed/seed.yml. Do NOT commit or push — the workflow publishes. Then stop.
+
+jobs:
+  # Kill switch + consent + input validation. A separate job so that when it
+  # refuses, NONE of the grow job's steps run — including its `if: always()`
+  # publish steps, which would otherwise still fire.
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      go: ${{ steps.gate.outputs.go }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Consent, kill switch, auth, input validation
+        id: gate
+        env:
+          ENABLED: ${{ vars.SEED_GROW_ENABLED }}
+          OAUTH: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          FOCUS: ${{ inputs.focus }}
+        run: |
+          set -euo pipefail
+          # Dispatch inputs are validated before any step interpolates them.
+          if printf '%s' "$FOCUS" | LC_ALL=C grep -qE '[`$<>|;&{}]'; then
+            echo "::error::inputs.focus contains disallowed characters (possible injection); refusing to run."
+            exit 1
+          fi
+          go=true
+          if [ "$ENABLED" != "true" ]; then
+            echo "::notice::seed-grow idle — set the SEED_GROW_ENABLED repo variable to 'true' to consent to autonomous growth."
+            go=false
+          fi
+          if grep -qE '^paused:[[:space:]]*true' .seed/pause.yml 2>/dev/null; then
+            echo "::warning::seed is PAUSED via .seed/pause.yml — skipping this tick. A human resumes by setting paused: false."
+            go=false
+          fi
+          if [ -z "$OAUTH" ] && [ -z "$KEY" ]; then
+            echo "::notice::no Claude auth configured (CLAUDE_CODE_OAUTH_TOKEN / ANTHROPIC_API_KEY) — idle."
+            go=false
+          fi
+          echo "go=$go" >> "$GITHUB_OUTPUT"
+
+  grow:
+    needs: gate
+    if: needs.gate.outputs.go == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      id-token: write # claude-code-action exchanges an OIDC token
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # Model passes run with Bash + network tools; never leave a
+          # credential in .git/config while they do. The publish step
+          # re-authenticates explicitly.
+          persist-credentials: false
+
+      - name: Resolve policy from .seed/seed.yml
+        id: policy
+        run: |
+          set -euo pipefail
+          m() { grep -E "^[[:space:]]*$1:" .seed/seed.yml | head -1 | sed -E "s/.*$1:[[:space:]]*\"?([^\"#]+)\"?.*/\1/" | xargs; }
+          for k in plan build verify; do
+            v="$(m "$k")"
+            case "$v" in
+              claude-*) echo "$k=$v" >> "$GITHUB_OUTPUT" ;;
+              *) echo "::error::could not resolve policy.models.$k from .seed/seed.yml (got '$v')"; exit 1 ;;
+            esac
+          done
+          base="$(m default_branch)"
+          [ -n "$base" ] || { echo "::error::could not resolve seed.default_branch from .seed/seed.yml"; exit 1; }
+          echo "base=$base" >> "$GITHUB_OUTPUT"
+          echo "started=$(date -u +%FT%TZ)" >> "$GITHUB_OUTPUT"
+          echo "orig_ticks=$(grep -cE '^### G[0-9]+-T[0-9]+' CONCEPT.md || true)" >> "$GITHUB_OUTPUT"
+
+      - name: Pass 1 — plan
+        id: plan
+        continue-on-error: true
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: ${{ env.PLAN_PROMPT }}
+          claude_args: >-
+            --model ${{ steps.policy.outputs.plan }}
+            --max-turns 40
+            --allowedTools "Bash,Edit,Write,Read,Glob,Grep,TodoWrite,Task,Skill"
+          show_full_output: true
+
+      - name: Snapshot pass 1 output
+        if: always()
+        run: cp /home/runner/work/_temp/claude-execution-output.json /tmp/seed-pass-1.json 2>/dev/null || true
+
+      - name: Pass 2 — build
+        id: build
+        continue-on-error: true
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: ${{ env.BUILD_PROMPT }}
+          claude_args: >-
+            --model ${{ steps.policy.outputs.build }}
+            --max-turns 80
+            --allowedTools "Bash,Edit,Write,Read,Glob,Grep,WebFetch,WebSearch,TodoWrite,Task,Skill"
+          show_full_output: true
+
+      - name: Snapshot pass 2 output
+        if: always()
+        run: cp /home/runner/work/_temp/claude-execution-output.json /tmp/seed-pass-2.json 2>/dev/null || true
+
+      - name: Pass 3 — verify
+        id: verify
+        continue-on-error: true
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: ${{ env.VERIFY_PROMPT }}
+          claude_args: >-
+            --model ${{ steps.policy.outputs.verify }}
+            --max-turns 80
+            --allowedTools "Bash,Edit,Write,Read,Glob,Grep,TodoWrite,Task,Skill"
+          show_full_output: true
+
+      - name: Snapshot pass 3 output
+        if: always()
+        run: cp /home/runner/work/_temp/claude-execution-output.json /tmp/seed-pass-3.json 2>/dev/null || true
+
+      # claude-code-action exits 0 even when the agent result is an error
+      # (e.g. an expired OAuth token): the final result element carries
+      # is_error:true. Check every pass's snapshot, not just the last.
+      - name: Detect a failed/empty tick
+        if: always()
+        id: check
+        run: |
+          set -uo pipefail
+          content=$(git status --porcelain | grep -c . || true)
+          empty=true
+          [ "${content:-0}" -gt 0 ] && empty=false
+          failed=false
+          for out in /tmp/seed-pass-1.json /tmp/seed-pass-2.json /tmp/seed-pass-3.json; do
+            if [ -f "$out" ] && jq -e '[.[] | select(.type=="result")] | last | .is_error == true' "$out" >/dev/null 2>&1; then
+              failed=true
+            fi
+          done
+          echo "empty=$empty" >> "$GITHUB_OUTPUT"
+          echo "failed=$failed" >> "$GITHUB_OUTPUT"
+          echo "changes=$content empty=$empty failed=$failed"
+
+      - name: Fallback — one complete tick on the API key
+        id: fallback
+        if: steps.check.outputs.empty == 'true' || steps.check.outputs.failed == 'true'
+        continue-on-error: true
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: ${{ env.FALLBACK_PROMPT }}
+          claude_args: >-
+            --model ${{ steps.policy.outputs.verify }}
+            --max-turns 120
+            --allowedTools "Bash,Edit,Write,Read,Glob,Grep,WebFetch,WebSearch,TodoWrite,Task,Skill"
+          show_full_output: true
+
+      - name: Snapshot fallback output
+        if: always()
+        run: cp /home/runner/work/_temp/claude-execution-output.json /tmp/seed-pass-4.json 2>/dev/null || true
+
+      - name: Upload agent telemetry artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: seed-grow-telemetry-${{ github.run_id }}
+          path: /tmp/seed-pass-*.json
+          if-no-files-found: ignore
+          retention-days: 14
+
+      # Deterministic, workflow-owned publish: guardrail enforcement, §8 safety
+      # net, telemetry append, branch push, draft PR. The model never commits.
+      - name: Publish the tick as a draft pull request
+        id: publish
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.SEED_PAT != '' && secrets.SEED_PAT || github.token }}
+          USED_PAT: ${{ secrets.SEED_PAT != '' && 'true' || 'false' }}
+          BASE: ${{ steps.policy.outputs.base }}
+          STARTED: ${{ steps.policy.outputs.started }}
+          ORIG_TICKS: ${{ steps.policy.outputs.orig_ticks }}
+          PASS_PLAN: ${{ steps.plan.outcome }}
+          PASS_BUILD: ${{ steps.build.outcome }}
+          PASS_VERIFY: ${{ steps.verify.outcome }}
+          PASS_FALLBACK: ${{ steps.fallback.outcome }}
+        run: |
+          set -uo pipefail
+          echo "published=false" >> "$GITHUB_OUTPUT"
+          # Guardrail: workflows are not agent-writable. Revert any edit; any
+          # stray addition becomes a reviewable proposal instead of shipping.
+          strays=$(git ls-files --others --exclude-standard -- .github/workflows 2>/dev/null || true)
+          if [ -n "$strays" ]; then
+            mkdir -p seed/proposed-workflows
+            echo "$strays" | while read -r f; do
+              [ -n "$f" ] && mv "$f" "seed/proposed-workflows/$(basename "$f")"
+            done
+            echo "::warning::moved model-authored workflow file(s) to seed/proposed-workflows/ — a human moves them on review."
+          fi
+          git checkout -- .github/workflows/ 2>/dev/null || true
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "No changes this tick — nothing to publish."
+            exit 0
+          fi
+          # §8 safety net: if no pass advanced the Evolution Log, append the
+          # entry deterministically so the tick clock never stalls.
+          new_ticks=$(grep -cE '^### G[0-9]+-T[0-9]+' CONCEPT.md || true)
+          if [ "${new_ticks:-0}" -le "${ORIG_TICKS:-0}" ]; then
+            last=$(grep -E '^### G[0-9]+-T[0-9]+' CONCEPT.md | tail -1 || true)
+            if [ -n "$last" ]; then
+              gen=$(printf '%s' "$last" | sed -E 's/^### G([0-9]+)-T([0-9]+).*/\1/')
+              seq=$(printf '%s' "$last" | sed -E 's/^### G([0-9]+)-T([0-9]+).*/\2/')
+            else
+              gen=1; seq=0
+            fi
+            printf '\n### G%s-T%s — %s — Tick %s: growth tick\n\n**Action**: Changes published by the plan->build->verify escalation; this §8 entry was recorded deterministically by the workflow because no pass appended it.\n' \
+              "$gen" "$((seq + 1))" "$(date -u +%F)" "$((ORIG_TICKS + 1))" >> CONCEPT.md
+            echo "::notice::tick clock advanced by the workflow safety net"
+          fi
+          tick=$(grep -E '^### G[0-9]+-T[0-9]+' CONCEPT.md | tail -1 | sed -E 's/^### (G[0-9]+-T[0-9]+).*/\1/')
+          # Telemetry (seed-telemetry/v1): sum cost/turns across pass outputs
+          # when parseable; null otherwise — never fabricated.
+          snaps=$(ls /tmp/seed-pass-*.json 2>/dev/null || true)
+          cost=null; turns=null
+          if [ -n "$snaps" ]; then
+            cost=$(jq -s '[.[][] | select(.type=="result") | .total_cost_usd // 0] | add' $snaps 2>/dev/null || echo null)
+            turns=$(jq -s '[.[][] | select(.type=="result") | .num_turns // 0] | add' $snaps 2>/dev/null || echo null)
+          fi
+          git add -A
+          changed=$(git diff --cached --name-only | grep -c . || true)
+          mkdir -p .seed/telemetry
+          printf '{"schema":"seed-telemetry/v1","run_id":"%s","repo":"%s","tick":"%s","conclusion":"published","passes":{"plan":"%s","build":"%s","verify":"%s","fallback":"%s"},"changed_files":%s,"cost_usd":%s,"num_turns":%s,"started":"%s","ended":"%s"}\n' \
+            "${{ github.run_id }}" "${{ github.repository }}" "${tick:-unknown}" \
+            "$PASS_PLAN" "$PASS_BUILD" "$PASS_VERIFY" "${PASS_FALLBACK:-skipped}" \
+            "${changed:-0}" "${cost:-null}" "${turns:-null}" "$STARTED" "$(date -u +%FT%TZ)" \
+            >> .seed/telemetry/evolution.jsonl
+          git add .seed/telemetry/evolution.jsonl
+          git config user.name "seed-grow"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # claude-code-action can leave a stale http.extraheader that
+          # overrides auth; clear it before the explicit re-auth.
+          { git config --local --get-regexp 'http\..*\.extraheader' 2>/dev/null || true; } \
+            | awk '{print $1}' | while read -r k; do git config --local --unset-all "$k" || true; done
+          branch="seed/grow-${{ github.run_id }}"
+          git checkout -B "$branch"
+          git commit -q -m "feat(seed): grow tick ${tick:-} (plan -> build -> verify)"
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+          pushed=""
+          for _ in 1 2 3; do
+            if git push -u origin "$branch"; then pushed=1; break; fi
+            sleep 5
+          done
+          [ -n "$pushed" ] || { echo "::error::could not push $branch after retries"; exit 1; }
+          if [ "$USED_PAT" != "true" ]; then
+            echo "::notice::pushed with github.token — CI will NOT run on this PR (GitHub fires no workflow events for refs the installation token pushes). Set the SEED_PAT secret to fix this."
+          fi
+          gh pr create --draft --base "$BASE" --head "$branch" \
+            --title "feat(seed): grow tick ${tick:-unknown}" \
+            --body "$(printf '<!-- ai-seed:grow-tick -->\nAutonomous AI-Seed grow tick **%s** (run %s).\n\n- Plan: .seed/tick-plan.md (in this diff)\n- Evolution Log: CONCEPT.md §8\n- Telemetry: .seed/telemetry/evolution.jsonl (appended)\n- Passes: plan=%s build=%s verify=%s fallback=%s\n\nA human reviews and merges; the seed never merges.' "${tick:-unknown}" "${{ github.run_id }}" "$PASS_PLAN" "$PASS_BUILD" "$PASS_VERIFY" "${PASS_FALLBACK:-skipped}")"
+          echo "published=true" >> "$GITHUB_OUTPUT"
+
+      # The passes are continue-on-error, so a tick where EVERY model pass died
+      # at startup (e.g. an invalid OAuth token) would otherwise report GREEN
+      # with nothing published. Surface it, and say which failure class it is.
+      - name: Fail loudly if the tick produced nothing
+        if: always()
+        env:
+          PUBLISHED: ${{ steps.publish.outputs.published }}
+          P1: ${{ steps.plan.outcome }}
+          P2: ${{ steps.build.outcome }}
+          P3: ${{ steps.verify.outcome }}
+          FB: ${{ steps.fallback.outcome }}
+          CHECK_FAILED: ${{ steps.check.outputs.failed }}
+        run: |
+          set -uo pipefail
+          if [ "$PUBLISHED" = "true" ]; then
+            echo "Grow tick published a draft PR — OK."
+            exit 0
+          fi
+          echo "::error::Grow tick produced NO changes (nothing was published)."
+          echo "pass outcomes: plan=$P1 build=$P2 verify=$P3 fallback=$FB is_error_seen=$CHECK_FAILED"
+          if [ "$CHECK_FAILED" = "true" ] || { [ "$P1" = "failure" ] && [ "$P2" = "failure" ] && [ "$P3" = "failure" ]; }; then
+            echo "::error::Model passes reported errors — this is an auth/setup failure (expired or invalid CLAUDE_CODE_OAUTH_TOKEN, or the action could not authenticate). Re-mint the token; do not chase a content problem."
+          else
+            echo "::error::Model passes ran without error but wrote nothing — growth stalled (CONCEPT.md §2 may be exhausted, or the plan selected nothing). Review the concept."
+          fi
+          exit 1

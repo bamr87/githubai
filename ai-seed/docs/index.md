@@ -1,10 +1,14 @@
-# AI Seed Repository
+# AI-Seed
 
-Welcome to the AI Seed Repository - a revolutionary self-evolving application framework powered by AI agents.
+AI-Seed is the autonomous AI orchestration framework: a plantable kernel that lets any GitHub repository initialize itself from a written concept and grow through incremental Claude Code OAuth passes, with GitHub as the entire SDLC platform. Start with **[Architecture](ARCHITECTURE.md)** (the system design) and **[Pattern provenance](PATTERNS.md)** (which fleet repo proved each mechanism); the planting quick start lives in the [repository README](https://github.com/bamr87/ai-seed#quick-start-plant--germinate--grow).
 
-## What is AI Seed?
+## The resident example (generations G1–G2)
 
-AI Seed is a comprehensive boilerplate repository that creates applications capable of autonomous evolution through AI agent collaboration. When you submit a GitHub issue describing desired functionality, specialized AI agents automatically:
+The sections below describe the repo's earlier era — the CrewAI-based agent application that this repository grew before the kernel existed. It remains runnable as a worked example; the framework itself is the kernel + planter + doctrine above.
+
+## What the example app is
+
+The example is a boilerplate application capable of issue-driven evolution through AI agent collaboration. When you submit a GitHub issue describing desired functionality, specialized AI agents automatically:
 
 - 📋 **Plan** the implementation approach
 - 💻 **Code** the solution following best practices

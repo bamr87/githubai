@@ -1,691 +1,100 @@
-# 🌱 AI-Seed: The Evolution Engine Repository
+# 🌱 AI-Seed — the autonomous AI orchestration framework
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Container First](https://img.shields.io/badge/Container-First-blue.svg)](https://docker.com) [![AI Powered](https://img.shields.io/badge/AI-Powered-purple.svg)](https://github.com/features/copilot) [![Path Based](https://img.shields.io/badge/Path-Based-green.svg)](#path-philosophy)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Claude Code OAuth](https://img.shields.io/badge/Claude%20Code-OAuth--first-purple.svg)](https://code.claude.com/docs) [![GitHub Native](https://img.shields.io/badge/SDLC-GitHub%20Native-blue.svg)](#github-as-the-sdlc-platform) [![Default OFF](https://img.shields.io/badge/Autonomy-Default%20OFF-green.svg)](#guardrails)
 
-> **"Like water finding its way through terrain, code and information follow paths of least resistance, creating interconnected networks of knowledge and functionality."**
+> Plant a seed in any repository. Write down the concept. Let it grow — one reviewed pull request at a time.
 
-Welcome to the **AI-Seed Repository** - a revolutionary approach to software development that grows organically through **Natural Paths**, powered by AI-human collaboration, and rooted in container-first architecture. This isn't just another template; it's a living, breathing ecosystem designed to evolve, adapt, and improve continuously.
+**AI-Seed** turns a repository into a self-growing, AI-native project. The planter stamps a small **kernel** into any repo (new or existing); from then on the repo can **germinate** (build its initial structure from a written concept) and **grow** (ship one bounded increment per tick) through Claude Code passes running inside GitHub Actions — wired to **Claude Code OAuth**, bounded by guardrails a single human can always halt, with **GitHub as the entire SDLC platform**: issues are the backlog, Actions is the compute, draft pull requests are the only write path, and merges belong to humans.
 
-## 🌊 The Path Philosophy: Natural Flow in Software Development
+The framework packages the production patterns of the [bamr87 fleet](https://github.com/bamr87/bamr87) (~40 repos of autonomous-SDLC machinery) into a portable, self-hosting form. Nothing here is speculative: every mechanism traces to a sibling repo where it already runs — the map is [docs/PATTERNS.md](docs/PATTERNS.md), the design is [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
-At the heart of AI-Seed lies the principle of **Path of Least Resistance** - where every line of code, every decision, every interaction follows the most natural, efficient route. Just as rivers carve the most efficient paths through landscapes, our development practices flow through well-defined channels that minimize friction and maximize value.
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    🌱 AI-Seed Ecosystem                     │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  💡 Ideas ──▶ 🎯 Planning ──▶ 🏗️  Building ──▶ 🚀 Deploy   │
-│      │             │              │              │         │
-│      ▼             ▼              ▼              ▼         │
-│  🤖 AI Analysis ──▶ 📊 Metrics ──▶ 🔄 Evolution ──▶ 📈 Growth │
-│                                                             │
-│           🐳 Container-First ♦ Path-Based ♦ AI-Powered      │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Core Path Types
-
-- **🏗️ Building Paths**: Code compilation and assembly following natural dependency flows
-- **🧪 Testing Paths**: Validation routes that ensure quality at every step  
-- **🚀 Deployment Paths**: Seamless movement from development to production
-- **📚 Learning Paths**: Knowledge acquisition routes that build progressively
-- **🔄 Evolution Paths**: Continuous improvement cycles powered by AI insights
-- **🤝 Collaboration Paths**: Human-AI partnership workflows
-
-## 🚀 Quick Start Path: From Zero to Running in 5 Minutes
-
-### Prerequisites
-
-- Docker & Docker Compose
-- Git
-- Your favorite IDE with GitHub Copilot (recommended)
-
-### The Instant Seed Germination
+## Quick start: plant → germinate → grow
 
 ```bash
-# 1. Clone the seed
+# 0. You need: a GitHub repo (fresh or existing), and a Claude Code subscription
 git clone https://github.com/bamr87/ai-seed.git
 cd ai-seed
 
-# 2. Plant the seed in containers
-docker-compose up --build
+# 1. PLANT — stamp the kernel (additive-only, idempotent; nothing is overwritten)
+python3 tools/seed.py plant ../my-project --repo you/my-project
 
-# 3. Watch it grow
-docker ps # See your ecosystem running
+# 2. CONCEPT — write the genome (this is the real work)
+$EDITOR ../my-project/CONCEPT.md     # fill §1 vision … §5 quality bars
+
+# 3. WIRE — commit, push, then in the repo's GitHub settings (human-owned):
+#    secrets:   CLAUDE_CODE_OAUTH_TOKEN   <- `claude setup-token` (primary auth)
+#               ANTHROPIC_API_KEY          <- optional metered fallback
+#               SEED_PAT                   <- fine-grained PAT so CI fires on seed PRs
+#    variables: SEED_GROW_ENABLED=true     <- only when ready: the variable IS the consent
+#    branch protection on main: require PRs + the seed-verify check
+
+# 4. GERMINATE — Actions → seed-germinate → Run workflow → retype the repo's seed name
+#    Claude reads CONCEPT.md and builds the initial structure as ONE draft PR.
+
+# 5. GROW — review, merge, and let the cron tick: plan → build → verify,
+#    one increment, one draft PR, telemetry appended. Forever.
 ```
 
-### Alternative: Manual Environment Setup
+Verify any planted repo at any time: `python3 .seed/tools/seed.py check .` (the planter vendors itself, so every planted repo can verify itself — and plant onward).
 
-```bash
-# Create the development environment
-./scripts/setup/init_environment.sh
+## The lifecycle
 
-# Build all components
-./scripts/build/build_images.sh --environment development
+| Stage | What happens | Consent |
+|---|---|---|
+| **PLANT** | `seed.py plant` stamps the kernel: manifest, kill switch, CONCEPT genome, four workflows | Running the planter |
+| **GERMINATE** | Claude builds the initial structure from `CONCEPT.md` → one draft PR | Manual dispatch + retyping the seed name |
+| **GROW** | Scheduled ticks: plan → build → verify escalation → one increment → one draft PR + telemetry | `SEED_GROW_ENABLED=true` |
+| **TEND** | `@claude` mentions and the issue lane (`seed:request` → human applies `seed:approved` → implementation PR) | The mention / the label |
+| **POLLINATE** | Any planted repo plants onward; a garden hub orchestrates many (stalest-first, capped) | Per-repo, same as PLANT |
+| **PAUSE** | `.seed/pause.yml` halts every loop; unsetting a variable halts one | Human edit, one file |
 
-# Deploy locally
-./scripts/deploy/deploy_development.sh
-```
+## Claude Code OAuth wiring
 
-Your AI-Seed environment is now live! 🎉
+Every model pass rides [`anthropics/claude-code-action@v1`](https://github.com/anthropics/claude-code-action), **OAuth-first**: `CLAUDE_CODE_OAUTH_TOKEN` (minted by `claude setup-token`, subscription-backed) is the primary credential at every call site, with `ANTHROPIC_API_KEY` as an evidence-based fallback — fired only when the OAuth passes produced nothing or reported `is_error` in their execution output. Model tiers are policy, not workflow: `.seed/seed.yml` names the model per pass (default escalation `claude-haiku-4-5` → `claude-sonnet-4-6` → `claude-opus-4-8`); changing tiers is a data edit. The workflow — never the model — commits, pushes, and opens PRs, and it prefers `SEED_PAT` because refs pushed with `github.token` fire no CI.
 
-Visit `http://localhost:3000` to see your evolving ecosystem in action.
+## GitHub as the SDLC platform
 
-## 🏗️ Architecture Overview: The Ecosystem Map
+| SDLC concern | GitHub surface |
+|---|---|
+| Product intent | `CONCEPT.md` §1–§7 (machine-readable genome) |
+| Backlog & intake | Issues + labels: `seed:request` → `seed:approved` (consent) → PR; `seed:hold` is the brake |
+| Implementation | Branches + Actions compute (`seed/*` branches only) |
+| Review & merge | Draft PRs; humans merge — no agent ever does |
+| CI / quality | `seed-verify` (structural gate) + the repo's own suite |
+| History & telemetry | `CONCEPT.md` §8 Evolution Log (the tick clock) + `.seed/telemetry/evolution.jsonl` (append-only) |
+| Incident response | `.seed/pause.yml` — one human edit halts everything |
 
-AI-Seed follows a **Path-Based Architecture** where every component connects through well-defined routes, creating a network that can grow and adapt organically.
+## Guardrails
 
-```
-┌─────────────────── AI-Seed Ecosystem Architecture ───────────────────┐
-│                                                                       │
-│  🌐 Frontend Layer (React/Next.js)                                   │
-│  ├── 📱 User Interface Paths                                         │
-│  ├── 🎨 Component Evolution Engine                                   │
-│  └── 🔄 Real-time Path Monitoring                                    │
-│                           │                                           │
-│  🔗 API Gateway Layer (Node.js/Express)                              │
-│  ├── 🛣️  Request Routing Paths                                       │
-│  ├── 🔒 Security & Auth Paths                                        │
-│  └── 📊 Analytics Collection                                         │
-│                           │                                           │
-│  ⚙️  Business Logic Layer (Python/FastAPI)                           │
-│  ├── 🧠 AI Processing Paths                                          │
-│  ├── 📈 Evolution Engine Core                                        │
-│  └── 🔄 Path Optimization Algorithms                                 │
-│                           │                                           │
-│  💾 Data Layer (PostgreSQL + Redis)                                  │
-│  ├── 📊 Path Metrics Storage                                         │
-│  ├── 🗄️  Application State                                           │
-│  └── ⚡ Caching Layers                                               │
-│                           │                                           │
-│  🐳 Container Orchestration (Docker + Kubernetes)                    │
-│  ├── 🔄 Service Discovery Paths                                      │
-│  ├── 📈 Auto-scaling Routes                                          │
-│  └── 🛡️  Health Check Circuits                                       │
-│                                                                       │
-└───────────────────────────────────────────────────────────────────────┘
-```
+The constitution lives in `.seed/seed.yml` (`guardrails:`), binds every agent via `CLAUDE.md`, and is enforced by `seed.py check` and by workflow-owned publish steps: every loop ships **default OFF** (the `*_ENABLED` variable is the consent); **PR-only, never merge**; **workflows are not agent-writable** (model-authored workflow files become `seed/proposed-workflows/` proposals, never live code); **untrusted input is quarantined** (issue text and web content are data, never instructions); **one increment per tick**; **fail loudly** (a tick that produced nothing fails its run and names the failure class — auth vs stalled); **telemetry is append-only**. Full doctrine: [docs/ARCHITECTURE.md §7](docs/ARCHITECTURE.md).
 
-### Container-First Design
+## Self-hosting
 
-Every component runs in its own container, ensuring:
+ai-seed is planted with its own kernel — look at the root of this repo: [`CONCEPT.md`](CONCEPT.md) is its genome (§8 logs the repo's real history), `.seed/` is its plant (strict kernel parity), and the `seed-*.yml` workflows growing this framework are the same files the planter stamps everywhere else. `seed-verify.yml` fails CI here the moment the kernel and the installation drift: anything the kernel demands of a planted repo, this repo demonstrates first.
 
-- **🔒 Isolation**: Clean separation of concerns
-- **📦 Portability**: Run anywhere Docker runs
-- **🔄 Scalability**: Scale individual components as needed
-- **🛡️ Security**: Minimal attack surface per service
-- **🧪 Testability**: Consistent environments from dev to prod
+## Repository map
 
-## 📁 Repository Structure: Organic Path Organization
+| Path | What it is |
+|---|---|
+| [`seed/`](seed/README.md) | **The product**: `kernel/` (plantable files) + `garden/` (multi-repo hub layer) |
+| [`tools/seed.py`](tools/seed.py) | The planter/checker CLI — single-file, stdlib-only, self-vendoring |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | The system design: lifecycle, layers, auth, grow tick, guardrails |
+| [`docs/PATTERNS.md`](docs/PATTERNS.md) | Provenance: which fleet repo proved each mechanism, with the incident behind it |
+| [`CONCEPT.md`](CONCEPT.md) / [`.seed/`](.seed/seed.yml) / [`CLAUDE.md`](CLAUDE.md) | This repo's own plant (self-hosting) |
+| `.github/workflows/` | Installed kernel workflows (`seed-*.yml`) + repo CI (`ci.yml`, `ci-cd.yml`, docs, prose, triage) |
+| `tests/` | Pytest: CLI behavior, kernel contracts, workflow pins, strict parity |
+| `src/`, `agents/`, `docker/` | The **resident example**: the G1–G2 era application (React/Node/Python demo + CrewAI engine) that this repo grew before the kernel existed — kept runnable as a worked example, not the framework |
 
-```
-ai-seed/
-├── 🌱 README.md                    # You are here - the seed's DNA
-├── 📋 .github/                     # GitHub integration paths
-│   ├── 🤖 copilot-instructions.md  # AI collaboration guidelines
-│   ├── 🛠️  workflows/              # CI/CD automation paths
-│   └── 📜 instructions/            # Detailed development guides
-├── 🎯 prompts/                     # AI prompt engineering collection
-│   └── 🎨 zer0.prompt.yaml         # Genesis prompt for this README
-├── 🐳 docker/                      # Container configuration paths
-│   ├── 🏗️  Dockerfile              # Multi-stage container builds
-│   └── 🎼 docker-compose.yml       # Service orchestration
-├── 🛠️  scripts/                    # Automation and tooling paths
-│   ├── ⚙️  setup/                  # Environment initialization
-│   ├── 🏗️  build/                  # Build automation paths
-│   └── 🚀 deploy/                  # Deployment orchestration
-├── 📖 docs/                        # Documentation evolution paths
-│   ├── 🏗️  architecture/           # System design documentation
-│   ├── 📚 guides/                  # Learning and tutorial paths
-│   └── 🔧 api/                     # API documentation
-├── 🧪 tests/                       # Quality assurance paths
-│   ├── 🔬 unit/                    # Isolated component tests
-│   ├── 🔗 integration/             # Service interaction tests
-│   └── 🎭 e2e/                     # End-to-end journey tests
-├── 📦 src/                         # Source code paths
-│   ├── 🌐 frontend/                # User interface components
-│   ├── 🔗 api/                     # Backend service logic
-│   ├── 🧠 ai/                      # AI processing engines
-│   └── 📊 data/                    # Data management layers
-└── 🔧 config/                      # Configuration management paths
-    ├── 🏭 environments/            # Environment-specific configs
-    └── 🛡️  security/               # Security policy definitions
-```
+## The fleet — design considerations and implementation examples
 
-## 🛤️ Development Paths: Choose Your Journey
+AI-Seed extracts, rather than invents: the [year-of-ai](https://github.com/year-of-ai/year-of-ai.github.io) and [ai-world-view](https://github.com/ai-world-view/ai-world-view.github.io) hubs proved the lineage growth engine (seeds, policy, escalation, kill switch, fail-loud ticks); [lifehacker.dev](https://github.com/bamr87/lifehacker.dev) proved consent gates, the harness discipline, and quarantine; the [bamr87 hub](https://github.com/bamr87/bamr87) proved the token contract, the label state machine, and the standing rules about `github.token` and protected branches; [wtd](https://github.com/bamr87/wtd) proved provider lanes and dedup markers; [gitorio](https://github.com/bamr87/gitorio) proved loop guards and least-privilege compilation; [git-with-the-program](https://github.com/bamr87/git-with-the-program) contributes the constitution politics; [SCHEMA](https://github.com/bamr87/SCHEMA) the self-describing, vendorable-tool posture. The registry with the receipts: [docs/PATTERNS.md](docs/PATTERNS.md).
 
-AI-Seed accommodates different developer journeys, each with its own optimized path:
+## Contributing
 
-### 🌱 Beginner Path: Plant Your First Seed
+Humans and agents alike: read [`CLAUDE.md`](CLAUDE.md) (the working agreement), file `seed:request` issues for changes you want the evolve lane to build, and remember the two rules that never bend — the kernel is edited in `seed/kernel/` and re-rendered (`python3 tools/seed.py plant . --update`), and nobody merges but a human. Run before any PR: `python3 -m pytest tests/ && python3 tools/seed.py check . && python3 tools/unwrap-prose.py --check`.
 
-Perfect for developers new to AI-powered development or container-first architecture.
+## License
 
-```bash
-# Start here: guided setup with explanations
-./scripts/onboarding/beginner_setup.sh
+MIT — see [LICENSE](LICENSE). Plant freely.
 
-# Follow the learning path
-cd docs/guides/
-cat 01-getting-started.md
-cat 02-understanding-paths.md
-cat 03-first-contribution.md
-```
-
-**What you'll learn:**
-- Path-based development principles
-- Container-first development workflow
-- AI-human collaboration patterns
-- Basic contribution guidelines
-
-### 🌿 Intermediate Path: Grow Your Understanding
-
-For developers ready to dive deeper into the ecosystem mechanics.
-
-```bash
-# Enhanced development environment
-./scripts/setup/development_environment.sh --enhanced
-
-# Explore advanced patterns
-cd docs/guides/intermediate/
-cat container-orchestration.md
-cat ai-integration-patterns.md
-cat path-optimization-techniques.md
-```
-
-**What you'll master:**
-- Advanced container orchestration
-- AI tool integration strategies
-- Path optimization techniques
-- Custom evolution engine development
-
-### 🌳 Expert Path: Architect New Ecosystems
-
-For experienced developers ready to extend and evolve the system.
-
-```bash
-# Full development toolkit
-./scripts/setup/expert_environment.sh --full-stack
-
-# Contribute to core evolution
-cd src/evolution-engine/
-cat README.md  # Core architecture
-cat CONTRIBUTING.md  # Advanced contribution patterns
-```
-
-**What you'll create:**
-- New evolution algorithms
-- Advanced AI integration patterns
-- Ecosystem extensions and plugins
-- Path architecture innovations
-
-## 🧬 Evolution Engine: AI-Powered Continuous Growth
-
-The AI-Seed repository features a sophisticated **Evolution Engine** that continuously monitors, analyzes, and improves the codebase through intelligent automation and AI-powered insights.
-
-### 📊 Current Evolution Status
-
-- **Seed Maturity**: 78.0% (Mature Stage)
-- **Active Paths**: 8 execution paths monitoring 12 total branches
-- **Evolution Cycles**: 23 completed cycles with 47 improvements
-- **System Health**: 94.2% across 6 container services
-- **Uptime**: 2d 14h 23m with 23.5% CPU utilization
-
-### 🌱 Growth Metrics Dashboard
-
-The Evolution Engine provides real-time monitoring through an interactive dashboard:
-
-- **Branch Development**: 12 active branches with 156 leaf nodes
-- **Root Depth**: 45m deep architecture analysis
-- **Path Efficiency**: Visual performance tracking across time
-- **Optimization Insights**: AI-generated improvement recommendations
-
-### The Evolution Cycle
-
-```
-   📊 Analyze          🎯 Plan           🛠️  Implement
-      │                   │                   │
-      ▼                   ▼                   ▼
-┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-│ Path Metrics│───▶│   AI Insights│───▶│  Code Changes│
-│ Collection  │    │ & Suggestions│    │ & Improvements│
-└─────────────┘    └─────────────┘    └─────────────┘
-      ▲                   │                   │
-      │                   ▼                   ▼
-┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-│   Feedback  │◀───│  Validation │◀───│   Testing   │
-│   Loop      │    │ & Review    │    │ & Quality   │
-└─────────────┘    └─────────────┘    └─────────────┘
-   🔄 Learn         ✅ Validate       🧪 Test
-```
-
-### Evolution Engine Features
-
-#### 🚀 Interactive Controls
-- **Start Evolution Cycle**: Initiate new improvement cycles
-- **Pause Engine**: Temporarily halt evolution for maintenance
-- **Detailed Analytics**: Deep-dive into performance metrics
-- **Growth Targets**: Set specific improvement objectives
-
-#### 🎯 Intelligence Insights
-- **Next Growth Phase**: Recommended development directions
-- **Optimization Opportunities**: Identified efficiency improvements
-- **Health Indicators**: System wellness and performance trends
-
-### AI Integration Points
-
-1. **🔍 Code Analysis**: Continuous scanning for optimization opportunities
-2. **📊 Metrics Collection**: Real-time performance and usage analytics
-3. **🎯 Suggestion Engine**: AI-powered improvement recommendations  
-4. **🤖 Automated Testing**: AI-generated test cases and scenarios
-5. **📚 Documentation Evolution**: Self-updating documentation based on code changes
-6. **🔄 Refactoring Assistance**: Intelligent code restructuring suggestions
-
-### Example: Evolution in Action
-
-```python
-# File: src/evolution/path_optimizer.py
-class PathEvolutionEngine:
-    """
-    Continuously analyzes and optimizes execution paths
-    through AI-powered pattern recognition and improvement.
-    """
-    
-    def analyze_path_efficiency(self, path_metrics):
-        """Identify optimization opportunities in execution paths."""
-        ai_insights = self.ai_analyzer.process(path_metrics)
-        return self.generate_improvement_suggestions(ai_insights)
-    
-    def evolve_codebase(self, suggestions):
-        """Apply AI-suggested improvements with human oversight."""
-        for suggestion in suggestions:
-            if self.human_reviewer.approve(suggestion):
-                self.apply_improvement(suggestion)
-                self.measure_impact(suggestion)
-```
-
-## 🤝 Contribution Pathways: Join the Evolution
-
-AI-Seed thrives on collaboration between humans and AI. Here's how you can contribute to the ecosystem's growth:
-
-### Quick Contribution Path
-
-```bash
-# 1. Fork and clone
-git clone https://github.com/your-username/ai-seed.git
-cd ai-seed
-
-# 2. Create your evolution branch
-git checkout -b feature/your-contribution
-
-# 3. Set up development environment
-./scripts/setup/contributor_environment.sh
-
-# 4. Make your changes following path principles
-# ... your amazing contributions ...
-
-# 5. Test your changes
-./scripts/test/run_all_tests.sh
-
-# 6. Submit for evolution review
-git push origin feature/your-contribution
-# Create PR with path-impact description
-```
-
-### Contribution Categories
-
-#### 🧠 AI Enhancement Contributions
-- Improve evolution algorithms
-- Add new AI integration patterns
-- Enhance path optimization logic
-- Expand automated testing capabilities
-
-#### 🛠️ Infrastructure Contributions  
-- Container optimization
-- CI/CD pipeline improvements
-- Monitoring and observability
-- Security enhancements
-
-#### 📚 Knowledge Contributions
-- Documentation improvements
-- Tutorial creation
-- Best practice guides
-- Pattern libraries
-
-#### 🌱 Ecosystem Extensions
-- New language support
-- Framework integrations
-- Tool chain additions
-- Platform adaptations
-
-### Code Style: The Path-Based Approach
-
-All contributions should follow our **Path-Based Coding Standards**:
-
-```javascript
-// Good: Clear path with meaningful stages
-async function processUserRegistration(userData) {
-    // Path: Input validation → business logic → persistence → notification
-    const validatedData = await validateUserInput(userData);
-    const processedUser = await applyBusinessRules(validatedData);
-    const savedUser = await persistUser(processedUser);
-    await sendWelcomeNotification(savedUser);
-    return savedUser;
-}
-
-// Good: Path-aware error handling
-class PathAwareError extends Error {
-    constructor(message, pathContext) {
-        super(message);
-        this.pathContext = pathContext;
-        this.timestamp = Date.now();
-    }
-}
-```
-
-## 🔮 Future Vision: Where Paths Lead
-
-AI-Seed represents the beginning of a new era in software development. Here's where we're heading:
-
-### Short-term Evolution (3-6 months)
-- **🤖 Enhanced AI Integration**: Deeper GitHub Copilot integration with custom models
-- **📊 Advanced Analytics**: Real-time path performance monitoring and optimization
-- **🔄 Self-healing Systems**: Automatic issue detection and resolution
-- **🌐 Multi-language Support**: Expansion beyond JavaScript/Python to Go, Rust, and more
-
-### Medium-term Growth (6-12 months)  
-- **🧠 Predictive Development**: AI that anticipates needed features and optimizations
-- **🌍 Distributed Evolution**: Multi-repository ecosystem synchronization
-- **🎨 Visual Path Design**: Graphical tools for designing and optimizing development paths
-- **🤝 Community Marketplace**: Sharing and discovering evolution patterns
-
-### Long-term Transformation (1-2 years)
-- **🦾 Autonomous Development**: AI systems that can independently implement features
-- **🌌 Ecosystem Intelligence**: Cross-project learning and optimization
-- **🔬 Research Integration**: Cutting-edge AI research automatically integrated
-- **🌟 Developer Augmentation**: Human-AI collaboration reaching new levels of productivity
-
-### The Bigger Picture
-
-AI-Seed isn't just about making development easier—it's about fundamentally transforming how we think about software creation:
-
-- **From Static to Dynamic**: Code that evolves and improves itself
-- **From Isolated to Connected**: Development practices that learn from the global community
-- **From Reactive to Predictive**: Systems that anticipate and prevent problems
-- **From Human vs AI to Human + AI**: True collaboration between human creativity and AI efficiency
-
-## 🎯 Getting Involved: Your Path Starts Here
-
-Ready to be part of the evolution? Here are immediate ways to contribute:
-
-### 🚀 Quick Wins
-- Star this repository to show support
-- Try the quick start guide and share feedback
-- Report issues or suggest improvements
-- Share your path-based development experiences
-
-### 🌱 Plant Your Own Seed
-- Fork the repository and customize for your needs
-- Create your own evolution patterns
-- Build integrations with your favorite tools
-- Share your innovations with the community
-
-### 🤝 Join the Community
-- Follow our development on GitHub
-- Participate in discussions and issues
-- Share your success stories and learnings
-- Help others on their path-based journey
-
-### 🧠 Advanced Contributions
-- Contribute to the evolution engine algorithms
-- Help build the next generation of AI-development tools
-- Research new path optimization techniques
-- Pioneer human-AI collaboration patterns
-
-## 📜 License and Legal Paths
-
-AI-Seed is released under the [MIT License](LICENSE), ensuring that the benefits of path-based development can flow freely to the entire software development community.
-
-### What This Means
-- ✅ **Commercial Use**: Build products and services with AI-Seed
-- ✅ **Modification**: Adapt and extend the system for your needs  
-- ✅ **Distribution**: Share your innovations with others
-- ✅ **Private Use**: Use in private projects and organizations
-- ⚠️ **Attribution**: Please credit the AI-Seed project in derivative works
-
-## 🙏 Acknowledgments and Inspiration
-
-AI-Seed builds upon the wisdom of the software development community and the pioneering work in AI-powered development:
-
-- **GitHub Copilot**: For revolutionizing AI-assisted coding
-- **Docker & Kubernetes**: For containerization excellence
-- **Open Source Community**: For showing us the power of collaborative development
-- **Nature**: For teaching us that the most efficient paths emerge organically
-
----
-
-## 🌟 Final Words: Your Journey Begins
-
-```
-   🌱
-   │ │
-   │ │  ╭─ 🤖 AI-Powered
-   │ │  │
-   │ │  ├─ 🐳 Container-First  
-   │ │  │
-   │ │  ├─ 🛤️  Path-Based
-   │ │  │
-   │ │  └─ 🔄 Ever-Evolving
-   │ │
-   └─┴─────────── 🚀 Infinite Possibilities
-```
-
-The seed has been planted. The paths are laid out before you. The evolution engine awaits your contributions.
-
-**What path will you choose? What will you help grow?**
-
-The future of software development is path-based, AI-powered, and collaborative. Welcome to AI-Seed - where every contribution helps the entire ecosystem evolve.
-
-*Let's build the future of development together, one path at a time.* 🌱✨
-
-## 🌱 Automated Growth: Periodic Workflows
-
-Your AI-Seed now includes a sophisticated **automated growth system** that nurtures and evolves your repository through natural cycles:
-
-### 🔄 Growth Cycle Schedule
-
-```
-Daily (3 AM UTC) ──▶ Weekly (Sunday 6 AM) ──▶ Monthly (1st at 9 AM) ──▶ Quarterly (1st at 12 PM)
-     │                      │                        │                           │
-     ▼                      ▼                        ▼                           ▼
- 🌅 Maintenance        🏥 Health Check        📊 Progress Report        🚀 Major Evolution
-   • Bug fixes          • System analysis      • Growth analytics        • New features
-   • Documentation      • Security review       • Trend analysis          • Strategic upgrades
-   • Code quality       • Performance check     • Roadmap planning        • Version releases
-```
-
-### 🎯 Workflow Features
-
-- **🌅 Daily Evolution**: Routine maintenance, bug fixes, and continuous improvements
-- **🏥 Weekly Health Check**: Comprehensive system analysis and preventive care
-- **📊 Monthly Reports**: Growth analytics, trends, and strategic planning
-- **🚀 Quarterly Evolution**: Major feature development and architectural improvements
-
-### 🎛️ Manual Control
-
-Trigger any workflow manually with custom parameters:
-
-```bash
-# Quick evolution cycle
-gh workflow run "Daily Evolution" --field evolution_type=documentation
-
-# Comprehensive health analysis  
-gh workflow run "Weekly Health Check" --field check_type=comprehensive
-
-# Generate monthly insights
-gh workflow run "Monthly Evolution Report" --field include_predictions=true
-
-# Major strategic evolution
-gh workflow run "Quarterly Major Evolution" --field evolution_mode=strategic
-```
-
-**📖 Learn More**: See the [Periodic Growth Workflows Guide](./docs/guides/periodic-growth-workflows.md) for complete documentation.
-
----
-
-**Ready to start your journey?** Run `./scripts/setup/init_environment.sh` and let the evolution begin! 🚀
-
-> *"The best time to plant a tree was 20 years ago. The second best time is now."* - Chinese Proverb
-> 
-> *Your AI-Seed will now grow automatically - water it with your contributions and watch it flourish!* 🌱✨
-> 
-> *"The best time to plant a development seed is right now."* - AI-Seed Philosophy
-
----
-
-# 🤖 Merged: AI Agent Framework (from ai-seed-repo)
-
-> The following documents the Python-based, CrewAI-powered self-evolving agent
-> framework merged in from [`bamr87/ai-seed-repo`](https://github.com/bamr87/ai-seed-repo).
-> Its code lives in `agents/`, `src/main.py`, `utils/`, `tests/`, and
-> `seed_instructions.yaml`. It complements the container-first Evolution Engine
-> described above.
-
-# AI Seed Repository - Self-Evolving Application Framework
-
-A comprehensive boilerplate for building self-evolving applications powered by AI agents. This repository serves as the foundational skeleton for any application type (web API, CLI tool, service) where AI agents autonomously handle development tasks through GitHub issue-driven evolution.
-
-## 🎯 Core Philosophy
-
-- **80% Autonomy, 20% Human Oversight**: AI agents handle planning, coding, testing, documenting, and deploying, with human review for critical decisions
-- **Issue-Driven Evolution**: Submit a GitHub issue → AI agents implement → Create PR → Human review → Deploy
-- **Multi-Agent Collaboration**: Specialized agents work together using CrewAI orchestration
-- **Continuous Self-Improvement**: Agents learn from outcomes and evolve their own capabilities
-
-## 🏗️ Architecture
-
-```
-GitHub Issue → Workflow Trigger → Agent Orchestra → Code/Test/Doc → PR → Review → Deploy → Learn
-```
-
-### Agent Roles
-- **Planner**: Analyzes issues and creates implementation roadmaps
-- **Coder**: Generates and modifies application code
-- **Tester**: Creates and runs comprehensive test suites
-- **Documenter**: Maintains up-to-date documentation
-- **Deployer**: Handles deployment and infrastructure
-- **Evolver**: Reflects on outcomes and improves the system
-- **Triager**: Analyzes workflow failures and creates actionable reports
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Python 3.12+
-- GitHub repository with Actions enabled
-- API keys for OpenAI or Anthropic
-
-### Initial Setup
-
-1. **Clone and Configure**:
-```bash
-git clone <your-repo-url>
-cd ai-seed-repo
-cp .env.example .env
-# Edit .env with your API keys
-```
-
-2. **Install Dependencies**:
-```bash
-pip install -r requirements.txt
-```
-
-3. **Configure GitHub Secrets**:
-   - `OPENAI_API_KEY` or `ANTHROPIC_API_KEY`
-   - `GITHUB_TOKEN` (for agent GitHub operations)
-
-4. **Start the Base Application**:
-```bash
-python src/main.py
-```
-
-5. **Trigger Evolution**:
-   - Create a GitHub issue using the provided template
-   - Watch as agents automatically implement your request
-   - Review and merge the generated PR
-
-## 📁 Project Structure
-
-```
-ai-seed-repo/
-├── .github/
-│   ├── workflows/          # CI/CD automation
-│   ├── ISSUE_TEMPLATE/     # Standardized evolution requests
-│   └── copilot-instructions.md
-├── agents/                 # AI agent implementations
-├── src/                    # Evolvable application code
-├── tests/                  # Automated test suites
-├── docs/                   # Auto-generated documentation
-├── utils/                  # Utility modules (logging, etc.)
-├── scripts/                # Helper scripts (docs generation, triage)
-└── seed_instructions.yaml  # AI agent prompts and configurations
-```
-
-## 🧠 How It Works
-
-1. **Submit an Issue**: Use the GitHub issue template to describe desired functionality
-2. **Automatic Planning**: Planner agent breaks down the request into actionable tasks
-3. **Implementation**: Coder agent generates code following project patterns
-4. **Quality Assurance**: Tester agent creates comprehensive tests
-5. **Documentation**: Documenter agent updates all relevant documentation
-6. **Review Process**: Human review of the generated PR
-7. **Deployment**: Automatic deployment upon PR merge
-8. **Learning**: Evolver agent analyzes outcomes for system improvement
-
-## 🔧 Configuration
-
-Key configuration files:
-- `seed_instructions.yaml`: Agent prompts, behavioral rules, and all system configurations
-- `.env`: Environment variables and API keys
-- `mkdocs.yml`: Documentation generation settings
-- `requirements.txt` & `requirements-dev.txt`: Python dependencies
-
-## 📖 Documentation
-
-Documentation is automatically generated and deployed:
-- **API Docs**: Auto-generated from docstrings
-- **Architecture**: System design and patterns
-- **Agent Guides**: How each agent operates
-- **Evolution Log**: History of autonomous improvements
-
-Visit the [documentation site](https://bamr87.github.io/ai-seed-repo) for comprehensive guides.
-
-## 🛡️ Safety & Best Practices
-
-- **Code Quality**: Enforced PEP8, type hints, security scans
-- **Human Oversight**: All changes require PR review
-- **Rollback Capability**: Easy reversion of problematic changes
-- **Reflection Loops**: Agents continuously improve their performance
-- **A/B Testing**: Framework for testing improvements
-
-## 🔮 Future Evolution
-
-This repository is designed to evolve. The Evolver agent will continuously:
-- Improve agent prompts based on outcomes
-- Add new capabilities as needed
-- Optimize workflows and processes
-- Integrate new tools and technologies
-
-## 🤝 Contributing
-
-While this repo evolves autonomously, human contributions are welcome:
-1. Submit evolution requests via GitHub issues
-2. Review and provide feedback on agent-generated PRs
-3. Contribute to the seed instructions and configurations
-
-## 📄 License
-
-MIT License - See LICENSE file for details.
-
----
-
-*Built with ❤️ by AI agents, guided by human wisdom*
+> *"The best time to plant a tree was 20 years ago. The second best time is now."*

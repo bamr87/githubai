@@ -290,24 +290,27 @@ class TestWorkflowIntegration:
         assert "triage" in failure_step.get("name", "").lower()
     
     def test_environment_variables_consistency(self):
-        """Test that required environment variables are used consistently."""
+        """Workflows that perform authenticated GitHub operations must carry a token.
+
+        The old heuristic ("mentions github at all") false-positived on thin
+        reusable-workflow callers and expression-only workflows (ci.yml,
+        markdown-oneline.yml, seed-verify.yml), which reference `${{ github.* }}`
+        contexts without ever calling the API. Only actual API surfaces — the
+        gh CLI, actions/github-script, or raw api.github.com calls — need a
+        GITHUB_TOKEN/GH_TOKEN (github.token counts: it IS the token).
+        """
         workflow_files = list(WORKFLOW_DIR.glob("*.yml"))
-        
-        required_env_vars = ["GITHUB_TOKEN", "GH_TOKEN"]
-        
+
+        token_markers = ["GITHUB_TOKEN", "GH_TOKEN", "github.token"]
+        api_markers = ["gh ", "github-script", "api.github.com"]
+
         for workflow_file in workflow_files:
             with open(workflow_file, 'r') as f:
                 content = f.read()
-            
-            # If the workflow mentions GitHub operations, it should have tokens
-            if "gh " in content or "github" in content.lower():
-                for env_var in required_env_vars:
-                    if env_var in content:
-                        break
-                else:
-                    # Allow workflows that don't need authentication
-                    if "github.event" not in content:
-                        pytest.fail(f"Workflow {workflow_file} may need GitHub token but none found")
+
+            if any(marker in content for marker in api_markers):
+                assert any(tok in content for tok in token_markers), \
+                    f"Workflow {workflow_file} performs GitHub operations but carries no token"
 
 
 class TestWorkflowSecurity:

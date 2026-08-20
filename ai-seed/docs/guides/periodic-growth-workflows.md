@@ -1,6 +1,8 @@
-# 🌱 Periodic Growth Workflows
+# 🌱 Periodic Growth Workflows (legacy — G1 era)
 
-This document describes the automated workflow system that helps your AI-Seed grow naturally through scheduled evolution cycles.
+> **Legacy notice**: the periodic workflows this guide describes (daily/weekly/monthly/quarterly evolution, later consolidated into `scheduled-evolution.yml`) were retired when the repo was re-founded as the AI-Seed orchestration framework. Scheduled growth now runs through the kernel's `seed-grow.yml` — OAuth-first, default OFF, one draft PR per tick — documented in [ARCHITECTURE.md](../ARCHITECTURE.md). This page is kept as a historical record of the G1-era design.
+
+This document describes the automated workflow system that helped the early AI-Seed grow through scheduled evolution cycles.
 
 ## 🔄 Growth Cycle Overview
 

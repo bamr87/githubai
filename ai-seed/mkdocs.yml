@@ -1,7 +1,7 @@
-site_name: AI Seed Repository Documentation
-site_description: Self-evolving application powered by AI agents
-site_url: https://bamr87.github.io/ai-seed-repo
-repo_url: https://github.com/bamr87/ai-seed-repo
+site_name: AI-Seed Documentation
+site_description: The autonomous AI orchestration framework — plant, germinate, grow
+site_url: https://bamr87.github.io/ai-seed
+repo_url: https://github.com/bamr87/ai-seed
 
 theme:
   name: material
@@ -66,25 +66,15 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - Getting Started:
-    - Quick Start: getting-started/quick-start.md
-    - Configuration: getting-started/configuration.md
-    - First Evolution: getting-started/first-evolution.md
-  - Architecture:
-    - Overview: architecture/overview.md
-    - Agent System: architecture/agents.md
-    - Workflow: architecture/workflow.md
-    - Integration: architecture/integration.md
+  - Framework:
+    - Architecture: ARCHITECTURE.md
+    - Pattern provenance: PATTERNS.md
+  - Example app (legacy):
+    - Developer guide: DEVELOPER_GUIDE.md
+    - API: API.md
+    - Implementation notes: architecture/IMPLEMENTATION.md
+    - Periodic growth (historical): guides/periodic-growth-workflows.md
   - API Reference: reference/
-  - User Guide:
-    - Creating Evolutions: guide/creating-evolutions.md
-    - Agent Interaction: guide/agent-interaction.md
-    - Monitoring: guide/monitoring.md
-  - Development:
-    - Contributing: development/contributing.md
-    - Testing: development/testing.md
-    - Deployment: development/deployment.md
-  - Evolution Log: evolution-log.md
 
 extra:
   social:

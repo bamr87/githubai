@@ -1,0 +1,39 @@
+# =============================================================================
+# seed-verify.yml — the seed's structural CI gate (kernel v__SEED_KERNEL_VERSION__)
+# =============================================================================
+# Runs the vendored checker on every PR and default-branch push: manifest
+# valid, kill switch present, Evolution Log intact, gates default-OFF, kernel
+# workflows carrying their guardrail markers, telemetry ledger well-formed.
+# Read-only, so it is deliberately EXEMPT from the kill switch — a paused repo
+# still wants its PRs checked. The exemption is "writes nothing anywhere".
+# Kernel-managed: rendered from seed/kernel/ by the AI-Seed planter.
+
+name: seed-verify
+
+on:
+  pull_request:
+  push:
+    branches: [__SEED_DEFAULT_BRANCH__]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: seed-verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Seed structural check
+        run: python3 .seed/tools/seed.py check .

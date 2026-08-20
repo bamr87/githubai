@@ -1,0 +1,82 @@
+# =============================================================================
+# .seed/seed.yml — the seed manifest (schema: seed-manifest/v1)
+# =============================================================================
+# The machine-readable identity, policy, and constitution of this planted repo.
+# Stamped by the AI-Seed planter (tools/seed.py plant) from bamr87/ai-seed.
+#
+# POLICY OVER WORKFLOW: model tiers, cadence, gates, and the auth contract live
+# HERE, not in workflow files. Workflows read this file at runtime; changing a
+# tier or a cadence is a data edit. (Exception: the grow cron is stamped into
+# seed-grow.yml at plant time because GitHub cannot read schedules from data —
+# edit it here, then re-render with `python3 .seed/tools/seed.py plant . --update`
+# so the manifest and the workflow never disagree.)
+#
+# GUARDRAILS ARE AGENT-READ-ONLY: agents read this file to learn their bounds;
+# only human-reviewed pull requests may change it. Secret VALUES never live in
+# this file (or any file) — the auth block only NAMES which secret does what.
+
+schema: seed-manifest/v1
+
+seed:
+  name: __SEED_NAME__
+  repo: __SEED_REPO__
+  default_branch: __SEED_DEFAULT_BRANCH__
+  planted: __SEED_PLANTED__
+  kernel_version: __SEED_KERNEL_VERSION__
+  planted_from: __SEED_PLANTED_FROM__
+
+concept:
+  file: CONCEPT.md
+
+policy:
+  # Model escalation tiers for the grow tick (plan -> build -> verify) and the
+  # one-shot germination pass. Use authoritative model IDs.
+  models:
+    plan: claude-haiku-4-5
+    build: claude-sonnet-4-6
+    verify: claude-opus-4-8
+    germinate: claude-opus-4-8
+  cadence:
+    # UTC cron for the scheduled grow tick (also stamped into seed-grow.yml).
+    grow_cron: "__SEED_GROW_CRON__"
+    # One bounded, reviewable increment per tick. Raising this widens PRs;
+    # prefer more ticks over bigger ones.
+    increments_per_tick: 1
+
+# Consent surface: each autonomous loop is IDLE until a human sets its repo
+# variable to "true". The variable is the consent; deleting it is the off
+# switch. The planter never sets these — a human does.
+gates:
+  grow: SEED_GROW_ENABLED
+  evolve: SEED_EVOLVE_ENABLED
+
+# The token contract (names only, never values):
+#   primary    — Claude Code OAuth token from `claude setup-token` (subscription).
+#   fallback   — metered Anthropic API key; fired only on evidence the OAuth
+#                passes failed or produced nothing.
+#   cross_repo — fine-grained PAT: pushes grow branches + opens PRs so CI fires
+#                on them (github.token pushes fire NO workflow events), and
+#                lets a garden hub dispatch this repo's workflows.
+auth:
+  primary: CLAUDE_CODE_OAUTH_TOKEN
+  fallback: ANTHROPIC_API_KEY
+  cross_repo: SEED_PAT
+
+kernel:
+  # true => kernel/installation parity drift is an ERROR in `seed.py check`
+  # (the framework repo runs strict; planted repos may customize and keep
+  # this false, accepting drift warnings as the record of divergence).
+  strict: false
+
+telemetry:
+  ledger: .seed/telemetry/evolution.jsonl
+
+# The constitution. Restated for agents in CLAUDE.md; enforced where checkable
+# by `seed.py check` and by workflow-owned publish steps. Never weaken.
+guardrails:
+  pr_only: true
+  never_merge: true
+  workflows_agent_writable: false
+  kill_switch: .seed/pause.yml
+  quarantine_untrusted: true
+  perpetual: true

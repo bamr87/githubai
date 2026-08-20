@@ -1,0 +1,119 @@
+# =============================================================================
+# garden-orchestrate.yml — the garden conductor (kernel v__SEED_KERNEL_VERSION__)
+# =============================================================================
+# Once a day, dispatch a seed-grow tick to the stalest members of the roster
+# in .seed/garden.yml. The garden owns NO model passes — it only dispatches;
+# each member's growth runs in the member's own Actions, behind the member's
+# own gates, so the garden can never bypass a member's consent surface.
+#
+# OFF by default: idle until the GARDEN_ENABLED repo variable is "true" AND
+# the SEED_PAT secret (actions:write on every member) exists. Honors this
+# repo's .seed/pause.yml kill switch before any dispatch. Selection is
+# stateless (last seed-grow run per member via the Actions API), so this
+# workflow writes nothing anywhere.
+
+name: garden-orchestrate
+
+on:
+  schedule:
+    - cron: '15 5 * * *'
+  workflow_dispatch:
+    inputs:
+      targets:
+        description: 'Optional space-separated owner/repo list; blank = stalest-first from the roster'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: garden-orchestrate
+  cancel-in-progress: false
+
+jobs:
+  orchestrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Consent, kill switch, input validation
+        id: gate
+        env:
+          ENABLED: ${{ vars.GARDEN_ENABLED }}
+          PAT: ${{ secrets.SEED_PAT }}
+          TARGETS: ${{ inputs.targets }}
+        run: |
+          set -euo pipefail
+          if printf '%s' "$TARGETS" | LC_ALL=C grep -qvE '^[A-Za-z0-9._/ -]*$'; then
+            echo "::error::inputs.targets may only contain owner/repo names separated by spaces."
+            exit 1
+          fi
+          go=true
+          if [ "$ENABLED" != "true" ]; then
+            echo "::notice::garden idle — set the GARDEN_ENABLED repo variable to 'true' to consent to orchestration."
+            go=false
+          fi
+          if grep -qE '^paused:[[:space:]]*true' .seed/pause.yml 2>/dev/null; then
+            echo "::warning::garden is PAUSED via .seed/pause.yml — skipping all dispatch."
+            go=false
+          fi
+          if [ -z "$PAT" ]; then
+            echo "::notice::SEED_PAT not set — the garden cannot dispatch member workflows (needs actions:write on each member)."
+            go=false
+          fi
+          echo "go=$go" >> "$GITHUB_OUTPUT"
+
+      - name: Select the stalest members and dispatch grow ticks
+        if: steps.gate.outputs.go == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.SEED_PAT }}
+          TARGETS: ${{ inputs.targets }}
+        run: |
+          set -euo pipefail
+          python3 -c "import yaml" 2>/dev/null || pip install --quiet pyyaml
+          if [ -n "$TARGETS" ]; then
+            repos="$TARGETS"
+          else
+            # Stateless stalest-first: ask each member's Actions API for its
+            # last seed-grow run; never-grown members (404 / no runs) sort to
+            # the front. Cap per garden.repos_per_run.
+            repos="$(python3 - <<'PY'
+          import json, subprocess, yaml
+          cfg = yaml.safe_load(open('.seed/garden.yml'))
+          members = [m['repo'] for m in (cfg.get('members') or []) if isinstance(m, dict) and m.get('repo')]
+          cap = int((cfg.get('garden') or {}).get('repos_per_run') or 0)
+          def last_run(repo):
+              try:
+                  out = subprocess.run(
+                      ['gh', 'api', f'repos/{repo}/actions/workflows/seed-grow.yml/runs?per_page=1',
+                       '--jq', '.workflow_runs[0].created_at // ""'],
+                      capture_output=True, text=True, timeout=30)
+                  return out.stdout.strip() if out.returncode == 0 else ''
+              except Exception:
+                  return ''
+          ranked = sorted(members, key=lambda r: last_run(r))
+          if cap > 0:
+              ranked = ranked[:cap]
+          print(' '.join(ranked))
+          PY
+          )"
+          fi
+          if [ -z "$repos" ]; then
+            echo "::notice::roster is empty — nothing to dispatch."
+            exit 0
+          fi
+          echo "Dispatching seed-grow ticks for: $repos"
+          failed=0
+          for r in $repos; do
+            if gh workflow run seed-grow.yml -R "$r" >/dev/null 2>&1; then
+              echo "  ok: $r"
+            else
+              echo "  FAILED: $r (SEED_PAT needs actions:write there, and the member needs seed-grow.yml)"
+              failed=$((failed + 1))
+            fi
+          done
+          [ "$failed" -eq 0 ] || { echo "::error::$failed dispatch(es) failed."; exit 1; }

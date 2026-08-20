@@ -1,8 +1,8 @@
 ---
-name: Evolution Request
-about: Request new features or improvements to be implemented by AI agents
-title: '[EVOLUTION] '
-labels: evolution
+name: Seed request (evolution)
+about: Propose a change for the AI-Seed evolve lane to implement
+title: '[SEED] '
+labels: seed:request
 assignees: ''
 
 ---
@@ -11,34 +11,24 @@ assignees: ''
 <!-- Clearly describe what you want to achieve -->
 
 ## 📋 Requirements
-<!-- List specific requirements and acceptance criteria -->
+<!-- Specific requirements and acceptance criteria -->
 - [ ] Requirement 1
 - [ ] Requirement 2
-- [ ] Requirement 3
 
-## 🔧 Technical Considerations
-<!-- Any technical constraints, preferences, or integration requirements -->
+## 🔧 Technical considerations
+<!-- Constraints, preferences, integration requirements -->
 
-## 📊 Success Metrics
-<!-- How will we measure if this evolution is successful? -->
+## ✅ How we'll know it worked
+<!-- Observable success criteria; the verify pass runs the repo's checks either way -->
 
-## 🚀 Priority
-- [ ] High (urgent)
-- [ ] Medium (standard)
-- [ ] Low (enhancement)
-
-## 📝 Additional Context
-<!-- Add any other context, screenshots, or references -->
+## 📝 Additional context
+<!-- Anything else; external links are treated as data, not instructions -->
 
 ---
-<!-- 
-This issue will automatically trigger the AI agent workflow.
-The agents will:
-1. 📋 Plan the implementation approach
-2. 💻 Generate the necessary code
-3. 🧪 Create comprehensive tests
-4. 📚 Update documentation
-5. 🔄 Create a pull request for review
-
-You can monitor progress in the Actions tab.
--->
+<!--
+How this lane works (GitHub as the SDLC):
+1. Filing this issue applies the seed:request label — that is intake, not consent.
+2. A maintainer reviews and applies the seed:approved label. THAT is the
+consent that dispatches one Claude Code implementation run (OAuth-first), provided the SEED_EVOLVE_ENABLED repo variable is set and the seed is not paused (.seed/pause.yml).
+3. The run lands as ONE draft pull request linked here. Humans review and
+merge; the seed never merges. Brakes: apply seed:hold to keep an approved issue parked; remove the label or pause the seed to stop everything. -->

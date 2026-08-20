@@ -1,0 +1,253 @@
+# =============================================================================
+# seed-germinate.yml — one-time initial build from CONCEPT.md (kernel v__SEED_KERNEL_VERSION__)
+# =============================================================================
+# Turns a freshly planted repo into a working project skeleton: Claude Code
+# reads CONCEPT.md and builds the initial structure (scaffold, docs, first
+# tests) on a branch, published as ONE draft pull request a human reviews.
+#
+# Consent model: manual workflow_dispatch ONLY, with a two-key confirm — the
+# `confirm` input must retype the seed name from .seed/seed.yml. No repo
+# variable is required (running the dispatch with the confirm IS the consent),
+# but the .seed/pause.yml kill switch is still honored.
+#
+# Workflows guardrail: the model NEVER writes .github/workflows/** — CI it
+# wants to add is authored into seed/proposed-workflows/ inside the draft PR,
+# and a human moves the files on review. (github.token cannot push workflow
+# changes at all, and a model-authored workflow must never run before review.)
+# Kernel-managed: rendered from seed/kernel/ by the AI-Seed planter.
+
+name: seed-germinate
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Retype the seed name (from .seed/seed.yml) to confirm germination'
+        required: true
+      notes:
+        description: 'Optional steering notes (plain prose; no shell metacharacters)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: seed-write-${{ github.repository }}
+  cancel-in-progress: false
+
+env:
+  GERMINATE_PROMPT: |
+    You are the GERMINATE pass of an AI-Seed repository — the one-time initial
+    build. CONCEPT.md is the genome: read it in full (§1 vision, §2
+    capabilities, §3 architecture intent, §4 structure, §5 quality bars, §7
+    conventions). Read CLAUDE.md — its guardrails bind you. Then build the
+    initial project structure this concept calls for:
+      1. Scaffold the stack §3 names: source layout per §4, dependency
+         manifests, a runnable entry point, and FIRST TESTS that pass.
+      2. Write the real README.md (front door: what/why/quickstart) and fill
+         the TODO sections of CLAUDE.md (stack commands, project summary).
+      3. Any CI the project needs is AUTHORED INTO seed/proposed-workflows/
+         (never .github/workflows/ — a human moves the files on review).
+      4. Update CONCEPT.md §4 to match what you actually built, check off any
+         §2 capability you genuinely delivered, and append the germination
+         entry to §8, exact format:
+         "### G1-T1 — <YYYY-MM-DD> — Tick 1: germinated"
+         with a one-line **Action** naming what was scaffolded.
+      5. Run what §5 lists (including `python3 .seed/tools/seed.py check .`)
+         and fix what it surfaces. ${{ inputs.notes }}
+    Never edit .seed/pause.yml, the guardrails block of .seed/seed.yml, or
+    anything under .github/workflows/. Do NOT commit or push — the workflow
+    publishes. A germination that scaffolds nothing has FAILED. Then stop.
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      go: ${{ steps.gate.outputs.go }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Two-key confirm, kill switch, auth, input validation
+        id: gate
+        env:
+          CONFIRM: ${{ inputs.confirm }}
+          NOTES: ${{ inputs.notes }}
+          OAUTH: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          set -euo pipefail
+          if printf '%s' "$NOTES" | LC_ALL=C grep -qE '[`$<>|;&{}]'; then
+            echo "::error::inputs.notes contains disallowed characters (possible injection); refusing to run."
+            exit 1
+          fi
+          name=$(grep -E '^[[:space:]]*name:' .seed/seed.yml | head -1 | sed -E 's/.*name:[[:space:]]*"?([^"#]+)"?.*/\1/' | xargs)
+          if [ -z "$name" ] || [ "$CONFIRM" != "$name" ]; then
+            echo "::error::two-key confirm failed — inputs.confirm must exactly match seed.name ('$name') from .seed/seed.yml."
+            exit 1
+          fi
+          if grep -qE '^paused:[[:space:]]*true' .seed/pause.yml 2>/dev/null; then
+            echo "::error::seed is PAUSED via .seed/pause.yml — refusing to germinate."
+            exit 1
+          fi
+          if [ -z "$OAUTH" ] && [ -z "$KEY" ]; then
+            echo "::error::no Claude auth configured (CLAUDE_CODE_OAUTH_TOKEN / ANTHROPIC_API_KEY)."
+            exit 1
+          fi
+          echo "go=true" >> "$GITHUB_OUTPUT"
+
+  germinate:
+    needs: gate
+    if: needs.gate.outputs.go == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: read
+      id-token: write # claude-code-action exchanges an OIDC token
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Resolve policy from .seed/seed.yml
+        id: policy
+        run: |
+          set -euo pipefail
+          m() { grep -E "^[[:space:]]*$1:" .seed/seed.yml | head -1 | sed -E "s/.*$1:[[:space:]]*\"?([^\"#]+)\"?.*/\1/" | xargs; }
+          model="$(m germinate)"
+          case "$model" in
+            claude-*) echo "model=$model" >> "$GITHUB_OUTPUT" ;;
+            *) echo "::error::could not resolve policy.models.germinate from .seed/seed.yml (got '$model')"; exit 1 ;;
+          esac
+          base="$(m default_branch)"
+          [ -n "$base" ] || { echo "::error::could not resolve seed.default_branch from .seed/seed.yml"; exit 1; }
+          echo "base=$base" >> "$GITHUB_OUTPUT"
+
+      - name: Germinate — build the initial structure
+        id: pass
+        continue-on-error: true
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: ${{ env.GERMINATE_PROMPT }}
+          claude_args: >-
+            --model ${{ steps.policy.outputs.model }}
+            --max-turns 150
+            --allowedTools "Bash,Edit,Write,Read,Glob,Grep,WebFetch,WebSearch,TodoWrite,Task,Skill"
+          show_full_output: true
+
+      - name: Snapshot pass output
+        if: always()
+        run: cp /home/runner/work/_temp/claude-execution-output.json /tmp/seed-germinate.json 2>/dev/null || true
+
+      - name: Detect a failed/empty germination
+        if: always()
+        id: check
+        run: |
+          set -uo pipefail
+          content=$(git status --porcelain | grep -c . || true)
+          empty=true
+          [ "${content:-0}" -gt 0 ] && empty=false
+          failed=false
+          if [ -f /tmp/seed-germinate.json ] && jq -e '[.[] | select(.type=="result")] | last | .is_error == true' /tmp/seed-germinate.json >/dev/null 2>&1; then
+            failed=true
+          fi
+          echo "empty=$empty" >> "$GITHUB_OUTPUT"
+          echo "failed=$failed" >> "$GITHUB_OUTPUT"
+
+      - name: Fallback — germinate on the API key
+        id: fallback
+        if: steps.check.outputs.empty == 'true' || steps.check.outputs.failed == 'true'
+        continue-on-error: true
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: ${{ env.GERMINATE_PROMPT }}
+          claude_args: >-
+            --model ${{ steps.policy.outputs.model }}
+            --max-turns 150
+            --allowedTools "Bash,Edit,Write,Read,Glob,Grep,WebFetch,WebSearch,TodoWrite,Task,Skill"
+          show_full_output: true
+
+      - name: Upload agent telemetry artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: seed-germinate-telemetry-${{ github.run_id }}
+          path: /tmp/seed-germinate.json
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Publish germination as a draft pull request
+        id: publish
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.SEED_PAT != '' && secrets.SEED_PAT || github.token }}
+          USED_PAT: ${{ secrets.SEED_PAT != '' && 'true' || 'false' }}
+          BASE: ${{ steps.policy.outputs.base }}
+        run: |
+          set -uo pipefail
+          echo "published=false" >> "$GITHUB_OUTPUT"
+          # Workflows guardrail with preservation: any stray the model left
+          # under .github/workflows becomes a reviewable proposal instead.
+          strays=$(git ls-files --others --exclude-standard -- .github/workflows 2>/dev/null || true)
+          if [ -n "$strays" ]; then
+            mkdir -p seed/proposed-workflows
+            echo "$strays" | while read -r f; do
+              [ -n "$f" ] && mv "$f" "seed/proposed-workflows/$(basename "$f")"
+            done
+            echo "::warning::moved model-authored workflow file(s) to seed/proposed-workflows/ — a human moves them on review."
+          fi
+          git checkout -- .github/workflows/ 2>/dev/null || true
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "No changes — nothing to publish."
+            exit 0
+          fi
+          git add -A
+          git config user.name "seed-germinate"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          { git config --local --get-regexp 'http\..*\.extraheader' 2>/dev/null || true; } \
+            | awk '{print $1}' | while read -r k; do git config --local --unset-all "$k" || true; done
+          branch="seed/germinate-${{ github.run_id }}"
+          git checkout -B "$branch"
+          git commit -q -m "feat(seed): germinate — initial build from CONCEPT.md"
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+          pushed=""
+          for _ in 1 2 3; do
+            if git push -u origin "$branch"; then pushed=1; break; fi
+            sleep 5
+          done
+          [ -n "$pushed" ] || { echo "::error::could not push $branch after retries"; exit 1; }
+          if [ "$USED_PAT" != "true" ]; then
+            echo "::notice::pushed with github.token — CI will NOT run on this PR. Set the SEED_PAT secret to fix this."
+          fi
+          gh pr create --draft --base "$BASE" --head "$branch" \
+            --title "feat(seed): germinate — initial build from CONCEPT.md" \
+            --body "$(printf '<!-- ai-seed:germinate -->\nAI-Seed germination (run %s): the initial structure built from CONCEPT.md.\n\n- Evolution Log: CONCEPT.md §8 (Tick 1)\n- Proposed CI (if any): seed/proposed-workflows/ — review, then move into .github/workflows/\n\nA human reviews and merges; the seed never merges.' "${{ github.run_id }}")"
+          echo "published=true" >> "$GITHUB_OUTPUT"
+
+      - name: Fail loudly if germination produced nothing
+        if: always()
+        env:
+          PUBLISHED: ${{ steps.publish.outputs.published }}
+          P1: ${{ steps.pass.outcome }}
+          FB: ${{ steps.fallback.outcome }}
+          CHECK_FAILED: ${{ steps.check.outputs.failed }}
+        run: |
+          set -uo pipefail
+          if [ "$PUBLISHED" = "true" ]; then
+            echo "Germination published a draft PR — OK."
+            exit 0
+          fi
+          echo "::error::Germination produced NO changes (nothing was published)."
+          echo "pass outcomes: germinate=$P1 fallback=$FB is_error_seen=$CHECK_FAILED"
+          if [ "$CHECK_FAILED" = "true" ] || [ "$P1" = "failure" ]; then
+            echo "::error::The model pass reported an error — auth/setup failure (check CLAUDE_CODE_OAUTH_TOKEN). Re-mint the token; do not chase a content problem."
+          else
+            echo "::error::The model pass ran without error but scaffolded nothing — CONCEPT.md may be too thin to act on. Fill §1–§5 and dispatch again."
+          fi
+          exit 1
