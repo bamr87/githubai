@@ -155,7 +155,7 @@ Anything the kernel demands of a planted repo, this repo demonstrates. When the 
 
 ## 10. Failure handling
 
-- **Per-run triage**: `triage-on-failure.yml` watches the named workflows via `workflow_run`, downloads failed-run logs, and files a deduplicated triage issue. (Fleet caveat honored: `workflow_run` chains are fragile for *sequencing* — prefer `needs:` inside a pipeline; `workflow_run` here is pure observation, the one job it is fit for.)
+- **Per-run triage**: `triage-on-failure.yml` watches the named workflows via `workflow_run`, downloads failed-run logs, and files a triage issue. The issue **title is the dedupe key** — `[CI Failure] <workflow> on <branch>`, deliberately free of the commit SHA and with the ref normalized (`refs/heads/main` → `main`), so a recurring failure updates one issue instead of minting a new pair every push. The tend lane closes it once that workflow is green again on the default branch. Filer and closer together are what let the board converge; a filer alone only ratchets. (Fleet caveat honored: `workflow_run` chains are fragile for *sequencing* — prefer `needs:` inside a pipeline; `workflow_run` here is pure observation, the one job it is fit for.)
 - **Auth-vs-stalled diagnosis**: the grow tick's fail-loud step separates "every pass errored — fix the token" from "passes ran but produced nothing — growth stalled", so responders never chase the wrong class.
 - **Human brakes**: `seed:hold` on an issue stops the evolve lane from picking it up; the pause file stops everything; deleting an `*_ENABLED` variable stops one loop.
 

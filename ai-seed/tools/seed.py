@@ -46,7 +46,7 @@ import sys
 from pathlib import Path
 
 # Kept in sync with seed/VERSION by tests; the VERSION file wins when present.
-KERNEL_VERSION = "0.3.0"
+KERNEL_VERSION = "0.4.0"
 
 PLACEHOLDER_RE = re.compile(r"__SEED_[A-Z_]+__")
 

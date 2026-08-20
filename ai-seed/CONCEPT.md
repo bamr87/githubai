@@ -18,7 +18,8 @@ ai-seed is the autonomous AI orchestration framework for GitHub-native software:
 - [x] Garden layer: roster + stateless stalest-first orchestration of many planted repos (default OFF).
 - [x] Board precondition: every tick tends before it grows, and growth is blocked while unparked issues or PRs remain (`policy.board`; kernel v0.3.0).
 - [x] Autonomous CI triage and repair of the seed's own red or conflicted PRs (`seed-tend.yml`; kernel v0.3.0).
-- [x] Policy-gated auto-merge confined to the tend lane, with per-condition hard stops (`policy.merge`; kernel v0.3.0).
+- [x] Policy-gated auto-merge confined to the tend lane, with per-condition hard stops (`policy.merge`; kernel v0.3.0) — plus a non-configurable stop on PRs touching `.github/workflows/**` (v0.4.0).
+- [x] A converging board: triage files ONE issue per workflow+branch and the tend lane closes it when that workflow is green again (kernel v0.4.0).
 - [ ] Auto-spawn for gardens: maturity-gated tangential planting (reference: year-of-ai ADR-0007).
 - [ ] Issue pipeline tiers: intake → implement → complete with per-tier caps and autonomy gates in the manifest.
 - [ ] Cost governor: budget block in the manifest enforced by gate jobs against the telemetry ledger.
@@ -87,5 +88,7 @@ Append-only. One entry per tick, newest last, exact format: `### G<generation>-T
 **Action**: Added `plant --schema` to seed a kernel-managed `SCHEMA.md` (Pyramid Schema directory contract, from bamr87/SCHEMA) — skipped unless opted in, re-rendered by `--update`; kernel bumped to v0.2.1 with CLI tests and PATTERNS row 35 marked implemented.
 
 ### G3-T3 — 2026-08-20 — Tick 5: the board precondition and the tend lane
+
+**Action (v0.4.0 follow-up)**: Made the board actually converge. Triage's dedupe key was the issue title *including the commit SHA and raw ref*, so every push filed a new pair — 20 machine issues that no board could clear; the key is now stable per workflow+branch and the tend lane closes each one when that workflow goes green. `docs-build-deploy` was failing on every push at `Setup Pages` (Pages not enabled) despite building fine — publishing is now best-effort so a repo setting no longer manufactures failures. Fixed a latent kernel bug where the survey's `any(norm; …)` evaluated against the checks ARRAY (jq would have aborted on the first PR with checks), added the never-auto-merge stop for `.github/workflows/**`, and taught the survey to classify PRs with no checks at all instead of leaving them invisible.
 
 **Action**: Growth is now contingent on a clear board (kernel v0.3.0). New `seed-tend.yml` surveys open PRs/issues, runs one repair pass over red or conflicted seed PRs, merges what is provably green under `policy.merge`'s hard stops, and dispatches approved issues; `seed-grow.yml` calls it every tick and blocks the grow phase until a post-tend survey comes back clear. `guardrails.never_merge` gives way to policy-gated merging with enforced hard stops (green checks, no human-authored PRs, a block label a human can apply), and `seed.py check` errors if any lane other than tend contains `gh pr merge`.

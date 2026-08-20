@@ -70,6 +70,11 @@ policy:
   # A PR that fails ANY condition is left open for a human — that is the
   # designed outcome, not a failure. Precedent: gitorio ADR-015 hardened its
   # merge policy after an incident auto-merging unvetted dependency PRs.
+  #
+  # NOT configurable, on purpose: a PR that touches .github/workflows/** is
+  # never auto-merged, however green. Those workflows run with this repo's
+  # secrets, so merging one is a privilege change — letting policy opt out of
+  # that check would let the loop widen its own powers.
   merge:
     auto: true
     method: squash

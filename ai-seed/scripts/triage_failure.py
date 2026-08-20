@@ -74,7 +74,7 @@ def build_logs_details_markdown(root: Path, tail: int, max_files: int = 25) -> s
 
     def _sanitize(md: str) -> str:
         # Prevent accidental closing of fenced blocks inside logs
-        return md.replace("```", "``\`")
+        return md.replace("```", "``\\`")
 
     files: List[Path] = sorted(list(root.rglob("*.txt")) + list(root.rglob("*.log")))
     if not files:
@@ -181,8 +181,17 @@ async def main_async(args: argparse.Namespace) -> None:
     else:
         report_md = simple_summary(args.workflow_name, jobs_summary, excerpt, tail)
 
-    # Build issue content
-    title = f"[CI Failure] {args.workflow_name} on {args.git_ref} @ {args.commit_sha[:7]}"
+    # Build issue content.
+    #
+    # The title IS the dedupe key (create_issue matches an open issue by exact
+    # title and comments on it instead of filing a duplicate), so it must be
+    # STABLE for a recurring failure. It previously carried the commit SHA and
+    # the raw ref, which made every push mint a new issue — and `main` vs
+    # `refs/heads/main` filed two per run. That turned one broken workflow into
+    # an unbounded issue stream that no board could ever clear. The volatile
+    # details live in the body instead.
+    branch = args.git_ref.replace("refs/heads/", "").replace("refs/tags/", "")
+    title = f"[CI Failure] {args.workflow_name} on {branch}"
     files_scanned_md = (f"\n**Files scanned:**\n\n{jobs_summary}\n\n" if jobs_summary else "")
     body = (
         f"## CI Failure: {args.workflow_name}\n\n"

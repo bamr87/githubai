@@ -269,8 +269,40 @@ class TestKernelTemplates:
         tend = (KERNEL_DIR / ".github" / "workflows" / "seed-tend.yml").read_text()
         for marker in ("SEED_TEND_ENABLED", "pause.yml", "block_labels",
                        "no longer eligible on live state", "startswith(\"seed/\")",
-                       "human-review"):
+                       "human-review",
+                       # A workflow-touching PR is a privilege change: never auto-merged.
+                       "^\\.github/workflows/"):
             assert marker in tend, f"kernel seed-tend.yml lost '{marker}'"
+
+    def test_tend_lane_converges_the_board(self):
+        """The lane must close its own exhaust, or the board never clears."""
+        tend = (KERNEL_DIR / ".github" / "workflows" / "seed-tend.yml").read_text()
+        assert "gh issue close" in tend, "tend must close resolved CI-failure issues"
+        assert "ci-failure" in tend, "tend must recognise machine-filed CI-failure issues"
+        assert "unchecked" in tend, \
+            "tend must classify PRs with no checks, or they block the board invisibly"
+
+    def test_tend_jq_iterates_checks_elementwise(self):
+        """Regression: `any(norm; …)` runs the generator against the ARRAY.
+
+        `.conclusion` then indexes an array and jq aborts, taking the whole
+        survey with it. Every check predicate must normalize elementwise
+        (`map(norm)`) instead.
+        """
+        tend = (KERNEL_DIR / ".github" / "workflows" / "seed-tend.yml").read_text()
+        # Comments may quote the broken form to explain it; only code counts.
+        code = "\n".join(ln for ln in tend.splitlines()
+                         if not ln.lstrip().startswith("#"))
+        assert "any(norm;" not in code and "all(norm;" not in code, \
+            "check predicates must use `map(norm)`, not `any(norm; …)`"
+        assert "map(norm)" in code
+
+    def test_triage_dedupe_key_is_stable(self):
+        """A per-commit issue title turns one red workflow into an issue stream."""
+        triage = (REPO_ROOT / "scripts" / "triage_failure.py").read_text()
+        assert 'title = f"[CI Failure] {args.workflow_name} on {branch}"' in triage, \
+            "the triage issue title (the dedupe key) must not carry the commit SHA"
+        assert 'refs/heads/' in triage, "the ref must be normalized so main != refs/heads/main"
 
     def test_grow_is_gated_on_a_clear_board(self):
         grow = (KERNEL_DIR / ".github" / "workflows" / "seed-grow.yml").read_text()

@@ -20,6 +20,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    outputs:
+      pages: ${{ steps.pages.outcome }}
 
     steps:
       - uses: actions/checkout@v4
@@ -48,10 +50,27 @@ jobs:
         run: |
           mkdocs build --clean
 
+      # Publishing is best-effort; BUILDING is the real signal.
+      #
+      # configure-pages fails hard when GitHub Pages is not enabled for the
+      # repository, which failed this workflow on every push to the default
+      # branch even though the docs built cleanly — and each failure filed a
+      # triage issue, so a repo setting quietly became an unbounded issue
+      # stream. Treat Pages as optional: a broken docs build still fails the
+      # job (steps above), while an unconfigured Pages site downgrades to a
+      # notice and skips publishing.
       - name: Setup Pages
+        id: pages
+        continue-on-error: true
         uses: actions/configure-pages@v4
 
+      - name: Note that Pages is not enabled
+        if: steps.pages.outcome != 'success'
+        run: |
+          echo "::notice::Docs built successfully, but GitHub Pages is not enabled for this repository, so nothing was published. Enable it under Settings -> Pages (Source: GitHub Actions) to deploy."
+
       - name: Upload artifact
+        if: steps.pages.outcome == 'success'
         uses: actions/upload-pages-artifact@v3
         with:
           path: site/
@@ -83,6 +102,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: build
+    # Skip publishing when Pages is not enabled, rather than failing the run.
+    if: needs.build.outputs.pages == 'success'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
