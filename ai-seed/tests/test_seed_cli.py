@@ -95,7 +95,7 @@ class TestPlant:
         plant(tmp_path, "--garden")
         wf_dir = tmp_path / ".github" / "workflows"
         files = sorted(wf_dir.glob("*.yml"))
-        assert len(files) == 5  # 4 kernel + garden-orchestrate
+        assert len(files) == 6  # 5 kernel + garden-orchestrate
         for wf in files:
             yaml.safe_load(wf.read_text())
 
@@ -128,6 +128,19 @@ class TestCheck:
         assert main(["check", str(tmp_path)]) == 1
         assert "--draft" in capsys.readouterr().out
 
+    def test_declared_gate_with_no_workflow_is_flagged(self, tmp_path, capsys):
+        """A consent gate the manifest declares must control something.
+
+        Kernel v0.1.0 shipped gates.evolve: SEED_EVOLVE_ENABLED with no
+        workflow reading it — a dead promise on every planted repo. The
+        checker now warns when any declared gate is unhonored.
+        """
+        plant(tmp_path)
+        (tmp_path / ".github" / "workflows" / "seed-evolve.yml").unlink()
+        assert main(["check", str(tmp_path)]) == 0  # warning, not an error
+        out = capsys.readouterr().out
+        assert "SEED_EVOLVE_ENABLED" in out and "no workflow reads it" in out
+
     def test_missing_kill_switch_is_an_error(self, tmp_path):
         plant(tmp_path)
         (tmp_path / ".seed" / "pause.yml").unlink()
@@ -148,6 +161,15 @@ class TestSelfHosting:
 
     def test_self_check_is_green_under_strict_parity(self):
         assert main(["check", str(REPO_ROOT)]) == 0
+
+    def test_every_declared_gate_is_honored_here(self):
+        """ai-seed runs every lane it advertises — no dead gates in the flagship."""
+        manifest = parse_simple_yaml((REPO_ROOT / ".seed" / "seed.yml").read_text())
+        installed = "\n".join(
+            wf.read_text() for wf in (REPO_ROOT / ".github" / "workflows").glob("*.yml")
+        )
+        for gate_name, var in (manifest.get("gates") or {}).items():
+            assert var in installed, f"gates.{gate_name} ({var}) is declared but no workflow reads it"
 
     def test_manifest_is_strict(self):
         manifest = parse_simple_yaml((REPO_ROOT / ".seed" / "seed.yml").read_text())

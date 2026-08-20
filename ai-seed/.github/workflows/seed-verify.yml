@@ -1,5 +1,5 @@
 # =============================================================================
-# seed-verify.yml — the seed's structural CI gate (kernel v0.1.0)
+# seed-verify.yml — the seed's structural CI gate (kernel v0.2.0)
 # =============================================================================
 # Runs the vendored checker on every PR and default-branch push: manifest
 # valid, kill switch present, Evolution Log intact, gates default-OFF, kernel

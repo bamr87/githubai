@@ -17,7 +17,7 @@ Every AI-Seed repository moves through a botanical lifecycle. Each stage is a co
 | **PLANT** | `tools/seed.py plant` stamps the kernel into a target directory/repo | A human runs the CLI | Running the planter is the consent |
 | **GERMINATE** | `seed-germinate.yml` — Claude Code reads `CONCEPT.md` and builds the initial structure (scaffold, CI, docs, first tests) on a branch, opens a draft PR | Manual `workflow_dispatch` only | Two-key confirm: the `confirm` input must retype the seed name |
 | **GROW** | `seed-grow.yml` — the perpetual increment loop: plan → build → verify passes pick ONE increment per tick, open ONE draft PR | Cron + `workflow_dispatch` | `SEED_GROW_ENABLED` repo variable == `true` (the variable is the consent) |
-| **TEND** | `seed-steward.yml` — the `@claude` mention handler; plus the issue-driven lane (`seed:approved` label → implementation PR) | Human mentions / labels | The mention or the label is the consent |
+| **TEND** | `seed-steward.yml` — the `@claude` mention handler; `seed-evolve.yml` — the issue-driven lane (`seed:request` intake → a human applies `seed:approved` → implementation draft PR; `seed:hold` is the brake) | Human mentions / labels | The mention is the consent; the `seed:approved` label is the consent, gated by `SEED_EVOLVE_ENABLED` |
 | **POLLINATE** | The vendored `.seed/tools/seed.py` can plant the kernel onward into new repos; a garden hub (`seed/garden/`) orchestrates many members | A human runs the planter, or a hub's roster | Per-repo, same as PLANT |
 | **PAUSE / PRUNE** | `.seed/pause.yml` kill switch halts every loop repo-wide; unsetting an `*_ENABLED` variable halts one loop | Human edit | Human-owned; agents never touch either |
 
@@ -44,6 +44,7 @@ target-repo/
 └── .github/workflows/
     ├── seed-germinate.yml            # one-time initial build from CONCEPT.md (manual two-key)
     ├── seed-grow.yml                 # the increment loop (default OFF)
+    ├── seed-evolve.yml               # the issue lane (default OFF): seed:approved -> draft PR
     ├── seed-steward.yml              # @claude mention handler
     └── seed-verify.yml               # CI gate: python3 .seed/tools/seed.py check .
 ```
@@ -144,7 +145,7 @@ ai-seed is itself planted with its own kernel — the framework's first user is 
 
 - `CONCEPT.md` at the root is ai-seed's own concept, with a live §8 Evolution Log.
 - `.seed/` carries its manifest (`kernel.strict: true`), pause file, telemetry ledger, and the vendored `seed.py`.
-- `.github/workflows/seed-grow.yml`, `seed-verify.yml`, `seed-steward.yml`, and `seed-germinate.yml` are the kernel's own workflows, rendered for this repo (`seed-steward.yml` superseded the hub agent-context kit's `claude.yml` — same OAuth-first convention, plus kill-switch honor and a bot-sender guard).
+- `.github/workflows/seed-grow.yml`, `seed-evolve.yml`, `seed-verify.yml`, `seed-steward.yml`, and `seed-germinate.yml` are the kernel's own workflows, rendered for this repo (`seed-steward.yml` superseded the hub agent-context kit's `claude.yml` — same OAuth-first convention, plus kill-switch honor and a bot-sender guard).
 - `seed-verify.yml` runs `seed.py check .` on every PR, so a kernel edit that breaks planting or drifts from the installation fails CI here first — before any downstream repo can inherit it.
 
 Anything the kernel demands of a planted repo, this repo demonstrates. When the two disagree, that is a bug in this repo.

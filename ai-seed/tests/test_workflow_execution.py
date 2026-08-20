@@ -170,7 +170,7 @@ class TestWorkflowSecurity:
         workflow_files = [
             "ci-cd.yml",
             "triage-on-failure.yml",
-            "evolve-on-issue.yml",
+            "seed-evolve.yml",
             "docs-build-deploy.yml"
         ]
         

@@ -2,7 +2,7 @@ name: "triage-on-failure"
 
 on:
   workflow_run:
-    workflows: ["CI", "ci-cd-pipeline", "docs-build-deploy", "evolve-on-issue", "seed-grow", "seed-germinate"]
+    workflows: ["CI", "ci-cd-pipeline", "docs-build-deploy", "seed-evolve", "seed-grow", "seed-germinate"]
     types: ["completed"]
 
 permissions:

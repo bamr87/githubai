@@ -14,6 +14,7 @@ This directory is the product: the file set that turns any repository into a sel
 | `kernel/.seed/telemetry/README.md` | The `seed-telemetry/v1` ledger contract |
 | `kernel/.github/workflows/seed-germinate.yml` | One-time initial build from CONCEPT.md (manual two-key dispatch) |
 | `kernel/.github/workflows/seed-grow.yml` | The increment loop (default OFF; plan → build → verify → draft PR) |
+| `kernel/.github/workflows/seed-evolve.yml` | The issue-driven lane (default OFF; `seed:approved` → implementation draft PR) |
 | `kernel/.github/workflows/seed-steward.yml` | The @claude mention handler |
 | `kernel/.github/workflows/seed-verify.yml` | Structural CI gate (`seed.py check`) |
 | `garden/garden.yml` | Roster template for a hub orchestrating many planted repos |
@@ -34,7 +35,10 @@ $EDITOR ../my-project/CONCEPT.md          # §1–§5 minimum — germination re
 #    Secrets:   CLAUDE_CODE_OAUTH_TOKEN (from `claude setup-token`), optional
 #               ANTHROPIC_API_KEY (fallback), SEED_PAT (fine-grained PAT:
 #               contents+pull-requests+actions write — makes CI fire on seed PRs)
-#    Variables: SEED_GROW_ENABLED=true when you are ready for autonomous growth
+#    Variables: SEED_GROW_ENABLED=true when you are ready for autonomous growth;
+#               SEED_EVOLVE_ENABLED=true to enable the issue lane
+#    Labels:    seed:request, seed:approved, seed:hold — the issue lane's state
+#               machine. seed-evolve.yml never fires without seed:approved existing.
 #    Branch protection on the default branch: require PRs + the seed-verify check
 
 # 4. Germinate (Actions → seed-germinate → Run workflow → retype the seed name)

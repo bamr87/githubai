@@ -40,7 +40,7 @@ python3 tools/unwrap-prose.py --write       # FIX one-paragraph-per-line (markdo
 - Markdown: one paragraph per line (CI-enforced; `SCHEMA.md`/`CHANGELOG.md` exempt).
 - Don't suppress type errors (`as any`, `@ts-ignore`, `# type: ignore`) or leave empty exception handlers.
 - `tests/test_workflows.py` + `tests/test_workflow_execution.py` pin workflow contracts (files that must exist, permission bounds, timeout ranges) — changing workflows means updating them deliberately, in the same PR.
-- The steward here is `seed-steward.yml` (kernel-managed @claude handler; it superseded the agent-context kit's `claude.yml` — same OAuth-first convention, plus kill-switch honor and a bot-sender guard).
+- Every autonomous lane here is kernel-managed — `seed-grow.yml` (increment loop), `seed-evolve.yml` (issue lane; it superseded the bespoke `evolve-on-issue.yml` in kernel v0.2.0 so planted repos get the same lane), `seed-steward.yml` (@claude handler, superseding the agent-context kit's `claude.yml`), `seed-verify.yml` (structural gate). Fix them in `seed/kernel/` and re-render — never hand-edit the installed copy.
 
 ## Legacy surfaces (context, not the product)
 

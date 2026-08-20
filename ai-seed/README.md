@@ -44,7 +44,7 @@ Verify any planted repo at any time: `python3 .seed/tools/seed.py check .` (the 
 | **PLANT** | `seed.py plant` stamps the kernel: manifest, kill switch, CONCEPT genome, four workflows | Running the planter |
 | **GERMINATE** | Claude builds the initial structure from `CONCEPT.md` → one draft PR | Manual dispatch + retyping the seed name |
 | **GROW** | Scheduled ticks: plan → build → verify escalation → one increment → one draft PR + telemetry | `SEED_GROW_ENABLED=true` |
-| **TEND** | `@claude` mentions and the issue lane (`seed:request` → human applies `seed:approved` → implementation PR) | The mention / the label |
+| **TEND** | `seed-steward.yml` for `@claude` mentions; `seed-evolve.yml` for the issue lane (`seed:request` → human applies `seed:approved` → implementation PR) | The mention / the label |
 | **POLLINATE** | Any planted repo plants onward; a garden hub orchestrates many (stalest-first, capped) | Per-repo, same as PLANT |
 | **PAUSE** | `.seed/pause.yml` halts every loop; unsetting a variable halts one | Human edit, one file |
 

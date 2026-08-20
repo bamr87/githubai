@@ -271,7 +271,7 @@ class TestWorkflowIntegration:
         # Should monitor key workflows
         assert "ci-cd-pipeline" in monitored_workflows
         assert "docs-build-deploy" in monitored_workflows
-        assert "evolve-on-issue" in monitored_workflows
+        assert "seed-evolve" in monitored_workflows
     
     def test_workflow_failure_triage_integration(self):
         """Test that workflows properly integrate with triage on failure."""
@@ -318,7 +318,7 @@ class TestWorkflowSecurity:
     
     def test_workflow_permissions_specified(self):
         """Test that workflows specify appropriate permissions."""
-        sensitive_workflows = ["ci-cd.yml", "triage-on-failure.yml", "evolve-on-issue.yml"]
+        sensitive_workflows = ["ci-cd.yml", "triage-on-failure.yml", "seed-evolve.yml"]
         
         for workflow_name in sensitive_workflows:
             workflow_file = WORKFLOW_DIR / workflow_name

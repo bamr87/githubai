@@ -46,7 +46,7 @@ import sys
 from pathlib import Path
 
 # Kept in sync with seed/VERSION by tests; the VERSION file wins when present.
-KERNEL_VERSION = "0.1.0"
+KERNEL_VERSION = "0.2.0"
 
 PLACEHOLDER_RE = re.compile(r"__SEED_[A-Z_]+__")
 
@@ -311,6 +311,10 @@ Next steps (human-owned — the planter never does these):
                   SEED_PAT                   (fine-grained PAT, contents+pull-requests+actions:write —
                                               without it, CI does not fire on seed PRs)
        variables: SEED_GROW_ENABLED=true     (only when ready — the variable is the consent)
+                  SEED_EVOLVE_ENABLED=true   (only when ready — enables the issue lane)
+       labels:    seed:request  seed:approved  seed:hold
+                  (the issue lane's state machine: intake / consent / brake —
+                   seed-evolve.yml never fires without seed:approved existing)
        branch protection on {tokens['DEFAULT_BRANCH']}: require PRs + the seed-verify check.
   3. Germinate: Actions -> seed-germinate -> Run workflow -> confirm: {tokens['NAME']}
   4. Review the draft PR. Humans merge; the seed never does.""")
@@ -427,6 +431,21 @@ def cmd_check(args: argparse.Namespace) -> int:
                 r.error(f"{wf.name} contains 'gh pr merge' — the seed never merges.")
     if not steward:
         r.warn("no steward found (no workflow wiring claude-code-action to issue_comment) — @claude mentions go unanswered.")
+
+    # A gate the manifest declares must have a workflow that reads it, or the
+    # consent surface is a dead promise (the kernel shipped SEED_EVOLVE_ENABLED
+    # with no workflow honoring it until kernel v0.2.0).
+    for gate_name in ("grow", "evolve"):
+        var = dig(manifest, "gates", gate_name)
+        if not isinstance(var, str) or not var:
+            continue
+        honored = any(
+            var in wf.read_text(encoding="utf-8")
+            for wf in sorted(wf_dir.glob("*.yml"))
+        ) if wf_dir.is_dir() else False
+        if not honored:
+            r.warn(f"gates.{gate_name} declares {var} but no workflow reads it — "
+                   f"that consent gate controls nothing (expected .github/workflows/seed-{gate_name}.yml).")
 
     # Vendored tool + version skew.
     vend = target / VENDORED_TOOL

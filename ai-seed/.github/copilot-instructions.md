@@ -621,7 +621,7 @@ This repository implements a self-evolving application framework where AI agents
 ## Architecture Overview
 
 The system follows a **multi-agent workflow pattern**:
-- GitHub issues with `evolution` label or `[EVOLUTION]` title trigger automation via `.github/workflows/evolve-on-issue.yml`
+- GitHub issues drive the AI-Seed issue lane: a human applies the `seed:approved` label and `.github/workflows/seed-evolve.yml` opens ONE draft PR (gated by the `SEED_EVOLVE_ENABLED` repo variable; `seed:hold` is the brake)
 - `AgentOrchestrator` coordinates the complete evolution lifecycle in `agents/orchestrator.py`
 - CrewAI manages specialized agents (Planner → Coder → Tester → Documenter → Deployer → Evolver)
 - All changes create PRs for human review before deployment
@@ -723,7 +723,7 @@ mkdocs serve  # View at http://localhost:8000
 ### Key Files to Understand
 
 - `seed_instructions.yaml` - **Central nervous system**: All agent behavior, prompts, and system configuration
-- `.github/workflows/evolve-on-issue.yml` - **Evolution trigger**: Detects issues and orchestrates agent workflows
+- `.github/workflows/seed-evolve.yml` - **Issue lane** (kernel-managed): `seed:approved` label dispatches one Claude Code run that opens a draft PR; never merges
 - `agents/orchestrator.py` - **Coordination hub**: `AgentOrchestrator.process_evolution_request()` manages entire lifecycle
 - `src/main.py` - **Evolvable core**: FastAPI application that agents can extend and modify
 - `utils/logger.py` - **Logging standard**: Use `setup_logger(__name__)` for consistent logging across all modules

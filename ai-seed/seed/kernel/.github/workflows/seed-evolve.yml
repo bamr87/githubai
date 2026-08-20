@@ -1,19 +1,26 @@
 # =============================================================================
-# evolve-on-issue.yml — the issue-driven evolution lane (AI-Seed)
+# seed-evolve.yml — the issue-driven evolution lane (kernel v__SEED_KERNEL_VERSION__)
 # =============================================================================
-# GitHub-as-SDLC intake: a human files a seed:request issue; a human applies
-# the seed:approved label; THAT label event is the consent that dispatches one
-# Claude Code implementation run, which lands as ONE draft PR linked back to
-# the issue. Replaces the OpenAI-era CrewAI orchestrator lane with the
-# fleet's OAuth-first Claude wiring.
+# GitHub-as-SDLC intake: a human files a `seed:request` issue; a human applies
+# the `seed:approved` label; THAT label event is the consent that dispatches
+# ONE Claude Code implementation run, which lands as ONE draft PR linked back
+# to the issue. This is the TEND stage's backlog lane — the counterpart to
+# seed-grow's perpetual increment loop.
+#
+# Labels this lane needs (create them once, per the planter's next steps):
+#   seed:request   intake — filed by the issue template, NOT consent
+#   seed:approved  the human greenlight that dispatches a run
+#   seed:hold      the human brake — parks an approved issue
 #
 # Guardrails: OFF until the SEED_EVOLVE_ENABLED repo variable is "true";
 # honors .seed/pause.yml; ignores bot-applied labels (loop guard); the issue
-# text is fetched into a file and QUARANTINED (data to analyze, never
+# text is fetched to a file and QUARANTINED (data to analyze, never
 # instructions that can override CLAUDE.md); the workflow — never the model —
 # pushes and opens the draft PR; never merges.
+# Kernel-managed: rendered from seed/kernel/ by the AI-Seed planter; `seed.py
+# check` flags drift against the kernel.
 
-name: "evolve-on-issue"
+name: seed-evolve
 
 on:
   issues:

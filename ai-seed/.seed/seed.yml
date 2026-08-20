@@ -22,7 +22,7 @@ seed:
   repo: bamr87/ai-seed
   default_branch: main
   planted: 2026-08-19
-  kernel_version: 0.1.0
+  kernel_version: 0.2.0
   planted_from: bamr87/ai-seed
 
 concept:
