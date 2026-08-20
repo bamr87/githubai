@@ -1,5 +1,5 @@
 # =============================================================================
-# seed-evolve.yml — the issue-driven evolution lane (kernel v0.2.0)
+# seed-evolve.yml — the issue-driven evolution lane (kernel v0.2.1)
 # =============================================================================
 # GitHub-as-SDLC intake: a human files a `seed:request` issue; a human applies
 # the `seed:approved` label; THAT label event is the consent that dispatches

@@ -19,7 +19,7 @@ ai-seed is the autonomous AI orchestration framework for GitHub-native software:
 - [ ] Auto-spawn for gardens: maturity-gated tangential planting (reference: year-of-ai ADR-0007).
 - [ ] Issue pipeline tiers: intake → implement → complete with per-tier caps and autonomy gates in the manifest.
 - [ ] Cost governor: budget block in the manifest enforced by gate jobs against the telemetry ledger.
-- [ ] Optional SCHEMA.md (Pyramid Schema) seeding at plant time.
+- [x] Optional SCHEMA.md (Pyramid Schema) seeding at plant time (`plant --schema`; kernel v0.2.1).
 - [ ] Judge ladder for the verify pass (deterministic → single judge → panel).
 
 ## §3 Architecture intent
@@ -78,3 +78,7 @@ Append-only. One entry per tick, newest last, exact format: `### G<generation>-T
 ### G3-T1 — 2026-08-19 — Tick 3: re-founded as the orchestration framework
 
 **Action**: Plantable kernel (`seed/kernel/`), planter CLI (`tools/seed.py`), garden layer, Claude Code OAuth grow loop, and the doctrine docs (ARCHITECTURE, PATTERNS) landed; ai-seed planted with its own kernel (strict parity); OpenAI-era scheduled evolution replaced by the gated seed-grow loop.
+
+### G3-T2 — 2026-08-20 — Tick 4: optional SCHEMA.md (Pyramid Schema) seeding
+
+**Action**: Added `plant --schema` to seed a kernel-managed `SCHEMA.md` (Pyramid Schema directory contract, from bamr87/SCHEMA) — skipped unless opted in, re-rendered by `--update`; kernel bumped to v0.2.1 with CLI tests and PATTERNS row 35 marked implemented.

@@ -46,7 +46,7 @@ import sys
 from pathlib import Path
 
 # Kept in sync with seed/VERSION by tests; the VERSION file wins when present.
-KERNEL_VERSION = "0.2.0"
+KERNEL_VERSION = "0.2.1"
 
 PLACEHOLDER_RE = re.compile(r"__SEED_[A-Z_]+__")
 
@@ -57,6 +57,10 @@ USER_OWNED = {
     ".seed/seed.yml",
     ".seed/pause.yml",
 }
+
+# Kernel-relative paths that are kernel-managed but only seeded when the
+# corresponding flag is passed to `plant` (skip entirely otherwise).
+SCHEMA_OPTIONAL = {"SCHEMA.md"}  # --schema
 
 VENDORED_TOOL = ".seed/tools/seed.py"
 LEDGER = ".seed/telemetry/evolution.jsonl"
@@ -224,6 +228,9 @@ def cmd_plant(args: argparse.Namespace) -> int:
         path.write_text(content, encoding="utf-8")
 
     for rel in kernel_files(kernel):
+        # Optional surfaces: skip unless the caller explicitly opts in.
+        if rel in SCHEMA_OPTIONAL and not args.schema:
+            continue
         rendered = render((kernel / rel).read_text(encoding="utf-8"), tokens, rel)
         dest = target / rel
         managed = rel not in USER_OWNED
@@ -563,6 +570,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--force", action="store_true",
                    help="overwrite EVERYTHING from the kernel, user-owned files included (destructive)")
     p.add_argument("--garden", action="store_true", help="also install the garden hub layer")
+    p.add_argument("--schema", action="store_true",
+                   help="seed SCHEMA.md (Pyramid Schema) — kernel-managed, refreshed by --update")
     p.set_defaults(func=cmd_plant)
 
     c = sub.add_parser("check", help="structural gate for a planted repo")

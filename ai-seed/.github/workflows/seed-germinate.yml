@@ -1,5 +1,5 @@
 # =============================================================================
-# seed-germinate.yml — one-time initial build from CONCEPT.md (kernel v0.2.0)
+# seed-germinate.yml — one-time initial build from CONCEPT.md (kernel v0.2.1)
 # =============================================================================
 # Turns a freshly planted repo into a working project skeleton: Claude Code
 # reads CONCEPT.md and builds the initial structure (scaffold, docs, first

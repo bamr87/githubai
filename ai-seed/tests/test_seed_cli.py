@@ -14,6 +14,7 @@ import yaml
 
 from tools.seed import (
     KERNEL_VERSION,
+    SCHEMA_OPTIONAL,
     main,
     parse_simple_yaml,
 )
@@ -188,6 +189,41 @@ class TestSelfHosting:
     def test_evolution_log_has_ticks(self):
         text = (REPO_ROOT / "CONCEPT.md").read_text()
         assert re.search(r"(?m)^### G\d+-T\d+ ", text)
+
+
+class TestSchemaFlag:
+    def test_fresh_plant_without_schema_flag_does_not_create_schema_md(self, tmp_path):
+        plant(tmp_path)
+        assert not (tmp_path / "SCHEMA.md").exists(), \
+            "plant without --schema must not create SCHEMA.md"
+
+    def test_fresh_plant_with_schema_flag_creates_schema_md(self, tmp_path, capsys):
+        assert plant(tmp_path, "--schema") == 0
+        assert (tmp_path / "SCHEMA.md").exists(), "plant --schema must create SCHEMA.md"
+        out = capsys.readouterr().out
+        assert "SCHEMA.md" in out, "planted SCHEMA.md must appear in plant output"
+        content = (tmp_path / "SCHEMA.md").read_text()
+        assert "__SEED_" not in content, "SCHEMA.md must have no unresolved placeholders"
+        assert "bamr87/test-seed" in content, "SCHEMA.md must contain the repo name"
+
+    def test_schema_update_rerenders_from_kernel(self, tmp_path, capsys):
+        plant(tmp_path, "--schema")
+        schema = tmp_path / "SCHEMA.md"
+        original = schema.read_text()
+        schema.write_text(original + "\nDrifted line.\n")
+        capsys.readouterr()
+        assert plant(tmp_path, "--schema", "--update") == 0
+        assert schema.read_text() == original, \
+            "--schema --update must re-render SCHEMA.md to match the kernel template"
+        out = capsys.readouterr().out
+        assert "SCHEMA.md" in out
+
+    def test_schema_check_passes_after_schema_plant(self, tmp_path):
+        plant(tmp_path, "--schema")
+        assert main(["check", str(tmp_path)]) == 0
+
+    def test_schema_optional_constant_names_schema_md(self):
+        assert "SCHEMA.md" in SCHEMA_OPTIONAL
 
 
 class TestKernelTemplates:
