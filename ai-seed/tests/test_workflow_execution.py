@@ -233,7 +233,7 @@ class TestWorkflowPerformance:
         steps = test_job["steps"]
         
         # Checkout should be first step
-        assert steps[0]["uses"] == "actions/checkout@v4"
+        assert steps[0]["uses"] == "actions/checkout@v7"
         
         # Python setup should be early
         setup_step = next((i for i, step in enumerate(steps) if "setup-python" in step.get("uses", "")), None)

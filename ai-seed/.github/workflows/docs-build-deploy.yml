@@ -24,12 +24,12 @@ jobs:
       pages: ${{ steps.pages.outcome }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.12'
           cache: 'pip'
@@ -62,7 +62,7 @@ jobs:
       - name: Setup Pages
         id: pages
         continue-on-error: true
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v6
 
       - name: Note that Pages is not enabled
         if: steps.pages.outcome != 'success'
@@ -71,7 +71,7 @@ jobs:
 
       - name: Upload artifact
         if: steps.pages.outcome == 'success'
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: site/
 
@@ -111,4 +111,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
