@@ -39,9 +39,45 @@ policy:
   cadence:
     # UTC cron for the scheduled grow tick (also stamped into seed-grow.yml).
     grow_cron: "__SEED_GROW_CRON__"
+    # UTC cron for the standalone tend cycle (also stamped into seed-tend.yml).
+    # Tending is cheap on a clean board — a deterministic survey and nothing
+    # else — so it runs more often than growth.
+    tend_cron: "__SEED_TEND_CRON__"
     # One bounded, reviewable increment per tick. Raising this widens PRs;
     # prefer more ticks over bigger ones.
     increments_per_tick: 1
+
+  # THE BOARD PRECONDITION. Growth is contingent on a clear board: every tick
+  # TENDS first (review CI, repair red or conflicted PRs, merge what is
+  # eligible, hand approved issues to the evolve lane) and only GROWS when
+  # nothing actionable is left. A backlog of half-finished work is not a base
+  # to build on.
+  #
+  # Items a human has explicitly parked (ignore_labels) do NOT count against
+  # the board — otherwise one held issue freezes the repo forever.
+  board:
+    clear_before_grow: true
+    ignore_labels: [seed:hold, human-review]
+    max_repairs_per_run: 3
+
+  # AUTO-MERGE. The seed may merge its OWN work once it is provably green.
+  # Every condition below must hold; each is a hard stop, not a heuristic:
+  #   require_checks   every check run concluded success (none failing/pending)
+  #   require_clean    mergeable, no conflicts with the base
+  #   block_labels     any of these present => a human decides, never the seed
+  #   allow_branches   only lanes the seed itself authored
+  #   allow_bots       dependency bots, held to the same green-CI bar
+  # A PR that fails ANY condition is left open for a human — that is the
+  # designed outcome, not a failure. Precedent: gitorio ADR-015 hardened its
+  # merge policy after an incident auto-merging unvetted dependency PRs.
+  merge:
+    auto: true
+    method: squash
+    require_checks: true
+    require_clean: true
+    block_labels: [human-review, seed:hold, do-not-merge]
+    allow_branches: [seed/*]
+    allow_bots: [dependabot]
 
 # Consent surface: each autonomous loop is IDLE until a human sets its repo
 # variable to "true". The variable is the consent; deleting it is the off
@@ -49,6 +85,7 @@ policy:
 gates:
   grow: SEED_GROW_ENABLED
   evolve: SEED_EVOLVE_ENABLED
+  tend: SEED_TEND_ENABLED
 
 # The token contract (names only, never values):
 #   primary    — Claude Code OAuth token from `claude setup-token` (subscription).
@@ -74,8 +111,15 @@ telemetry:
 # The constitution. Restated for agents in CLAUDE.md; enforced where checkable
 # by `seed.py check` and by workflow-owned publish steps. Never weaken.
 guardrails:
+  # Every autonomous write still arrives as a pull request — that is frozen.
   pr_only: true
-  never_merge: true
+  # Merging is POLICY-GATED rather than forbidden (see policy.merge). The
+  # three keys below are the hard stops and `seed.py check` enforces them:
+  # the seed may never merge something red, never merge something a human
+  # authored, and never merge past a human's block label.
+  merge_requires_green: true
+  merge_human_authored: false
+  merge_blocked_by_label: human-review
   workflows_agent_writable: false
   kill_switch: .seed/pause.yml
   quarantine_untrusted: true

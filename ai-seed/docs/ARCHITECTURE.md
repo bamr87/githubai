@@ -6,7 +6,7 @@ This document is the system reference. The provenance of every mechanism — whi
 
 ## 1. The idea in one paragraph
 
-A repository becomes AI-native the moment three things are true: its intent is written down as data the machine can read (`CONCEPT.md` + `.seed/seed.yml`), its growth runs as auditable GitHub Actions driven by Claude Code OAuth, and every autonomous write is bounded by guardrails a human can inspect and halt (default-OFF enable variables, an in-tree kill switch, PR-only output, and a hard never-merge rule). AI-Seed is the smallest set of files that makes those three things true, plus the tool that stamps them anywhere — including into itself.
+A repository becomes AI-native the moment three things are true: its intent is written down as data the machine can read (`CONCEPT.md` + `.seed/seed.yml`), its growth runs as auditable GitHub Actions driven by Claude Code OAuth, and every autonomous write is bounded by guardrails a human can inspect and halt (default-OFF enable variables, an in-tree kill switch, PR-only output, and merging confined to one policy-gated lane). AI-Seed is the smallest set of files that makes those three things true, plus the tool that stamps them anywhere — including into itself.
 
 ## 2. The lifecycle
 
@@ -17,7 +17,7 @@ Every AI-Seed repository moves through a botanical lifecycle. Each stage is a co
 | **PLANT** | `tools/seed.py plant` stamps the kernel into a target directory/repo | A human runs the CLI | Running the planter is the consent |
 | **GERMINATE** | `seed-germinate.yml` — Claude Code reads `CONCEPT.md` and builds the initial structure (scaffold, CI, docs, first tests) on a branch, opens a draft PR | Manual `workflow_dispatch` only | Two-key confirm: the `confirm` input must retype the seed name |
 | **GROW** | `seed-grow.yml` — the perpetual increment loop: plan → build → verify passes pick ONE increment per tick, open ONE draft PR | Cron + `workflow_dispatch` | `SEED_GROW_ENABLED` repo variable == `true` (the variable is the consent) |
-| **TEND** | `seed-steward.yml` — the `@claude` mention handler; `seed-evolve.yml` — the issue-driven lane (`seed:request` intake → a human applies `seed:approved` → implementation draft PR; `seed:hold` is the brake) | Human mentions / labels | The mention is the consent; the `seed:approved` label is the consent, gated by `SEED_EVOLVE_ENABLED` |
+| **TEND** | `seed-tend.yml` — the board lane: survey open PRs/issues, repair what is red or conflicted, merge what is provably green, dispatch approved issues. `seed-steward.yml` — the `@claude` mention handler. `seed-evolve.yml` — the issue lane (`seed:request` intake → a human applies `seed:approved` → implementation draft PR; `seed:hold` is the brake) | Cron + called by every grow tick; mentions; labels | `SEED_TEND_ENABLED` for the board lane, `SEED_EVOLVE_ENABLED` for the issue lane; a mention is its own consent |
 | **POLLINATE** | The vendored `.seed/tools/seed.py` can plant the kernel onward into new repos; a garden hub (`seed/garden/`) orchestrates many members | A human runs the planter, or a hub's roster | Per-repo, same as PLANT |
 | **PAUSE / PRUNE** | `.seed/pause.yml` kill switch halts every loop repo-wide; unsetting an `*_ENABLED` variable halts one loop | Human edit | Human-owned; agents never touch either |
 
@@ -45,6 +45,7 @@ target-repo/
     ├── seed-germinate.yml            # one-time initial build from CONCEPT.md (manual two-key)
     ├── seed-grow.yml                 # the increment loop (default OFF)
     ├── seed-evolve.yml               # the issue lane (default OFF): seed:approved -> draft PR
+    ├── seed-tend.yml                 # the board lane (default OFF): review CI, repair, merge
     ├── seed-steward.yml              # @claude mention handler
     └── seed-verify.yml               # CI gate: python3 .seed/tools/seed.py check .
 ```
@@ -104,6 +105,8 @@ Model tiers are policy, not workflow: `.seed/seed.yml` → `policy.models` names
 
 ## 6. The grow tick
 
+**The board precondition.** A tick does not start new work while old work is unfinished. `seed-grow.yml` runs `tend` (the whole `seed-tend.yml` lane, as a called workflow) and then a `board` job that surveys open issues and PRs; the grow phase runs only when that survey comes back clear, or when `policy.board.clear_before_grow` is false. Items a human parked with a `policy.board.ignore_labels` label are excluded from the count, so a single long-lived issue can never freeze growth. The board job surveys independently rather than trusting the tend output, so the precondition still holds when the tend lane is disabled or skipped.
+
 One tick = one bounded increment = one draft PR. The `seed-grow.yml` anatomy:
 
 1. **Gate job** (separate job, on purpose): honors `.seed/pause.yml`, requires the `SEED_GROW_ENABLED` variable, validates every dispatch input against an injection charset, and checks that Claude auth exists. When the gate fails, none of the grow job's steps run — including its `if: always()` publish steps, which would otherwise still fire.
@@ -122,7 +125,7 @@ Guardrails are declared in the manifest (`.seed/seed.yml` → `guardrails:`), re
 
 1. **Default OFF.** Every autonomous loop is idle until its `*_ENABLED` repo variable is set to `true`. Turning the variable on is the consent; deleting it is the off switch. The planter never sets variables — a human does.
 2. **Kill switch.** `.seed/pause.yml` `paused: true` halts every loop before any model pass. Model-free, one file, in-tree, auditable in history. Agents never edit it.
-3. **PR-only, never merge.** Autonomous writes land on `seed/*` branches as draft PRs. `gh pr merge`, review approvals, and pushes to the default branch are forbidden to every agent lane, always.
+3. **PR-only, and merging is confined to one lane.** Autonomous writes land on `seed/*` branches as draft PRs; review approvals and pushes to the default branch are forbidden to every lane, always. No *model pass* may ever merge. Merging happens only in `seed-tend.yml`'s deterministic step, and only when every hard stop in `policy.merge` clears: all checks green, no conflicts, a seed- or bot-authored branch, and no block label (`human-review`, `seed:hold`, `do-not-merge`). A PR failing any one of those is left open for a human — the designed outcome, not a failure. `seed.py check` errors if any other `seed-*` workflow contains `gh pr merge`, and errors if a repo that permits merging drops the `merge_requires_green` / `merge_human_authored` hard stops. Set `guardrails.never_merge: true` to forbid merging outright.
 4. **Workflows are unwritable by agents.** No model pass may create or modify `.github/workflows/**` — workflow changes ride human-authored PRs (in this repo: kernel changes re-planted by the planter). The workflows execute with the loops' own secrets; self-editing them is privilege escalation.
 5. **Untrusted input is quarantined.** Issue bodies, PR comments, and web content are data to analyze, never instructions to follow. The bounded-action allowlist for inbound content: label, comment, propose — nothing destructive, nothing on a human's behalf.
 6. **One increment per tick.** Small, reviewable, revertible. A tick that would need a big-bang change instead files a `seed:request` issue proposing it.

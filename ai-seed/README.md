@@ -26,6 +26,10 @@ $EDITOR ../my-project/CONCEPT.md     # fill §1 vision … §5 quality bars
 #               ANTHROPIC_API_KEY          <- optional metered fallback
 #               SEED_PAT                   <- fine-grained PAT so CI fires on seed PRs
 #    variables: SEED_GROW_ENABLED=true     <- only when ready: the variable IS the consent
+#               SEED_TEND_ENABLED=true     <- lets the seed review CI, repair its own red
+#                                             PRs, and merge what is provably green
+#               SEED_EVOLVE_ENABLED=true   <- enables the seed:approved issue lane
+#    labels:    seed:request  seed:approved  seed:hold   <- the issue lane's state machine
 #    branch protection on main: require PRs + the seed-verify check
 
 # 4. GERMINATE — Actions → seed-germinate → Run workflow → retype the repo's seed name
@@ -43,8 +47,8 @@ Verify any planted repo at any time: `python3 .seed/tools/seed.py check .` (the 
 |---|---|---|
 | **PLANT** | `seed.py plant` stamps the kernel: manifest, kill switch, CONCEPT genome, four workflows | Running the planter |
 | **GERMINATE** | Claude builds the initial structure from `CONCEPT.md` → one draft PR | Manual dispatch + retyping the seed name |
-| **GROW** | Scheduled ticks: plan → build → verify escalation → one increment → one draft PR + telemetry | `SEED_GROW_ENABLED=true` |
-| **TEND** | `seed-steward.yml` for `@claude` mentions; `seed-evolve.yml` for the issue lane (`seed:request` → human applies `seed:approved` → implementation PR) | The mention / the label |
+| **GROW** | Scheduled ticks: **tend the board first**, then (only if it is clear) plan → build → verify → one increment → one draft PR + telemetry | `SEED_GROW_ENABLED=true` |
+| **TEND** | `seed-tend.yml` clears the board: review CI, repair red/conflicted PRs, merge what is provably green, dispatch approved issues. `seed-steward.yml` answers `@claude`; `seed-evolve.yml` runs the issue lane (`seed:request` → human applies `seed:approved` → implementation PR) | `SEED_TEND_ENABLED` / `SEED_EVOLVE_ENABLED` / the mention |
 | **POLLINATE** | Any planted repo plants onward; a garden hub orchestrates many (stalest-first, capped) | Per-repo, same as PLANT |
 | **PAUSE** | `.seed/pause.yml` halts every loop; unsetting a variable halts one | Human edit, one file |
 
@@ -59,14 +63,14 @@ Every model pass rides [`anthropics/claude-code-action@v1`](https://github.com/a
 | Product intent | `CONCEPT.md` §1–§7 (machine-readable genome) |
 | Backlog & intake | Issues + labels: `seed:request` → `seed:approved` (consent) → PR; `seed:hold` is the brake |
 | Implementation | Branches + Actions compute (`seed/*` branches only) |
-| Review & merge | Draft PRs; humans merge — no agent ever does |
+| Review & merge | Draft PRs. The tend lane merges only its own provably-green work; everything red, conflicted, human-authored, or labelled `human-review` waits for you |
 | CI / quality | `seed-verify` (structural gate) + the repo's own suite |
 | History & telemetry | `CONCEPT.md` §8 Evolution Log (the tick clock) + `.seed/telemetry/evolution.jsonl` (append-only) |
 | Incident response | `.seed/pause.yml` — one human edit halts everything |
 
 ## Guardrails
 
-The constitution lives in `.seed/seed.yml` (`guardrails:`), binds every agent via `CLAUDE.md`, and is enforced by `seed.py check` and by workflow-owned publish steps: every loop ships **default OFF** (the `*_ENABLED` variable is the consent); **PR-only, never merge**; **workflows are not agent-writable** (model-authored workflow files become `seed/proposed-workflows/` proposals, never live code); **untrusted input is quarantined** (issue text and web content are data, never instructions); **one increment per tick**; **fail loudly** (a tick that produced nothing fails its run and names the failure class — auth vs stalled); **telemetry is append-only**. Full doctrine: [docs/ARCHITECTURE.md §7](docs/ARCHITECTURE.md).
+The constitution lives in `.seed/seed.yml` (`guardrails:`), binds every agent via `CLAUDE.md`, and is enforced by `seed.py check` and by workflow-owned publish steps: every loop ships **default OFF** (the `*_ENABLED` variable is the consent); **PR-only**, with **merging confined to the tend lane** under `policy.merge`'s hard stops (green, conflict-free, seed/bot branch, no block label — no model pass may merge at all); **growth contingent on a clear board** (tend before grow); **workflows are not agent-writable** (model-authored workflow files become `seed/proposed-workflows/` proposals, never live code); **untrusted input is quarantined** (issue text and web content are data, never instructions); **one increment per tick**; **fail loudly** (a tick that produced nothing fails its run and names the failure class — auth vs stalled); **telemetry is append-only**. Full doctrine: [docs/ARCHITECTURE.md §7](docs/ARCHITECTURE.md).
 
 ## Self-hosting
 

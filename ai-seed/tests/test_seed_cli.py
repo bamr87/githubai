@@ -55,6 +55,8 @@ class TestSimpleYamlParser:
         def normalize(v):
             if isinstance(v, dict):
                 return {k: normalize(x) for k, x in v.items()}
+            if isinstance(v, list):  # inline flow lists (policy.board / policy.merge)
+                return [normalize(x) for x in v]
             return str(v).lower() if isinstance(v, bool) else str(v)
 
         assert mini == normalize(full)
@@ -96,7 +98,7 @@ class TestPlant:
         plant(tmp_path, "--garden")
         wf_dir = tmp_path / ".github" / "workflows"
         files = sorted(wf_dir.glob("*.yml"))
-        assert len(files) == 6  # 5 kernel + garden-orchestrate
+        assert len(files) == 7  # 6 kernel + garden-orchestrate
         for wf in files:
             yaml.safe_load(wf.read_text())
 
@@ -118,9 +120,27 @@ class TestCheck:
         plant(tmp_path)
         manifest = tmp_path / ".seed" / "seed.yml"
         manifest.write_text(manifest.read_text().replace(
-            "never_merge: true", "never_merge: false"))
+            "pr_only: true", "pr_only: false"))
         assert main(["check", str(tmp_path)]) == 1
-        assert "never_merge" in capsys.readouterr().out
+        assert "pr_only" in capsys.readouterr().out
+
+    def test_merge_hard_stops_cannot_be_weakened(self, tmp_path, capsys):
+        """A seed allowed to merge must keep the stops that make it safe."""
+        plant(tmp_path)
+        manifest = tmp_path / ".seed" / "seed.yml"
+        manifest.write_text(manifest.read_text().replace(
+            "merge_requires_green: true", "merge_requires_green: false"))
+        assert main(["check", str(tmp_path)]) == 1
+        out = capsys.readouterr().out
+        assert "merge_requires_green" in out and "never merge a red PR" in out
+
+    def test_only_the_tend_lane_may_merge(self, tmp_path, capsys):
+        """Growth must never merge, even when the merge policy is on."""
+        plant(tmp_path)
+        grow = tmp_path / ".github" / "workflows" / "seed-grow.yml"
+        grow.write_text(grow.read_text() + "\n# gh pr merge 1 --squash\n".replace("# ", "          "))
+        assert main(["check", str(tmp_path)]) == 1
+        assert "only the tend lane" in capsys.readouterr().out
 
     def test_lost_draft_marker_is_an_error(self, tmp_path, capsys):
         plant(tmp_path)
@@ -237,14 +257,32 @@ class TestKernelTemplates:
         germinate = (KERNEL_DIR / ".github" / "workflows" / "seed-germinate.yml").read_text()
         assert "confirm" in germinate and "pause.yml" in germinate
 
-    def test_no_kernel_workflow_can_merge(self):
+    def test_only_the_tend_lane_merges(self):
+        """Merging is confined to one auditable lane (kernel v0.3.0)."""
         for wf in (KERNEL_DIR / ".github" / "workflows").glob("*.yml"):
-            assert "gh pr merge" not in wf.read_text(), f"{wf.name} merges — forbidden"
+            if wf.name == "seed-tend.yml":
+                continue
+            assert "gh pr merge" not in wf.read_text(), \
+                f"{wf.name} merges — only seed-tend.yml may"
+
+    def test_tend_lane_keeps_its_hard_stops(self):
+        tend = (KERNEL_DIR / ".github" / "workflows" / "seed-tend.yml").read_text()
+        for marker in ("SEED_TEND_ENABLED", "pause.yml", "block_labels",
+                       "no longer eligible on live state", "startswith(\"seed/\")",
+                       "human-review"):
+            assert marker in tend, f"kernel seed-tend.yml lost '{marker}'"
+
+    def test_grow_is_gated_on_a_clear_board(self):
+        grow = (KERNEL_DIR / ".github" / "workflows" / "seed-grow.yml").read_text()
+        assert "seed-tend.yml" in grow, "grow must tend before it grows"
+        assert "needs.board.outputs.clear" in grow, \
+            "grow must be gated on the post-tend board survey"
 
     def test_templates_only_use_known_placeholders(self):
         known = {"__SEED_NAME__", "__SEED_REPO__", "__SEED_DEFAULT_BRANCH__",
                  "__SEED_PLANTED__", "__SEED_KERNEL_VERSION__",
-                 "__SEED_PLANTED_FROM__", "__SEED_GROW_CRON__"}
+                 "__SEED_PLANTED_FROM__", "__SEED_GROW_CRON__",
+                 "__SEED_TEND_CRON__"}
         for path in list(KERNEL_DIR.rglob("*")) + list((KERNEL_DIR.parent / "garden").rglob("*")):
             if path.is_file():
                 found = set(re.findall(r"__SEED_[A-Z_]+__", path.read_text()))

@@ -46,7 +46,7 @@ import sys
 from pathlib import Path
 
 # Kept in sync with seed/VERSION by tests; the VERSION file wins when present.
-KERNEL_VERSION = "0.2.1"
+KERNEL_VERSION = "0.3.0"
 
 PLACEHOLDER_RE = re.compile(r"__SEED_[A-Z_]+__")
 
@@ -66,6 +66,7 @@ VENDORED_TOOL = ".seed/tools/seed.py"
 LEDGER = ".seed/telemetry/evolution.jsonl"
 
 DEFAULT_CRON = "17 4 * * 1"
+DEFAULT_TEND_CRON = "47 */6 * * *"
 DEFAULT_PLANTED_FROM = "bamr87/ai-seed"
 
 
@@ -100,6 +101,14 @@ def parse_simple_yaml(text: str) -> dict:
         while stack and indent <= stack[-1][0]:
             stack.pop()
         parent = stack[-1][1] if stack else root
+        # Inline flow lists are part of the manifest contract (policy.board /
+        # policy.merge), so the parser understands them; block sequences are
+        # still out of contract.
+        if val.startswith("[") and val.endswith("]"):
+            inner = val[1:-1].strip()
+            parent[key] = [i.strip().strip('"').strip("'")
+                           for i in inner.split(",")] if inner else []
+            continue
         if val == "":
             child: dict = {}
             parent[key] = child
@@ -109,7 +118,7 @@ def parse_simple_yaml(text: str) -> dict:
     return root
 
 
-def dig(data: dict, *keys: str) -> str | dict | None:
+def dig(data: dict, *keys: str) -> str | list | dict | None:
     cur: object = data
     for k in keys:
         if not isinstance(cur, dict) or k not in cur:
@@ -180,6 +189,7 @@ def tokens_from_args(args: argparse.Namespace) -> dict[str, str]:
         "KERNEL_VERSION": kernel_version(args.kernel_path),
         "PLANTED_FROM": args.planted_from,
         "GROW_CRON": args.cron,
+        "TEND_CRON": args.tend_cron,
     }
 
 
@@ -197,6 +207,11 @@ def tokens_from_manifest(manifest: dict, kver: str) -> dict[str, str]:
         "KERNEL_VERSION": kver,
         "PLANTED_FROM": need("seed", "planted_from"),
         "GROW_CRON": need("policy", "cadence", "grow_cron"),
+        # Optional: repos planted before kernel v0.3.0 carry no tend_cron, so
+        # a re-render must not hard-fail on them.
+        "TEND_CRON": (dig(manifest, "policy", "cadence", "tend_cron")
+                      if isinstance(dig(manifest, "policy", "cadence", "tend_cron"), str)
+                      else DEFAULT_TEND_CRON),
     }
 
 
@@ -319,12 +334,17 @@ Next steps (human-owned — the planter never does these):
                                               without it, CI does not fire on seed PRs)
        variables: SEED_GROW_ENABLED=true     (only when ready — the variable is the consent)
                   SEED_EVOLVE_ENABLED=true   (only when ready — enables the issue lane)
+                  SEED_TEND_ENABLED=true     (only when ready — lets the seed review CI, repair
+                                              its own red PRs, and MERGE what is provably green;
+                                              the bounds live in policy.merge)
        labels:    seed:request  seed:approved  seed:hold
                   (the issue lane's state machine: intake / consent / brake —
                    seed-evolve.yml never fires without seed:approved existing)
        branch protection on {tokens['DEFAULT_BRANCH']}: require PRs + the seed-verify check.
   3. Germinate: Actions -> seed-germinate -> Run workflow -> confirm: {tokens['NAME']}
-  4. Review the draft PR. Humans merge; the seed never does.""")
+  4. Review the draft PR. With SEED_TEND_ENABLED off, humans merge everything;
+     with it on, the seed merges only its own provably-green work and leaves
+     anything else — red, conflicted, human-authored, or labelled — for you.""")
     return 0
 
 
@@ -386,11 +406,28 @@ def cmd_check(args: argparse.Namespace) -> int:
                 r.error(f".seed/seed.yml missing required key: {'.'.join(keys)}")
         if dig(manifest, "auth", "primary") not in (None, "CLAUDE_CODE_OAUTH_TOKEN"):
             r.warn("auth.primary is not CLAUDE_CODE_OAUTH_TOKEN — the framework is OAuth-first by doctrine.")
-        for key, want in (("never_merge", "true"), ("pr_only", "true"),
-                          ("workflows_agent_writable", "false")):
+        for key, want in (("pr_only", "true"), ("workflows_agent_writable", "false")):
             v = dig(manifest, "guardrails", key)
             if v != want:
                 r.error(f"guardrails.{key} must be {want} (got {v!r}) — the constitution does not weaken.")
+        # Merging is either forbidden outright (kernel < 0.3.0) or policy-gated
+        # (kernel >= 0.3.0). Either is acceptable; a repo that gates merging
+        # must keep the hard stops that make the gate meaningful.
+        if dig(manifest, "guardrails", "never_merge") != "true":
+            for key, want in (("merge_requires_green", "true"),
+                              ("merge_human_authored", "false")):
+                v = dig(manifest, "guardrails", key)
+                if v != want:
+                    r.error(f"guardrails.{key} must be {want} (got {v!r}) — a seed that may "
+                            f"merge must never merge a red PR or a human's PR. Set "
+                            f"guardrails.never_merge: true to forbid merging entirely instead.")
+            if not dig(manifest, "guardrails", "merge_blocked_by_label"):
+                r.error("guardrails.merge_blocked_by_label is unset — auto-merge needs a label "
+                        "a human can apply to stop it (e.g. human-review).")
+            if dig(manifest, "policy", "merge", "auto") == "true" \
+                    and dig(manifest, "gates", "tend") is None:
+                r.warn("policy.merge.auto is on but gates.tend is unset — nothing gates the lane "
+                       "that performs merges.")
 
     # Kill switch.
     pause_path = target / ".seed" / "pause.yml"
@@ -434,8 +471,16 @@ def cmd_check(args: argparse.Namespace) -> int:
             wtext = wf.read_text(encoding="utf-8")
             if "claude-code-action" in wtext and "issue_comment" in wtext:
                 steward = True
+            # Merging is confined to ONE lane. Growth, germination and the
+            # issue lane must never merge, whatever the merge policy says.
             if re.search(r"(?m)^\s*[^#]*gh pr merge", wtext) and wf.name.startswith("seed-"):
-                r.error(f"{wf.name} contains 'gh pr merge' — the seed never merges.")
+                if dig(manifest, "guardrails", "never_merge") == "true":
+                    r.error(f"{wf.name} merges, but guardrails.never_merge is true — "
+                            f"remove the merge, or change the policy deliberately.")
+                elif wf.name != "seed-tend.yml":
+                    r.error(f"{wf.name} contains 'gh pr merge' — only the tend lane "
+                            f"(seed-tend.yml) may merge; the grow, germinate and evolve "
+                            f"lanes never do.")
     if not steward:
         r.warn("no steward found (no workflow wiring claude-code-action to issue_comment) — @claude mentions go unanswered.")
 
@@ -525,7 +570,12 @@ def cmd_status(args: argparse.Namespace) -> int:
     print(f"kernel:  v{dig(manifest, 'seed', 'kernel_version')} planted {dig(manifest, 'seed', 'planted')} from {dig(manifest, 'seed', 'planted_from')}")
     print(f"models:  plan={dig(manifest, 'policy', 'models', 'plan')} build={dig(manifest, 'policy', 'models', 'build')} verify={dig(manifest, 'policy', 'models', 'verify')}")
     print(f"cadence: {dig(manifest, 'policy', 'cadence', 'grow_cron')} (cron, UTC)")
-    print(f"gates:   grow={dig(manifest, 'gates', 'grow')} evolve={dig(manifest, 'gates', 'evolve')} (repo variables; unset = idle)")
+    gates = dig(manifest, "gates") or {}
+    shown = " ".join(f"{k}={v}" for k, v in gates.items()) if isinstance(gates, dict) else "?"
+    print(f"gates:   {shown} (repo variables; unset = idle)")
+    print(f"board:   clear_before_grow={dig(manifest, 'policy', 'board', 'clear_before_grow')} "
+          f"| auto-merge={dig(manifest, 'policy', 'merge', 'auto')} "
+          f"(blocked by {dig(manifest, 'guardrails', 'merge_blocked_by_label')})")
     print(f"paused:  {dig(pause, 'paused') or 'unknown'}"
           + (f" ({dig(pause, 'reason')})" if dig(pause, "reason") else ""))
     concept = target / "CONCEPT.md"
@@ -562,6 +612,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--name", help="seed name (default: repo basename)")
     p.add_argument("--default-branch", default="main")
     p.add_argument("--cron", default=DEFAULT_CRON, help=f"grow schedule, UTC (default: '{DEFAULT_CRON}')")
+    p.add_argument("--tend-cron", default=DEFAULT_TEND_CRON,
+                   help=f"tend schedule, UTC (default: '{DEFAULT_TEND_CRON}')")
     p.add_argument("--date", help="plant date YYYY-MM-DD (default: today; for reproducible tests)")
     p.add_argument("--planted-from", default=DEFAULT_PLANTED_FROM)
     p.add_argument("--kernel", help="explicit path to seed/kernel")

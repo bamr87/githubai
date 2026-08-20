@@ -15,6 +15,7 @@ This directory is the product: the file set that turns any repository into a sel
 | `kernel/.github/workflows/seed-germinate.yml` | One-time initial build from CONCEPT.md (manual two-key dispatch) |
 | `kernel/.github/workflows/seed-grow.yml` | The increment loop (default OFF; plan → build → verify → draft PR) |
 | `kernel/.github/workflows/seed-evolve.yml` | The issue-driven lane (default OFF; `seed:approved` → implementation draft PR) |
+| `kernel/.github/workflows/seed-tend.yml` | The board lane (default OFF; review CI → repair → merge the provably green → dispatch approved issues). The only lane permitted to merge |
 | `kernel/.github/workflows/seed-steward.yml` | The @claude mention handler |
 | `kernel/.github/workflows/seed-verify.yml` | Structural CI gate (`seed.py check`) |
 | `garden/garden.yml` | Roster template for a hub orchestrating many planted repos |
@@ -50,6 +51,7 @@ $EDITOR ../my-project/CONCEPT.md          # §1–§5 minimum — germination re
 The kernel is the framework's public contract — edit with the same care as a released API:
 
 - ai-seed itself is planted with this kernel (`kernel.strict: true`), so `seed-verify.yml` here fails when the kernel and this repo's installed copies drift. After editing a kernel workflow, re-render the installation: `python3 tools/seed.py plant . --update`.
-- Never weaken a guardrail (default-OFF gates, kill-switch honor, PR-only publish, workflows-unwritable, fail-loud). Tightening is welcome.
+- Never weaken a guardrail (default-OFF gates, kill-switch honor, PR-only publish, workflows-unwritable, fail-loud, and the `policy.merge` hard stops). Tightening is welcome.
+- Merging stays in `seed-tend.yml` alone. If a lane needs work merged, it hands the PR to the board — it does not grow its own merge step.
 - Every mechanism must trace to a production precedent — extend [docs/PATTERNS.md](../docs/PATTERNS.md) in the same PR.
 - Bump `VERSION` on any behavior change; planted repos record the kernel version they were stamped from.

@@ -22,7 +22,7 @@ seed:
   repo: bamr87/ai-seed
   default_branch: main
   planted: 2026-08-19
-  kernel_version: 0.2.1
+  kernel_version: 0.3.0
   planted_from: bamr87/ai-seed
 
 concept:
@@ -39,9 +39,33 @@ policy:
   cadence:
     # UTC cron for the scheduled grow tick (also stamped into seed-grow.yml).
     grow_cron: "17 4 * * 1"
+    # UTC cron for the standalone tend cycle (also stamped into seed-tend.yml).
+    tend_cron: "47 */6 * * *"
     # One bounded, reviewable increment per tick. Raising this widens PRs;
     # prefer more ticks over bigger ones.
     increments_per_tick: 1
+
+  # THE BOARD PRECONDITION: growth is contingent on a clear board. Every tick
+  # tends first (review CI, repair red/conflicted PRs, merge what is eligible,
+  # dispatch approved issues) and grows only when nothing actionable is left.
+  # Items a human parked (ignore_labels) do not count — otherwise one held
+  # issue would freeze the repo forever.
+  board:
+    clear_before_grow: true
+    ignore_labels: [seed:hold, human-review]
+    max_repairs_per_run: 3
+
+  # AUTO-MERGE. The seed may merge its OWN provably-green work. Every
+  # condition is a hard stop, not a heuristic; a PR failing any of them is
+  # left open for a human, which is the designed outcome.
+  merge:
+    auto: true
+    method: squash
+    require_checks: true
+    require_clean: true
+    block_labels: [human-review, seed:hold, do-not-merge]
+    allow_branches: [seed/*]
+    allow_bots: [dependabot]
 
 # Consent surface: each autonomous loop is IDLE until a human sets its repo
 # variable to "true". The variable is the consent; deleting it is the off
@@ -49,6 +73,7 @@ policy:
 gates:
   grow: SEED_GROW_ENABLED
   evolve: SEED_EVOLVE_ENABLED
+  tend: SEED_TEND_ENABLED
 
 # The token contract (names only, never values):
 #   primary    — Claude Code OAuth token from `claude setup-token` (subscription).
@@ -74,8 +99,14 @@ telemetry:
 # The constitution. Restated for agents in CLAUDE.md; enforced where checkable
 # by `seed.py check` and by workflow-owned publish steps. Never weaken.
 guardrails:
+  # Every autonomous write still arrives as a pull request — that is frozen.
   pr_only: true
-  never_merge: true
+  # Merging is POLICY-GATED rather than forbidden (see policy.merge). These
+  # three are the hard stops `seed.py check` enforces: never merge something
+  # red, never merge a human's PR, never merge past a human's block label.
+  merge_requires_green: true
+  merge_human_authored: false
+  merge_blocked_by_label: human-review
   workflows_agent_writable: false
   kill_switch: .seed/pause.yml
   quarantine_untrusted: true

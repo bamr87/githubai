@@ -1,5 +1,5 @@
 # =============================================================================
-# seed-grow.yml — the AI-Seed increment loop (kernel v0.2.1)
+# seed-grow.yml — the AI-Seed increment loop (kernel v0.3.0)
 # =============================================================================
 # One tick = one bounded increment = one DRAFT pull request. OFF by default:
 #   1. Idle until the SEED_GROW_ENABLED repo variable is "true" — the variable
@@ -16,7 +16,13 @@
 #      .github/workflows/** (workflows are not agent-writable).
 #   5. A tick that publishes nothing FAILS LOUDLY, naming the failure class:
 #      auth/setup (re-mint the token) vs stalled growth (the plan chose
-#      nothing). Never merges — humans merge.
+#      nothing).
+#   6. THE BOARD PRECONDITION (policy.board.clear_before_grow): every tick
+#      TENDS before it grows — seed-tend reviews CI, repairs red/conflicted
+#      PRs, merges what is provably green, and hands approved issues to the
+#      evolve lane. Growth only starts once nothing actionable is left. Items
+#      a human parked (policy.board.ignore_labels) do not count, so one held
+#      issue can never freeze the repo.
 # Policy (model tiers, cadence) lives in .seed/seed.yml — edit there, not here.
 # Kernel-managed: rendered from seed/kernel/ by the AI-Seed planter; `seed.py
 # check` flags drift against the kernel.
@@ -104,6 +110,7 @@ jobs:
     timeout-minutes: 10
     outputs:
       go: ${{ steps.gate.outputs.go }}
+      require_clear_board: ${{ steps.gate.outputs.require_clear_board }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -136,11 +143,65 @@ jobs:
             echo "::notice::no Claude auth configured (CLAUDE_CODE_OAUTH_TOKEN / ANTHROPIC_API_KEY) — idle."
             go=false
           fi
+          # Policy is data: does growth require a clear board this tick?
+          req="$(grep -E '^[[:space:]]*clear_before_grow:' .seed/seed.yml | head -1 \
+                 | sed -E 's/.*clear_before_grow:[[:space:]]*([a-z]+).*/\1/')"
+          [ "$req" = "false" ] && req=false || req=true
+          echo "require_clear_board=$req" >> "$GITHUB_OUTPUT"
           echo "go=$go" >> "$GITHUB_OUTPUT"
 
-  grow:
+  # Work the board before growing it: review CI, repair, merge, dispatch.
+  tend:
     needs: gate
     if: needs.gate.outputs.go == 'true'
+    uses: ./.github/workflows/seed-tend.yml
+    secrets: inherit
+
+  # Survey AFTER tending — this is the state growth is actually gated on, and
+  # it is surveyed here (not taken from tend) so the precondition still holds
+  # when the tend lane is disabled or skipped.
+  board:
+    needs: [gate, tend]
+    if: always() && needs.gate.outputs.go == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+    outputs:
+      clear: ${{ steps.survey.outputs.clear }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Is the board clear?
+        id: survey
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -uo pipefail
+          ig="$(grep -E '^[[:space:]]*ignore_labels:' .seed/seed.yml | head -1 \
+                | sed -E 's/.*ignore_labels:[[:space:]]*\[([^]]*)\].*/\1/' | tr -d ' ')"
+          [ -n "$ig" ] || ig="seed:hold"
+          arr="$(printf '%s' "$ig" | jq -R 'split(",") | map(select(length > 0))')"
+          prs=$(gh pr list --state open --limit 50 --json number,labels \
+            | jq --argjson ig "$arr" '[.[] | select([.labels[].name] | any(. as $l | $ig | index($l)) | not)] | length')
+          issues=$(gh issue list --state open --limit 50 --json number,labels \
+            | jq --argjson ig "$arr" '[.[] | select([.labels[].name] | any(. as $l | $ig | index($l)) | not)] | length')
+          clear=false
+          [ "${prs:-1}" -eq 0 ] && [ "${issues:-1}" -eq 0 ] && clear=true
+          echo "clear=$clear" >> "$GITHUB_OUTPUT"
+          echo "board after tending: $prs open PR(s), $issues open issue(s) -> clear=$clear"
+          if [ "$clear" != "true" ]; then
+            echo "::notice::Board not clear ($prs PRs, $issues issues). Growth is contingent on a clear board (policy.board.clear_before_grow). Merge, close, or park them (labels: policy.board.ignore_labels)."
+          fi
+
+  grow:
+    needs: [gate, board]
+    if: |
+      needs.gate.outputs.go == 'true' &&
+      (needs.board.outputs.clear == 'true' || needs.gate.outputs.require_clear_board != 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 90
     permissions:
