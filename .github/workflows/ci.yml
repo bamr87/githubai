@@ -2,8 +2,8 @@ name: CI
 
 # GitHubAI self-tests: validate profiles, config loader, workflow
 # conventions (OAuth-first auth, permissions, pinning), template stubs,
-# and the installer. Markdown prose style is enforced separately by
-# markdown-oneline.yml.
+# the installer, and the GitHub App relay. Markdown prose style is
+# enforced separately by markdown-oneline.yml.
 
 on:
   pull_request:
@@ -41,3 +41,18 @@ jobs:
         run: |
           bash -n setup/install.sh
           shellcheck setup/install.sh
+
+  relay:
+    # The GitHub App relay (app/relay/) has no dependencies and no build step,
+    # so its suite runs on a bare Node - routing parity with Actions mode,
+    # org policy, sessions, tenant isolation, and the webhook pipeline.
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+      - name: Run relay tests
+        working-directory: app/relay
+        run: npm test

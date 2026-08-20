@@ -1,0 +1,17 @@
+{
+  "name": "githubai-relay",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "GitHubAI hosted GitHub App relay: routes org events into per-repo Claude workflows.",
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "migrate": "wrangler d1 execute githubai --remote --file=schema.sql"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

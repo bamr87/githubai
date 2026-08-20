@@ -1,9 +1,42 @@
-# GitHubAI relay — Cloudflare Worker config.
-# Deploy: wrangler deploy
-# Secrets: wrangler secret put GITHUB_APP_ID
-#          wrangler secret put GITHUB_APP_PRIVATE_KEY   (PKCS#8 PEM)
-#          wrangler secret put WEBHOOK_SECRET
+# GitHubAI hosted relay — Cloudflare Worker configuration.
+#
+# Deploy:
+#   wrangler d1 create githubai                      # once; copy the id below
+#   wrangler d1 execute githubai --remote --file=schema.sql
+#   wrangler deploy
+#
+# Secrets (wrangler secret put NAME):
+#   GITHUB_APP_ID           numeric App ID
+#   GITHUB_APP_PRIVATE_KEY  PKCS#8 PEM — convert GitHub's download once with
+#                           openssl pkcs8 -topk8 -nocrypt -in app.pem
+#   WEBHOOK_SECRET          the App's webhook secret
+#   SESSION_SECRET          32+ random characters; signs dashboard cookies
+#   GITHUB_CLIENT_ID        App OAuth client id     (dashboard sign-in only)
+#   GITHUB_CLIENT_SECRET    App OAuth client secret (dashboard sign-in only)
+#   SETUP_TOKEN             optional; enables /manifest/new self-registration
+#
+# Full runbook: ../OPERATIONS.md
 
 name = "githubai-relay"
-main = "worker.js"
+main = "src/index.js"
 compatibility_date = "2026-01-01"
+
+[vars]
+# Per-installation dispatch ceiling; excess deliveries are recorded and refused.
+RATE_LIMIT_PER_MINUTE = "60"
+# How long a fetched org policy document is reused before re-reading it.
+POLICY_TTL_SECONDS = "300"
+# Shown on the signed-out landing page. Set to your App's public install URL.
+APP_INSTALL_URL = ""
+
+[[d1_databases]]
+binding = "DB"
+database_name = "githubai"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+
+# Nightly retention sweep: activity and delivery ids older than 30 days are deleted.
+[triggers]
+crons = ["17 4 * * *"]
+
+[observability]
+enabled = true

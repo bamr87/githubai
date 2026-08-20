@@ -6,7 +6,7 @@ GitHubAI is three things at once:
 
 - **A framework** — reusable, hardened workflows and a composite action you reference at a ref, so every adopting repo upgrades by bumping one tag.
 - **A template** — repo-type profiles (library, webapp, service, cli, github-action, docs, data, template) that set standards based on what your repo *is* and what it's *for*.
-- **The seed of a GitHub App** — an [app manifest and webhook relay](app/) that route org-wide events into the same workflows; the hosted multi-tenant app is the [roadmap](PRD.md).
+- **A GitHub App** — a [multi-tenant webhook relay](app/) that routes org-wide events into the same workflows, with org-level policy and a read-only activity dashboard, for orgs that would rather install once than add stubs everywhere.
 
 ## How it works
 
@@ -81,12 +81,29 @@ actions/load-config/ composite action resolving profile + repo config
 profiles/            repo-type standards (the "based on type and purpose" part)
 template/            what the installer copies into adopting repos
 setup/install.sh     the one-command installer
-app/                 GitHub App manifest + webhook relay (app mode)
+app/                 GitHub App: manifest, multi-tenant relay, operations docs
 docs/                getting started, configuration, workflows, security, architecture
 tests/               self-tests keeping the framework honest
 ```
 
 This repo runs its own framework — the workflows above are live here, configured by [.github/githubai.yml](.github/githubai.yml) with the `template` profile. If the machinery doesn't work on itself, it doesn't ship.
+
+## Org-scale: app mode
+
+Installing stubs in fifty repositories is fine; governing fifty repositories from fifty files is not. [App mode](app/README.md) swaps the per-repo event stubs for one GitHub App: events reach a small Cloudflare Worker that verifies them, applies your organization's policy, and fires `repository_dispatch` into each repo's workflows. What it does **not** change is where Claude runs or whose token it uses — execution stays in each repository's own Actions with that repository's own `CLAUDE_CODE_OAUTH_TOKEN`. The relay holds no code, no credentials, and no model traffic ([full inventory](app/DATA-HANDLING.md)).
+
+Org policy lives in your own `.github` repository as `.github/githubai-org.yml` and is subtractive by design — it can keep events from reaching repositories, never grant a repository something its own config disabled:
+
+```yaml
+org:
+  repos:
+    exclude: ["legacy-*"]     # these repos see no automation
+automation:
+  auto_merge:
+    enabled: false            # no repo in this org enters the auto-merge lane
+```
+
+Signing in to the relay shows what it did with every delivery — dispatched, ignored, blocked by policy, or failed — which is the one question a router owes you. Deploy it with [`app/OPERATIONS.md`](app/OPERATIONS.md); it runs on Cloudflare's free tier.
 
 ## Migrating from GitHubAI v0.x
 

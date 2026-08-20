@@ -10,7 +10,8 @@
 #                    (auto-detected when omitted)
 #   --ref REF        framework ref to pin the installed stubs to (default: main)
 #   --source O/R     framework repo to install from (default: bamr87/githubai)
-#   --app            also install the GitHub App dispatch workflow (app mode)
+#   --app            also install the GitHub App dispatch workflow (app mode);
+#                    see app/README.md in the framework repo
 #   --labels         create the GitHubAI label taxonomy via `gh` (needs gh auth)
 #   --force          overwrite files that already exist
 #   --dry-run        print what would happen without writing anything
@@ -200,3 +201,20 @@ GitHubAI installed. Three manual steps remain:
 Then open an issue - Claude triages it within a minute or two. Mention
 @claude anywhere for interactive help.
 NEXT
+
+if [ "$WITH_APP" -eq 1 ]; then
+  cat <<'APPNEXT'
+App mode: claude-dispatch.yml is installed, so this repo will act on
+repository_dispatch events from your GitHubAI App relay. Two things to check:
+
+  - The relay must be deployed and the App installed on this repo
+    (see app/OPERATIONS.md in the framework repo).
+  - Org-wide routing policy is optional and lives in your organization's
+    .github repository at .github/githubai-org.yml - start from
+    template/githubai-org.yml. It can only narrow automation, never widen it.
+
+The per-event stubs above are now redundant for issues and pull requests, but
+harmless; keep claude.yml, claude-maintenance.yml and claude-release.yml either
+way, since mentions, schedules and tag pushes do not route through the relay.
+APPNEXT
+fi

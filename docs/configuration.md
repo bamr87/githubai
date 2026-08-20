@@ -79,6 +79,31 @@ standards:
 
 Two knobs intentionally do **not** live in YAML: the implement trigger label at the *workflow gate* level (pass `trigger_label` to the reusable workflow from your stub if you rename it — the event filter can't read config), and the maintenance schedule (edit the cron in your `claude-maintenance.yml` stub, since schedules bind to the workflow file's repo).
 
+## Organization policy (app mode)
+
+Repositories running [app mode](../app/README.md) gain a fourth, org-wide layer: `.github/githubai-org.yml` in the organization's `.github` repository, read by the relay before it routes anything. Start from [`template/githubai-org.yml`](../template/githubai-org.yml).
+
+```yaml
+version: 1
+
+org:
+  enabled: true              # false stops the relay dispatching anything for this org
+  repos:
+    include: ["*"]           # globs over `owner/name` and bare `name`; empty means all
+    exclude: ["legacy-*"]
+
+automation:
+  triage:    {enabled: true}  # same area names as above; only `enabled` is read
+  implement: {enabled: true}
+  review:    {enabled: true}
+  auto_merge: {enabled: false}
+  maintenance: {enabled: true}
+```
+
+This layer is **not** part of the merge chain above, and that is deliberate. It is evaluated in the relay, at routing time, and it is **subtractive**: it can stop an event from reaching a repository, but it can never enable an area the repository's own `githubai.yml` disables, and it never changes who may authorize work. A repository's effective behavior is still exactly what `load_config.py --print` shows; org policy only decides whether the event arrives.
+
+Two operational notes: the `.github` repository must be part of the GitHubAI installation or the relay cannot read the file (and treats the org as unrestricted), and edits take effect within the relay's policy cache TTL — five minutes by default. If the file stops parsing, the last version that parsed keeps applying and the error appears on the relay dashboard, so a typo cannot silently unlock automation an org had turned off.
+
 ## Compatibility promise
 
 Config keys are public API. New keys arrive with defaults so existing configs keep working; renames/removals only in a major version.

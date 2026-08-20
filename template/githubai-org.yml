@@ -1,0 +1,51 @@
+# GitHubAI organization policy — app mode only.
+#
+# Install this file at .github/githubai-org.yml in your organization's `.github`
+# repository. The hosted relay reads it before routing any event for your org.
+# Two rules make it safe to hand this much control to one file:
+#
+#   1. It is SUBTRACTIVE. Policy can stop the relay from dispatching an event;
+#      it can never make a repository do something that repository's own
+#      .github/githubai.yml has disabled. Every dispatched event still lands in
+#      the repo's workflows, which re-check their own config and labels.
+#   2. Nothing here changes who may authorize work. `claude:implement` still
+#      requires a maintainer, auto-merge still needs its verdict and your
+#      branch protection. Policy narrows what reaches those gates, never widens.
+#
+# The relay caches this file for a few minutes, so edits take effect shortly
+# after merge. If it fails to parse, the last version that parsed keeps
+# applying and the error is shown on the relay dashboard — a typo cannot
+# silently unlock automation you had turned off.
+#
+# The `.github` repository must be part of the GitHubAI installation, otherwise
+# the relay cannot read this file and treats the org as unrestricted.
+
+version: 1
+
+org:
+  # Master switch. false stops the relay from dispatching anything for this org
+  # while leaving the installation in place.
+  enabled: true
+
+  repos:
+    # Glob-matched against `owner/name` and against the bare repository name.
+    # An empty or absent `include` means every repository in the installation.
+    include:
+      - "*"
+    exclude: []
+      # - "legacy-*"
+      # - "acme/sandbox"
+
+# Same shape as a repository's .github/githubai.yml. Only `enabled` is read here,
+# and only `false` has an effect — see the subtractive rule above.
+automation:
+  triage:
+    enabled: true
+  implement:
+    enabled: true
+  review:
+    enabled: true
+  auto_merge:
+    enabled: true
+  maintenance:
+    enabled: true
