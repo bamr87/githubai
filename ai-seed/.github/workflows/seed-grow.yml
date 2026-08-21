@@ -112,7 +112,7 @@ jobs:
       go: ${{ steps.gate.outputs.go }}
       require_clear_board: ${{ steps.gate.outputs.require_clear_board }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 1
 
@@ -172,7 +172,7 @@ jobs:
     outputs:
       clear: ${{ steps.survey.outputs.clear }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 1
       - name: Is the board clear?
@@ -208,7 +208,7 @@ jobs:
       contents: read
       id-token: write # claude-code-action exchanges an OIDC token
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           # Model passes run with Bash + network tools; never leave a
@@ -326,7 +326,7 @@ jobs:
 
       - name: Upload agent telemetry artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: seed-grow-telemetry-${{ github.run_id }}
           path: /tmp/seed-pass-*.json
