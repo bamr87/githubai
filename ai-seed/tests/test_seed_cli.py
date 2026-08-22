@@ -142,6 +142,32 @@ class TestCheck:
         assert main(["check", str(tmp_path)]) == 1
         assert "only the tend lane" in capsys.readouterr().out
 
+    def test_missing_repair_budget_is_flagged(self, tmp_path, capsys):
+        """Without a per-PR budget, an unfixable PR is retried forever."""
+        plant(tmp_path)
+        manifest = tmp_path / ".seed" / "seed.yml"
+        manifest.write_text(manifest.read_text().replace(
+            "    max_repair_attempts: 3\n", ""))
+        assert main(["check", str(tmp_path)]) == 0  # a warning, not an error
+        assert "max_repair_attempts" in capsys.readouterr().out
+
+    def test_escalation_label_must_actually_stop_things(self, tmp_path, capsys):
+        """A block label that parks nothing makes escalation ceremonial."""
+        plant(tmp_path)
+        manifest = tmp_path / ".seed" / "seed.yml"
+        manifest.write_text(manifest.read_text().replace(
+            "ignore_labels: [seed:hold, human-review]", "ignore_labels: [seed:hold]"))
+        assert main(["check", str(tmp_path)]) == 1
+        assert "keep blocking growth forever" in capsys.readouterr().out
+
+    def test_lost_tend_guardrail_marker_is_an_error(self, tmp_path, capsys):
+        """The lane that merges is the one whose stops must not silently go."""
+        plant(tmp_path)
+        tend = tmp_path / ".github" / "workflows" / "seed-tend.yml"
+        tend.write_text(tend.read_text().replace("compare/", "diff/"))
+        assert main(["check", str(tmp_path)]) == 1
+        assert "diff guard" in capsys.readouterr().out
+
     def test_lost_draft_marker_is_an_error(self, tmp_path, capsys):
         plant(tmp_path)
         grow = tmp_path / ".github" / "workflows" / "seed-grow.yml"
@@ -273,6 +299,68 @@ class TestKernelTemplates:
                        # A workflow-touching PR is a privilege change: never auto-merged.
                        "^\\.github/workflows/"):
             assert marker in tend, f"kernel seed-tend.yml lost '{marker}'"
+
+    def test_repair_has_a_per_pr_budget_with_a_terminal_state(self):
+        """An autonomous fixer that never gives up is a loop, not autonomy.
+
+        `max_repairs_per_run` bounds one tick's spend; only a per-PR budget
+        stops an unfixable PR from being retried every tick forever. The
+        terminal state is the block label, which is simultaneously a merge
+        hard stop and an ignore_label — so escalation stops the retries, stops
+        the merge, and stops the PR from freezing growth.
+        """
+        tend = (KERNEL_DIR / ".github" / "workflows" / "seed-tend.yml").read_text()
+        assert "max_repair_attempts" in tend, "the per-PR repair budget is unread"
+        assert "ATTEMPT_MARKER" in tend, "nothing records an attempt to count"
+        assert "seed-escalate.json" in tend, "no escalation set is computed"
+        assert "--add-label" in tend, "escalation must apply the block label"
+        manifest = parse_simple_yaml(
+            (KERNEL_DIR / ".seed" / "seed.yml").read_text())
+        block = manifest["guardrails"]["merge_blocked_by_label"]
+        assert block in manifest["policy"]["board"]["ignore_labels"], \
+            "the escalation label must also park the PR, or growth stays frozen"
+
+    def test_attempts_burn_only_when_the_repair_actually_ran(self):
+        """Regression: an outage must not consume a PR's repair budget.
+
+        The repair step is `continue-on-error`, so an auth failure or an
+        action crash lands as outcome != success. Recording an attempt there
+        would escalate perfectly fixable PRs for reasons they had no part in.
+        """
+        tend = (KERNEL_DIR / ".github" / "workflows" / "seed-tend.yml").read_text()
+        record = tend.split("- name: Record repair attempts", 1)
+        assert len(record) == 2, "the attempt-recording step is missing"
+        head = record[1].split("run:", 1)[0]
+        assert "steps.repair.outcome == 'success'" in head, \
+            "attempts must be recorded only when the repair pass ran to completion"
+
+    def test_the_repair_diff_is_verified_against_protected_paths(self):
+        """The prompt is the instruction; the pushed diff is the evidence."""
+        tend = (KERNEL_DIR / ".github" / "workflows" / "seed-tend.yml").read_text()
+        assert "Guard what the repair pass pushed" in tend
+        assert "compare/" in tend, "the guard must read what was actually pushed"
+        assert "headRefOid" in tend, "without the pre-repair head there is nothing to compare"
+        for protected in (r"\.github/workflows/", r"\.github/actions/",
+                          r"\.seed/pause\.yml", r"\.seed/seed\.yml"):
+            assert protected in tend, f"the guard ignores {protected}"
+
+    def test_the_closer_asks_about_the_branch_the_issue_names(self):
+        """Regression: asking only the default branch answers a different question.
+
+        Issues titled "... on <feature-branch>" reported a failure on THAT
+        branch. Querying the default branch returns "unknown" forever, which
+        left a permanent floor of issues no board could clear.
+        """
+        tend = (KERNEL_DIR / ".github" / "workflows" / "seed-tend.yml").read_text()
+        closer = tend.split("- name: Close CI-failure issues", 1)[1]
+        assert '--branch "$branch"' in closer, \
+            "the closer must query the branch the issue names, not the default one"
+        assert "/branches/${branch}" in closer, \
+            "a deleted branch cannot fail again — the closer must detect that"
+        assert "actions/workflows" in closer, \
+            "a deleted workflow cannot fail again — the closer must detect that"
+        assert '*" @ "*' in closer, \
+            "issues filed under the retired per-commit key must be swept"
 
     def test_tend_lane_converges_the_board(self):
         """The lane must close its own exhaust, or the board never clears."""

@@ -1,5 +1,5 @@
 # =============================================================================
-# seed-grow.yml — the AI-Seed increment loop (kernel v0.4.0)
+# seed-grow.yml — the AI-Seed increment loop (kernel v0.5.0)
 # =============================================================================
 # One tick = one bounded increment = one DRAFT pull request. OFF by default:
 #   1. Idle until the SEED_GROW_ENABLED repo variable is "true" — the variable

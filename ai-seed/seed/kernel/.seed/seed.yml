@@ -55,10 +55,18 @@ policy:
   #
   # Items a human has explicitly parked (ignore_labels) do NOT count against
   # the board — otherwise one held issue freezes the repo forever.
+  #
+  # TWO caps, doing different jobs. `max_repairs_per_run` bounds one tick's
+  # spend. `max_repair_attempts` bounds a single pull request's LIFETIME: after
+  # that many repair passes the lane stops trying, applies the block label, and
+  # hands it to a human. Without a per-PR budget an unfixable PR is retried
+  # every tick forever and permanently blocks the board — an autonomous fixer
+  # needs a terminal state as much as it needs a retry.
   board:
     clear_before_grow: true
     ignore_labels: [seed:hold, human-review]
     max_repairs_per_run: 3
+    max_repair_attempts: 3
 
   # AUTO-MERGE. The seed may merge its OWN work once it is provably green.
   # Every condition below must hold; each is a hard stop, not a heuristic:

@@ -46,7 +46,7 @@ import sys
 from pathlib import Path
 
 # Kept in sync with seed/VERSION by tests; the VERSION file wins when present.
-KERNEL_VERSION = "0.4.0"
+KERNEL_VERSION = "0.5.0"
 
 PLACEHOLDER_RE = re.compile(r"__SEED_[A-Z_]+__")
 
@@ -330,8 +330,10 @@ Next steps (human-owned — the planter never does these):
   2. Commit and push, then in GitHub for {tokens['REPO']}:
        secrets:   CLAUDE_CODE_OAUTH_TOKEN   (claude setup-token; primary auth)
                   ANTHROPIC_API_KEY          (optional metered fallback)
-                  SEED_PAT                   (fine-grained PAT, contents+pull-requests+actions:write —
-                                              without it, CI does not fire on seed PRs)
+                  SEED_PAT                   (fine-grained PAT: contents, pull-requests, issues
+                                              and actions all :write — without contents CI does not
+                                              fire on seed PRs; without issues the tend lane cannot
+                                              close resolved CI-failure issues or escalate a PR)
        variables: SEED_GROW_ENABLED=true     (only when ready — the variable is the consent)
                   SEED_EVOLVE_ENABLED=true   (only when ready — enables the issue lane)
                   SEED_TEND_ENABLED=true     (only when ready — lets the seed review CI, repair
@@ -384,6 +386,24 @@ def _grow_workflow_markers() -> dict[str, str]:
     }
 
 
+def _tend_workflow_markers() -> dict[str, str]:
+    """Guardrail markers every installed seed-tend.yml must carry.
+
+    The tend lane is the only one that merges, so its stops are load-bearing:
+    a marker that silently disappears turns a bounded lane into an unbounded
+    one. Each entry names the mechanism, not just the string.
+    """
+    return {
+        "SEED_TEND_ENABLED": "the default-OFF consent gate (vars.SEED_TEND_ENABLED)",
+        "pause.yml": "the kill-switch check (.seed/pause.yml)",
+        "^\\.github/workflows/": "the never-auto-merge stop for PRs that edit CI",
+        "no longer eligible on live state": "the re-verification against live state before merging",
+        "max_repair_attempts": "the per-PR repair budget (an unfixable PR must reach a terminal state)",
+        "ATTEMPT_MARKER": "the attempt ledger marker the budget is counted from",
+        "compare/": "the diff guard that reads what the repair pass actually pushed",
+    }
+
+
 def cmd_check(args: argparse.Namespace) -> int:
     target = Path(args.target).resolve()
     r = Report()
@@ -424,6 +444,26 @@ def cmd_check(args: argparse.Namespace) -> int:
             if not dig(manifest, "guardrails", "merge_blocked_by_label"):
                 r.error("guardrails.merge_blocked_by_label is unset — auto-merge needs a label "
                         "a human can apply to stop it (e.g. human-review).")
+            # Escalation is only terminal if the label it applies is BOTH a
+            # merge block label (so the PR stops being merged) and an ignore
+            # label (so it stops counting against the board). Configure it as
+            # neither and the lane politely labels a PR that it then repairs
+            # again next tick — a guardrail that reads as one but is not.
+            block_label = dig(manifest, "guardrails", "merge_blocked_by_label")
+            if block_label:
+                for keys, why in (
+                    (("policy", "merge", "block_labels"),
+                     "auto-merge would ignore the label the tend lane escalates with"),
+                    (("policy", "board", "ignore_labels"),
+                     "an escalated pull request would keep blocking growth forever"),
+                ):
+                    labels = dig(manifest, *keys)
+                    if isinstance(labels, list) and block_label not in labels:
+                        r.error(f"guardrails.merge_blocked_by_label ({block_label}) is missing from "
+                                f"{'.'.join(keys)} — {why}.")
+            if not dig(manifest, "policy", "board", "max_repair_attempts"):
+                r.warn("policy.board.max_repair_attempts is unset — a pull request the repair "
+                       "pass cannot fix is retried every tick forever and blocks the board.")
             if dig(manifest, "policy", "merge", "auto") == "true" \
                     and dig(manifest, "gates", "tend") is None:
                 r.warn("policy.merge.auto is on but gates.tend is unset — nothing gates the lane "
@@ -460,6 +500,15 @@ def cmd_check(args: argparse.Namespace) -> int:
         for marker, why in _grow_workflow_markers().items():
             if marker not in gtext:
                 r.error(f"seed-grow.yml lost its guardrail marker '{marker}' ({why}).")
+    tend = wf_dir / "seed-tend.yml"
+    if tend.is_file():
+        ttext = tend.read_text(encoding="utf-8")
+        for marker, why in _tend_workflow_markers().items():
+            if marker not in ttext:
+                r.error(f"seed-tend.yml lost its guardrail marker '{marker}' ({why}).")
+    elif dig(manifest, "policy", "merge", "auto") == "true":
+        r.warn("policy.merge.auto is on but .github/workflows/seed-tend.yml is missing — "
+               "nothing performs (or bounds) merging.")
     verify = wf_dir / "seed-verify.yml"
     if not verify.is_file():
         r.warn(".github/workflows/seed-verify.yml missing — nothing gates seed structure in CI.")

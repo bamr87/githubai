@@ -15,7 +15,7 @@ This directory is the product: the file set that turns any repository into a sel
 | `kernel/.github/workflows/seed-germinate.yml` | One-time initial build from CONCEPT.md (manual two-key dispatch) |
 | `kernel/.github/workflows/seed-grow.yml` | The increment loop (default OFF; plan → build → verify → draft PR) |
 | `kernel/.github/workflows/seed-evolve.yml` | The issue-driven lane (default OFF; `seed:approved` → implementation draft PR) |
-| `kernel/.github/workflows/seed-tend.yml` | The board lane (default OFF; review CI → repair → merge the provably green → dispatch approved issues). The only lane permitted to merge |
+| `kernel/.github/workflows/seed-tend.yml` | The board lane (default OFF; survey → escalate what is out of repair budget → repair → guard the pushed diff → merge the provably green → dispatch approved issues → close resolved CI-failure issues). The only lane permitted to merge |
 | `kernel/.github/workflows/seed-steward.yml` | The @claude mention handler |
 | `kernel/.github/workflows/seed-verify.yml` | Structural CI gate (`seed.py check`) |
 | `garden/garden.yml` | Roster template for a hub orchestrating many planted repos |

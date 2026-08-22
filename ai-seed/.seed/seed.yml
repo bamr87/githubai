@@ -22,7 +22,7 @@ seed:
   repo: bamr87/ai-seed
   default_branch: main
   planted: 2026-08-19
-  kernel_version: 0.4.0
+  kernel_version: 0.5.0
   planted_from: bamr87/ai-seed
 
 concept:
@@ -48,12 +48,20 @@ policy:
   # THE BOARD PRECONDITION: growth is contingent on a clear board. Every tick
   # tends first (review CI, repair red/conflicted PRs, merge what is eligible,
   # dispatch approved issues) and grows only when nothing actionable is left.
-  # Items a human parked (ignore_labels) do not count — otherwise one held
-  # issue would freeze the repo forever.
+  # Items a human has explicitly parked (ignore_labels) do NOT count against
+  # the board — otherwise one held issue freezes the repo forever.
+  #
+  # TWO caps, doing different jobs. `max_repairs_per_run` bounds one tick's
+  # spend. `max_repair_attempts` bounds a single pull request's LIFETIME: after
+  # that many repair passes the lane stops trying, applies the block label, and
+  # hands it to a human. Without a per-PR budget an unfixable PR is retried
+  # every tick forever and permanently blocks the board — an autonomous fixer
+  # needs a terminal state as much as it needs a retry.
   board:
     clear_before_grow: true
     ignore_labels: [seed:hold, human-review]
     max_repairs_per_run: 3
+    max_repair_attempts: 3
 
   # AUTO-MERGE. The seed may merge its OWN provably-green work. Every
   # condition is a hard stop, not a heuristic; a PR failing any of them is

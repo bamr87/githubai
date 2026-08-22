@@ -38,6 +38,7 @@ python3 .seed/tools/seed.py check .   # the seed's structural gate (CI runs this
 - README-First, README-Last: read the nearest `README.md` before changing a directory, and update it after.
 - Don't suppress type errors (`as any`, `@ts-ignore`, `# type: ignore`) or leave empty exception handlers.
 - Update CONCEPT.md §2/§4 in the same PR when capabilities or structure change.
+- The tend lane will try to fix a red PR only `policy.board.max_repair_attempts` times; after that it applies the block label and hands the PR to a human. A guard re-reads what each repair pushed and escalates anything that reached `.github/workflows/`, `.github/actions/`, `.seed/pause.yml`, or `.seed/seed.yml`.
 
 ## Seed context
 
