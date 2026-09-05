@@ -84,7 +84,10 @@ jobs:
         run: rm -rf .githubai-framework
 
       - name: Run maintenance with Claude
-        if: steps.cfg.outputs.maintenance_enabled == 'true'
+        # Config-file toggle AND the fleet's vars.*_ENABLED kill switch: a scheduled
+        # firing is a no-op once CLAUDE_MAINTENANCE_ENABLED is "false" (default-ON;
+        # a manual dispatch always runs). bamr87/bamr87 fleet.yml harnesses:.
+        if: steps.cfg.outputs.maintenance_enabled == 'true' && (github.event_name != 'schedule' || vars.CLAUDE_MAINTENANCE_ENABLED != 'false')
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
