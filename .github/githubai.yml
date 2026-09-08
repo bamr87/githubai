@@ -14,7 +14,14 @@ repo:
 
 claude:
   model: ""
-  max_turns: 60
+  # Weekly maintenance runs five tasks in ONE agent invocation (docs_drift,
+  # todo_sweep, dependency_report, stale_nudge, health_report), each costing
+  # several gh/grep round trips. It outgrew 60: the 2026-09-07 run reported a
+  # successful result after 68 turns and the action failed it for exceeding the
+  # cap, discarding work that was already done. 100 leaves headroom as this repo
+  # keeps growing; `timeout-minutes: 45` on each job is the real cost backstop
+  # (that 68-turn run took 8m17s).
+  max_turns: 100
 
 automation:
   triage:
