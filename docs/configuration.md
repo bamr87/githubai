@@ -39,8 +39,8 @@ automation:
     draft_pr: false
   review:
     enabled: true
-    inline_comments: true
-    review_bot_prs: true
+    inline_comments: true      # reserved, not yet implemented: setting it currently has no effect
+    review_bot_prs: true       # reserved, not yet implemented: setting it currently has no effect
     focus: [...]               # review checklist; profiles set this per repo type
   auto_merge:
     enabled: false             # opt-in; read security.md first
@@ -78,6 +78,8 @@ standards:
 | `auto_merge.max_risk`, `auto_merge.method` | The deterministic merge step in claude-auto-merge.yml, read via `fromJSON` on the merged config |
 
 Two knobs intentionally do **not** live in YAML: the implement trigger label at the *workflow gate* level (pass `trigger_label` to the reusable workflow from your stub if you rename it — the event filter can't read config), and the maintenance schedule (edit the cron in your `claude-maintenance.yml` stub, since schedules bind to the workflow file's repo).
+
+Two schema keys are **reserved, not yet implemented**: `automation.review.inline_comments` and `automation.review.review_bot_prs`. They are declared with defaults so existing configs stay valid, but nothing reads them yet. Setting either one currently has no effect: Claude always has the inline-comment tool and reviews bot-authored PRs. Use `claude:skip` on a PR to opt it out of review.
 
 ## Organization policy (app mode)
 

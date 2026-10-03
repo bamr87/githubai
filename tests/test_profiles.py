@@ -1,5 +1,7 @@
 """Every repo-type profile must be well-formed and internally consistent."""
 
+import re
+
 import pytest
 
 from conftest import load_yaml
@@ -75,3 +77,25 @@ def test_risky_profiles_do_not_widen_auto_merge_paths(profiles_dir, risky):
         assert ".github/**" not in paths, (
             f"{risky} profile must not allow auto-merge across .github/** (workflow tampering surface)"
         )
+
+
+def test_review_keys_are_read_or_marked_reserved(repo_root, profiles_dir):
+    """A documented automation.review key must either be read by code or say it is reserved.
+
+    A key that is declared, defaulted and documented but read by nothing looks
+    configurable while doing nothing (issue #114).
+    """
+    review = load_yaml(profiles_dir / "_base.yml")["automation"]["review"]
+    code = (repo_root / "actions" / "load-config" / "load_config.py").read_text(encoding="utf-8")
+    code += "".join(p.read_text(encoding="utf-8") for p in (repo_root / ".github" / "workflows").glob("*.yml"))
+    base_lines = (profiles_dir / "_base.yml").read_text(encoding="utf-8").splitlines()
+    doc_lines = (repo_root / "docs" / "configuration.md").read_text(encoding="utf-8").splitlines()
+
+    def declared_reserved(lines, key):
+        return any(line.strip().startswith(f"{key}:") and "reserved" in line for line in lines)
+
+    for key in review:
+        if key == "enabled" or re.search(rf"\b{re.escape(key)}\b", code):
+            continue  # `enabled` is read generically as `<area>_enabled` by the loader
+        assert declared_reserved(base_lines, key), f"_base.yml: automation.review.{key} is read by nothing; mark it reserved"
+        assert declared_reserved(doc_lines, key), f"docs/configuration.md: automation.review.{key} is read by nothing; mark it reserved"

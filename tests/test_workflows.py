@@ -86,10 +86,16 @@ def test_jobs_have_timeouts_and_permissions(claude_workflow_files):
             )
 
 
-def test_automation_workflows_have_concurrency(workflow_files):
+def test_every_workflow_has_concurrency(workflow_files):
+    """Every workflow (not just automation) needs a concurrency group, at the
+    workflow level or on every job (claude.yml uses job level so skipped runs
+    never displace a queued one)."""
     for path in workflow_files:
-        if path.name in AUTOMATION:
-            assert "concurrency" in load_yaml(path), f"{path.name} needs a concurrency group"
+        data = load_yaml(path)
+        if "concurrency" in data:
+            continue
+        missing = [name for name, job in data["jobs"].items() if "concurrency" not in job]
+        assert not missing, f"{path.name} needs a concurrency group (jobs without one: {missing})"
 
 
 def test_no_untrusted_body_interpolation(workflow_files):
