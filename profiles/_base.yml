@@ -100,8 +100,8 @@ automation:
     draft_pr: false
   review:
     enabled: true
-    inline_comments: true
-    review_bot_prs: true
+    inline_comments: true   # reserved, not yet implemented
+    review_bot_prs: true    # reserved, not yet implemented
     focus:
       - correctness and edge cases
       - security (injection, secrets, unsafe input handling)

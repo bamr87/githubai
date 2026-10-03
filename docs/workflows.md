@@ -48,4 +48,4 @@ When calling any of them: `secrets: inherit` from your stub, and grant the stub'
 
 ## CI for the framework itself
 
-`ci.yml` (pytest suite + shellcheck) and `markdown-oneline.yml` (one-paragraph-per-line prose rule) guard this repo; they are not installed into consumers.
+`ci.yml` (three jobs: `tests` runs the pytest suite, `shell` runs shellcheck on the installer, and `relay` runs the GitHub App relay's `npm test` in `app/relay/`, so CI needs Node as well as Python) and `markdown-oneline.yml` (one-paragraph-per-line prose rule) guard this repo; they are not installed into consumers.
