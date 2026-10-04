@@ -154,6 +154,12 @@ jobs:
   tend:
     needs: gate
     if: needs.gate.outputs.go == 'true'
+    # A called workflow can't exceed its caller's grant: match seed-tend's job.
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+      id-token: write
     uses: ./.github/workflows/seed-tend.yml
     secrets: inherit
 
