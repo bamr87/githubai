@@ -154,7 +154,14 @@ jobs:
   tend:
     needs: gate
     if: needs.gate.outputs.go == 'true'
-    # A called workflow can't exceed its caller's grant: match seed-tend's job.
+    # A called workflow can never hold more than its CALLER granted it, and a
+    # calling job with no `permissions:` block inherits this workflow's default
+    # (`contents: read`) — which means every other scope is `none`. seed-tend's
+    # own job asks for pull-requests/issues read and `id-token: write`, so the
+    # RUN IS REFUSED BEFORE ANY JOB STARTS (`startup_failure`, no logs, no jobs,
+    # no annotation). Mirror exactly what seed-tend.yml declares — no more — so
+    # the called lane behaves identically whether it is invoked from here or
+    # from its own schedule.
     permissions:
       contents: read
       pull-requests: read
