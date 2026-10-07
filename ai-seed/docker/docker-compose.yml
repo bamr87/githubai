@@ -1,8 +1,6 @@
 # AI-Seed Container Orchestration
 # Path-based service communication and evolution engine
 
-version: '3.8'
-
 services:
   # Frontend Application - User Interface Path
   frontend:
@@ -22,7 +20,7 @@ services:
       - ../scripts:/app/scripts:rw
       - frontend_node_modules:/app/src/node_modules
     ports:
-      - "3000:3000"
+      - "127.0.0.1:${AI_SEED_FRONTEND_PORT:-3000}:3000"
     networks:
       - ai-seed-network
     depends_on:
@@ -30,7 +28,7 @@ services:
       - ai-engine
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -52,7 +50,7 @@ services:
       - ../src:/app/src:rw
       - api_logs:/app/logs
     ports:
-      - "8000:8000"
+      - "127.0.0.1:${AI_SEED_API_PORT:-8000}:8000"
     networks:
       - ai-seed-network
     depends_on:
@@ -60,7 +58,7 @@ services:
       - cache
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -71,7 +69,6 @@ services:
       context: ..
       dockerfile: docker/Dockerfile
       target: ai-engine
-    container_name: ai-seed-ai-engine
     environment:
       - AI_SEED_ENV=development
       - DATABASE_URL=postgresql://ai_seed:ai_seed_pass@database:5432/ai_seed_dev
@@ -81,7 +78,7 @@ services:
       - ai_models:/app/models
       - ai_logs:/app/logs
     ports:
-      - "5001:5000"
+      - "127.0.0.1:${AI_SEED_AI_ENGINE_PORT:-5001}:5000"
     networks:
       - ai-seed-network
     depends_on:
@@ -89,25 +86,24 @@ services:
       - cache
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:5000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
 
   # Database - Data Persistence Path
   database:
-    image: postgres:15-alpine
-    container_name: ai-seed-database
+    image: postgres:18-alpine
     environment:
       - POSTGRES_DB=ai_seed_dev
       - POSTGRES_USER=ai_seed
       - POSTGRES_PASSWORD=ai_seed_pass
       - POSTGRES_HOST_AUTH_METHOD=md5
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
       - ../src/data/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - "5432:5432"
+      - "127.0.0.1:${AI_SEED_DB_PORT:-5432}:5432"
     networks:
       - ai-seed-network
     restart: unless-stopped
@@ -119,13 +115,12 @@ services:
 
   # Cache - Fast Data Access Path
   cache:
-    image: redis:7-alpine
-    container_name: ai-seed-cache
+    image: redis:8-alpine
     command: redis-server --appendonly yes
     volumes:
       - redis_data:/data
     ports:
-      - "6379:6379"
+      - "127.0.0.1:${AI_SEED_CACHE_PORT:-6379}:6379"
     networks:
       - ai-seed-network
     restart: unless-stopped
@@ -138,12 +133,11 @@ services:
   # Path Monitor - Analytics and Metrics Path
   monitor:
     image: nginx:alpine
-    container_name: ai-seed-monitor
     volumes:
       - ../config/nginx.conf:/etc/nginx/nginx.conf:ro
       - monitor_logs:/var/log/nginx
     ports:
-      - "8080:80"
+      - "127.0.0.1:${AI_SEED_MONITOR_PORT:-8080}:80"
     networks:
       - ai-seed-network
     depends_on:

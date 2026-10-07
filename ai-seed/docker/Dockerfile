@@ -2,7 +2,7 @@
 # Following path-based development and container-first principles
 
 # Base stage with common dependencies
-FROM node:18-alpine AS base
+FROM node:24-alpine AS base
 WORKDIR /app
 
 # Install system dependencies for multiple language support
