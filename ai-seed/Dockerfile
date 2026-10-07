@@ -1,4 +1,7 @@
-FROM python:3.12-slim
+# pinned: crewai publishes no release for Python 3.14, so pip backtracks to an
+# ancient one whose numpy/regex sdists will not build (ai-seed#78). Hold at 3.13
+# until crewai ships cp314 — see bamr87/bamr87 docs/DOCKER.md, image_overrides.
+FROM python:3.13-slim
 
 # Set working directory
 WORKDIR /app

@@ -1,5 +1,7 @@
 # AI Evolution Engine Development Dockerfile
-FROM python:3.11-slim
+# pinned: same CrewAI stack as the root Dockerfile — no crewai release for
+# Python 3.14 (ai-seed#78). Hold at 3.13 until crewai ships cp314.
+FROM python:3.13-slim
 
 WORKDIR /app
 

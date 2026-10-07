@@ -137,7 +137,8 @@ FROM base AS development
 FROM base AS production
 
 # AI engine stage with Python environment
-FROM python:3.11-slim AS ai-engine
+# pinned at 3.13: crewai publishes no release for Python 3.14 (ai-seed#78)
+FROM python:3.13-slim AS ai-engine
 ```
 
 ### Service Orchestration

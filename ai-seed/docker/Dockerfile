@@ -79,7 +79,9 @@ EXPOSE 3000
 CMD ["npm", "start", "--prefix", "src"]
 
 # AI Evolution Engine stage
-FROM python:3.11-slim AS ai-engine
+# pinned: same CrewAI stack as the root Dockerfile — no crewai release for
+# Python 3.14 (ai-seed#78). Hold at 3.13 until crewai ships cp314.
+FROM python:3.13-slim AS ai-engine
 WORKDIR /app
 
 # Install system dependencies and update certificates
