@@ -30,7 +30,7 @@ When calling any of them: `secrets: inherit` from your stub, and grant the stub'
 
 ## claude-auto-merge.yml
 
-- **Triggers**: PR labeled `claude:auto-merge`; PRs opened by dependabot/renovate; dispatch/call with `pr_number`.
+- **Triggers**: PR labeled `claude:auto-merge`; PRs opened by dependabot/renovate; dispatch/call with `pr_number`. Runs triggered by dependabot read **Dependabot** secrets, not Actions secrets, so add `CLAUDE_CODE_OAUTH_TOKEN` (or `ANTHROPIC_API_KEY`) under Settings → Secrets → Dependabot as well; `claude-review.yml` has the same requirement for bot PRs. Both pass `allowed_bots: dependabot[bot],renovate[bot]` to `claude-code-action`, which otherwise refuses non-human actors.
 - **Permissions**: `contents: write`, `pull-requests: write`, checks read, id-token write, actions read.
 - **Behavior**: two-phase by design. Phase 1: Claude, with **read-only tools**, checks the config gate (enabled + author/label + every file in `allowed_paths`), the content gate (genuinely minor changes only), risk (dependency-diff inspection; major bumps ≥ medium), and CI state — returning a structured verdict via JSON schema. Phase 2: a deterministic bash step posts the verdict comment and, only for `eligible && risk ≤ max_risk` (high never merges), approves and runs `gh pr merge --auto` — so the merge still waits for your required checks. If enabling auto-merge fails (repo setting off, no protection), it says so and leaves the PR approved but unmerged.
 
