@@ -15,7 +15,7 @@ name: Claude Maintenance
 
 on:
   schedule:
-    - cron: "17 6 * * 1"
+    - cron: "40 16 * * 1"  # staggered AI cron (bamr87/bamr87#348); was 17 6 * * 1
   workflow_dispatch:
     inputs:
       tasks:
