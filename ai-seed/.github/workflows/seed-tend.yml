@@ -42,7 +42,7 @@ name: seed-tend
 
 on:
   schedule:
-    - cron: '47 */6 * * *'
+    - cron: '10 11 * * *'
   workflow_dispatch:
   workflow_call:
     outputs:

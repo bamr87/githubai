@@ -38,9 +38,9 @@ policy:
     germinate: claude-opus-4-8
   cadence:
     # UTC cron for the scheduled grow tick (also stamped into seed-grow.yml).
-    grow_cron: "17 4 * * 1"
+    grow_cron: "10 12 * * 1"  # staggered AI cron (bamr87/bamr87#348); was "17 4 * * 1"
     # UTC cron for the standalone tend cycle (also stamped into seed-tend.yml).
-    tend_cron: "47 */6 * * *"
+    tend_cron: "10 11 * * *"  # daily (was "47 */6 * * *"; 124/124 green) + staggered (bamr87/bamr87#348)
     # One bounded, reviewable increment per tick. Raising this widens PRs;
     # prefer more ticks over bigger ones.
     increments_per_tick: 1
