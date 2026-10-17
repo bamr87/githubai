@@ -120,7 +120,7 @@ Humans and agents alike: read [`CLAUDE.md`](CLAUDE.md) (the working agreement), 
 
 ## Changelog
 
-There is no CHANGELOG.md yet; changes are tracked in the [commit history](https://github.com/bamr87/ai-seed/commits/main).
+Notable changes are recorded in [CHANGELOG.md](CHANGELOG.md); the full record is in the [commit history](https://github.com/bamr87/ai-seed/commits/main).
 
 ## License
 
