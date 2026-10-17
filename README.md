@@ -1,5 +1,11 @@
 # GitHubAI — the Claude Code SDLC framework
 
+> Claude Code SDLC framework: reusable GitHub Actions that triage issues, implement work, review PRs and cut releases.
+
+[![CI](https://github.com/bamr87/githubai/actions/workflows/ci.yml/badge.svg)](https://github.com/bamr87/githubai/actions/workflows/ci.yml) [![License](https://img.shields.io/github/license/bamr87/githubai)](LICENSE)
+
+## Overview
+
 Wire [Claude Code](https://claude.com/claude-code) into every stage of a repository's lifecycle with one install command. Claude triages every issue, implements approved work, reviews every PR, safely auto-merges minor updates, runs weekly maintenance, and drafts releases — as GitHub Actions, with **Claude Code OAuth as the default auth**, no servers required.
 
 GitHubAI is three things at once:
@@ -73,8 +79,7 @@ Schema reference: [docs/configuration.md](docs/configuration.md). Labels are the
 
 Every workflow authenticates with `CLAUDE_CODE_OAUTH_TOKEN` (from `claude setup-token` — included in Claude subscriptions) and falls back to `ANTHROPIC_API_KEY` only when the OAuth token is absent. One org-level secret can power every repo. Threat model, permissions, and the auto-merge safety design: [docs/security.md](docs/security.md).
 
-## Repository layout
-
+## Project structure
 ```text
 .github/workflows/   the framework: reusable claude-*.yml + this repo's CI
 actions/load-config/ composite action resolving profile + repo config
@@ -109,6 +114,23 @@ Signing in to the relay shows what it did with every delivery — dispatched, ig
 
 The Django/React application that previously lived here (last release v0.5.3) was replaced by this framework; every v0 capability has a lighter successor. See [docs/migration-v0.md](docs/migration-v0.md).
 
+## Development
+
+Full commands, conventions and gotchas for humans and AI agents live in [AGENTS.md](AGENTS.md).
+
+## Contributing
+
+Contributions are welcome via pull request. Use [Conventional Commits](https://www.conventionalcommits.org/) and keep the CI checks green. The fleet-wide workflow is described in the hub's [CONTRIBUTING.md](https://github.com/bamr87/bamr87/blob/main/CONTRIBUTING.md). AI agents should start with [AGENTS.md](AGENTS.md) (with [CLAUDE.md](CLAUDE.md) for Claude Code).
+
+## Changelog
+
+There is no CHANGELOG.md yet; changes are tracked in the [commit history](https://github.com/bamr87/githubai/commits/main).
+
 ## License
 
 [MIT](LICENSE)
+
+---
+
+<!-- bamr87-portfolio-footer -->
+Part of the [bamr87 portfolio](https://github.com/bamr87) — browse every project on [Amr's GitHub profile](https://github.com/bamr87).
