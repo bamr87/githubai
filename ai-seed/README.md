@@ -1,12 +1,24 @@
 # 🌱 AI-Seed — the autonomous AI orchestration framework
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Claude Code OAuth](https://img.shields.io/badge/Claude%20Code-OAuth--first-purple.svg)](https://code.claude.com/docs) [![GitHub Native](https://img.shields.io/badge/SDLC-GitHub%20Native-blue.svg)](#github-as-the-sdlc-platform) [![Default OFF](https://img.shields.io/badge/Autonomy-Default%20OFF-green.svg)](#guardrails)
+> Self-evolving project template: plant a kernel in any repo and let Claude Code Actions germinate and grow it.
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Claude Code OAuth](https://img.shields.io/badge/Claude%20Code-OAuth--first-purple.svg)](https://code.claude.com/docs) [![GitHub Native](https://img.shields.io/badge/SDLC-GitHub%20Native-blue.svg)](#github-as-the-sdlc-platform) [![Default OFF](https://img.shields.io/badge/Autonomy-Default%20OFF-green.svg)](#guardrails) [![CI](https://github.com/bamr87/ai-seed/actions/workflows/ci.yml/badge.svg)](https://github.com/bamr87/ai-seed/actions/workflows/ci.yml)
+
+## Overview
 
 > Plant a seed in any repository. Write down the concept. Let it grow — one reviewed pull request at a time.
 
 **AI-Seed** turns a repository into a self-growing, AI-native project. The planter stamps a small **kernel** into any repo (new or existing); from then on the repo can **germinate** (build its initial structure from a written concept) and **grow** (ship one bounded increment per tick) through Claude Code passes running inside GitHub Actions — wired to **Claude Code OAuth**, bounded by guardrails a single human can always halt, with **GitHub as the entire SDLC platform**: issues are the backlog, Actions is the compute, draft pull requests are the only write path, and merges belong to humans.
 
 The framework packages the production patterns of the [bamr87 fleet](https://github.com/bamr87/bamr87) (~40 repos of autonomous-SDLC machinery) into a portable, self-hosting form. Nothing here is speculative: every mechanism traces to a sibling repo where it already runs — the map is [docs/PATTERNS.md](docs/PATTERNS.md), the design is [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+## Features
+
+- `tools/seed.py plant` stamps a small kernel into any new or existing repository
+- Germinate builds the initial structure from a written concept; grow ships one bounded increment per tick
+- Each pass is a Claude Code run inside GitHub Actions, authenticated with Claude Code OAuth
+- GitHub is the whole SDLC: issues are the backlog, draft pull requests the only write path, and merges stay human
+- Guardrails keep autonomy off by default and let a single human halt it
 
 ## Quick start: plant → germinate → grow
 
@@ -76,8 +88,7 @@ The constitution lives in `.seed/seed.yml` (`guardrails:`), binds every agent vi
 
 ai-seed is planted with its own kernel — look at the root of this repo: [`CONCEPT.md`](CONCEPT.md) is its genome (§8 logs the repo's real history), `.seed/` is its plant (strict kernel parity), and the `seed-*.yml` workflows growing this framework are the same files the planter stamps everywhere else. `seed-verify.yml` fails CI here the moment the kernel and the installation drift: anything the kernel demands of a planted repo, this repo demonstrates first.
 
-## Repository map
-
+## Project structure
 | Path | What it is |
 |---|---|
 | [`seed/`](seed/README.md) | **The product**: `kernel/` (plantable files) + `garden/` (multi-repo hub layer) |
@@ -93,12 +104,31 @@ ai-seed is planted with its own kernel — look at the root of this repo: [`CONC
 
 AI-Seed extracts, rather than invents: the [year-of-ai](https://github.com/year-of-ai/year-of-ai.github.io) and [ai-world-view](https://github.com/ai-world-view/ai-world-view.github.io) hubs proved the lineage growth engine (seeds, policy, escalation, kill switch, fail-loud ticks); [lifehacker.dev](https://github.com/bamr87/lifehacker.dev) proved consent gates, the harness discipline, and quarantine; the [bamr87 hub](https://github.com/bamr87/bamr87) proved the token contract, the label state machine, and the standing rules about `github.token` and protected branches; [wtd](https://github.com/bamr87/wtd) proved provider lanes and dedup markers; [gitorio](https://github.com/bamr87/gitorio) proved loop guards and least-privilege compilation; [git-with-the-program](https://github.com/bamr87/git-with-the-program) contributes the constitution politics; [SCHEMA](https://github.com/bamr87/SCHEMA) the self-describing, vendorable-tool posture. The registry with the receipts: [docs/PATTERNS.md](docs/PATTERNS.md).
 
+## Development
+
+```bash
+pip install -r requirements.txt -r requirements-dev.txt
+python3 -m pytest tests/
+python3 tools/seed.py check .
+```
+
+Full commands, conventions and gotchas for humans and AI agents live in [CLAUDE.md](CLAUDE.md).
+
 ## Contributing
 
 Humans and agents alike: read [`CLAUDE.md`](CLAUDE.md) (the working agreement), file `seed:request` issues for changes you want the evolve lane to build, and remember the two rules that never bend — the kernel is edited in `seed/kernel/` and re-rendered (`python3 tools/seed.py plant . --update`), and nobody merges but a human. Run before any PR: `python3 -m pytest tests/ && python3 tools/seed.py check . && python3 tools/unwrap-prose.py --check`.
+
+## Changelog
+
+There is no CHANGELOG.md yet; changes are tracked in the [commit history](https://github.com/bamr87/ai-seed/commits/main).
 
 ## License
 
 MIT — see [LICENSE](LICENSE). Plant freely.
 
 > *"The best time to plant a tree was 20 years ago. The second best time is now."*
+
+---
+
+<!-- bamr87-portfolio-footer -->
+Part of the [bamr87 portfolio](https://github.com/bamr87) — browse every project on [Amr's GitHub profile](https://github.com/bamr87).
