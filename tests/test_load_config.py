@@ -69,7 +69,7 @@ def test_unknown_type_fails_listing_profiles(profiles_dir, tmp_path):
 
 
 def test_outputs_format_and_flags(profiles_dir, tmp_path):
-    path = write_config(tmp_path, {"repo": {"type": "library"}, "claude": {"model": "claude-opus-4-8"}})
+    path = write_config(tmp_path, {"repo": {"type": "library"}, "claude": {"model": "claude-opus-5-5"}})
     merged, found = load_config.resolve(profiles_dir, path)
     buf = io.StringIO()
     load_config.emit_outputs(merged, found, buf)
@@ -78,7 +78,7 @@ def test_outputs_format_and_flags(profiles_dir, tmp_path):
         line.split("=", 1) for line in out.splitlines() if "=" in line and "<<" not in line and line != "GHAI_EOF"
     )
     assert lines["type"] == "library"
-    assert lines["model"] == "claude-opus-4-8"
+    assert lines["model"] == "claude-opus-5-5"
     assert lines["triage_enabled"] == "true"
     assert lines["auto_merge_enabled"] == "false"
     assert f"prompt_context<<{load_config.OUTPUT_DELIMITER}" in out
