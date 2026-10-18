@@ -101,7 +101,7 @@ Three auth rules are structural, learned the hard way by the fleet:
 2. **A PR that must have CI cannot be opened with `github.token`.** GitHub fires no workflow events for refs pushed with the installation token. Grow and evolve lanes therefore prefer `SEED_PAT` and emit a loud notice when they fall back.
 3. **Agents never hold long-lived credentials.** Checkouts run `persist-credentials: false` before model passes; pushes re-authenticate explicitly in workflow-owned steps after the model is done. The model plans and writes files; the workflow commits, pushes, and opens the PR.
 
-Model tiers are policy, not workflow: `.seed/seed.yml` → `policy.models` names the model for each pass (`plan` / `build` / `verify`), defaulting to the fleet's proven escalation (`claude-haiku-4-5` → `claude-sonnet-4-6` → `claude-opus-4-8`). Changing tiers is a data edit that never touches a workflow file.
+Model tiers are policy, not workflow: `.seed/seed.yml` → `policy.models` names the model for each pass (`plan` / `build` / `verify`), defaulting to the fleet's proven escalation (`claude-haiku-5-5` → `claude-sonnet-5-5` → `claude-opus-5-5`). Changing tiers is a data edit that never touches a workflow file.
 
 ## 6. The grow tick
 

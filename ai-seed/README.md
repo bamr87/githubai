@@ -66,7 +66,7 @@ Verify any planted repo at any time: `python3 .seed/tools/seed.py check .` (the 
 
 ## Claude Code OAuth wiring
 
-Every model pass rides [`anthropics/claude-code-action@v1`](https://github.com/anthropics/claude-code-action), **OAuth-first**: `CLAUDE_CODE_OAUTH_TOKEN` (minted by `claude setup-token`, subscription-backed) is the primary credential at every call site, with `ANTHROPIC_API_KEY` as an evidence-based fallback — fired only when the OAuth passes produced nothing or reported `is_error` in their execution output. Model tiers are policy, not workflow: `.seed/seed.yml` names the model per pass (default escalation `claude-haiku-4-5` → `claude-sonnet-4-6` → `claude-opus-4-8`); changing tiers is a data edit. The workflow — never the model — commits, pushes, and opens PRs, and it prefers `SEED_PAT` because refs pushed with `github.token` fire no CI.
+Every model pass rides [`anthropics/claude-code-action@v1`](https://github.com/anthropics/claude-code-action), **OAuth-first**: `CLAUDE_CODE_OAUTH_TOKEN` (minted by `claude setup-token`, subscription-backed) is the primary credential at every call site, with `ANTHROPIC_API_KEY` as an evidence-based fallback — fired only when the OAuth passes produced nothing or reported `is_error` in their execution output. Model tiers are policy, not workflow: `.seed/seed.yml` names the model per pass (default escalation `claude-haiku-5-5` → `claude-sonnet-5-5` → `claude-opus-5-5`); changing tiers is a data edit. The workflow — never the model — commits, pushes, and opens PRs, and it prefers `SEED_PAT` because refs pushed with `github.token` fire no CI.
 
 ## GitHub as the SDLC platform
 

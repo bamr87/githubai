@@ -215,7 +215,7 @@ class TestCrewManager:
     def test_initialize_llm_anthropic(self, mock_config):
         """Test LLM initialization with Anthropic."""
         mock_config["llm_config"]["provider"] = "anthropic"
-        mock_config["llm_config"]["model"] = "claude-3-5-sonnet-20241022"
+        mock_config["llm_config"]["model"] = "claude-sonnet-5-5"
         
         with patch('agents.crew_manager.ChatAnthropic') as mock_anthropic:
             crew_manager = CrewManager.__new__(CrewManager)
@@ -224,8 +224,7 @@ class TestCrewManager:
             crew_manager._initialize_llm()
             
             mock_anthropic.assert_called_once_with(
-                model="claude-3-5-sonnet-20241022",
-                temperature=0.1,
+                model="claude-sonnet-5-5",
                 max_tokens=4096
             )
     

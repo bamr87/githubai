@@ -52,9 +52,10 @@ class CrewManager:
                     max_tokens=max_tokens
                 )
             elif provider == 'anthropic':
+                # Claude 5.5 models reject non-default temperature/top_p/top_k
+                # (HTTP 400), so sampling params are not forwarded to Anthropic.
                 return ChatAnthropic(
                     model=model,
-                    temperature=temperature,
                     max_tokens=max_tokens
                 )
             else:

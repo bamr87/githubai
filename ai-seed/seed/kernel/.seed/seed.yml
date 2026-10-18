@@ -32,10 +32,10 @@ policy:
   # Model escalation tiers for the grow tick (plan -> build -> verify) and the
   # one-shot germination pass. Use authoritative model IDs.
   models:
-    plan: claude-haiku-4-5
-    build: claude-sonnet-4-6
-    verify: claude-opus-4-8
-    germinate: claude-opus-4-8
+    plan: claude-haiku-5-5
+    build: claude-sonnet-5-5
+    verify: claude-opus-5-5
+    germinate: claude-opus-5-5
   cadence:
     # UTC cron for the scheduled grow tick (also stamped into seed-grow.yml).
     grow_cron: "__SEED_GROW_CRON__"

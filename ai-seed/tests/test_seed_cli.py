@@ -37,13 +37,13 @@ class TestSimpleYamlParser:
             "  cadence:\n"
             '    grow_cron: "17 4 * * 1"  # inline comment\n'
             "  models:\n"
-            "    plan: claude-haiku-4-5\n"
+            "    plan: claude-haiku-5-5\n"
             "kernel:\n"
             "  strict: false\n"
         )
         assert data["schema"] == "seed-manifest/v1"
         assert data["policy"]["cadence"]["grow_cron"] == "17 4 * * 1"
-        assert data["policy"]["models"]["plan"] == "claude-haiku-4-5"
+        assert data["policy"]["models"]["plan"] == "claude-haiku-5-5"
         assert data["kernel"]["strict"] == "false"
 
     def test_matches_pyyaml_on_the_kernel_manifest(self):
