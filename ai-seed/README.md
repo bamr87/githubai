@@ -4,6 +4,8 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Claude Code OAuth](https://img.shields.io/badge/Claude%20Code-OAuth--first-purple.svg)](https://code.claude.com/docs) [![GitHub Native](https://img.shields.io/badge/SDLC-GitHub%20Native-blue.svg)](#github-as-the-sdlc-platform) [![Default OFF](https://img.shields.io/badge/Autonomy-Default%20OFF-green.svg)](#guardrails) [![CI](https://github.com/bamr87/ai-seed/actions/workflows/ci.yml/badge.svg)](https://github.com/bamr87/ai-seed/actions/workflows/ci.yml)
 
+> **Moved.** This project now lives in [bamr87/githubai](https://github.com/bamr87/githubai) under `ai-seed/`, imported with its full history. Its workflows do not run from this subdirectory; commands below run from `ai-seed/`. Issue references like `bamr87/ai-seed#81` point at the original repository.
+
 ## Overview
 
 > Plant a seed in any repository. Write down the concept. Let it grow — one reviewed pull request at a time.

@@ -6,6 +6,8 @@ Agent context for working on GitHubAI itself. Read [README.md](README.md) first 
 
 GitHubAI is a GitHub-native framework that wires Claude Code into the whole SDLC. Almost none of it is application code: the product is reusable workflows (`.github/workflows/claude-*.yml`), a composite action (`actions/load-config/`), repo-type profiles (`profiles/`), and an installer + template files (`setup/`, `template/`). The one real program is the multi-tenant GitHub App relay in `app/relay/` — a zero-dependency Cloudflare Worker that routes org webhooks into the same workflows. This repo dogfoods its own automation via `.github/githubai.yml` (profile: `template`).
 
+`ai-seed/` is the imported [bamr87/ai-seed](https://github.com/bamr87/ai-seed) project (full history). It is self-contained reference: nothing at the root imports it, root CI does not test it, and its nested workflows never run. Work inside it from its own directory and read its own `CLAUDE.md`.
+
 ## Commands
 
 - Test: `python3 -m pytest -q` (needs `pip install -r requirements-dev.txt`)
