@@ -1,0 +1,53 @@
+# Core dependencies
+fastapi
+uvicorn[standard]
+pydantic>=2
+python-multipart
+
+# AI and LLM dependencies
+crewai
+crewai-tools
+langchain
+langchain-openai
+langchain-anthropic
+langchain-community
+langchain-core
+
+# Agent tools and integrations
+composio-crewai
+requests
+
+# Data and utilities
+pyyaml
+python-dotenv
+aiofiles
+
+# Vector storage for memory
+pinecone-client
+faiss-cpu
+numpy
+
+# GitHub integration
+PyGithub
+gitpython
+
+# Development and testing
+pytest
+pytest-asyncio
+pytest-cov
+pytest-mock
+httpx
+
+# Code quality
+flake8
+mypy
+black
+isort
+bandit
+
+# Documentation
+mkdocs
+mkdocs-material
+mkdocstrings[python]
+mkdocs-gen-files
+mkdocs-literate-nav

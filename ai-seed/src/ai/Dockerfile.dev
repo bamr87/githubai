@@ -1,0 +1,26 @@
+# AI Evolution Engine Development Dockerfile
+# pinned: same CrewAI stack as the root Dockerfile — no crewai release for
+# Python 3.14 (ai-seed#78). Hold at 3.13 until crewai ships cp314.
+FROM python:3.13-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements file
+COPY requirements.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy source code
+COPY . .
+
+# Expose port for Flask
+EXPOSE 5000
+
+# Start development server
+CMD ["python", "main.py"]

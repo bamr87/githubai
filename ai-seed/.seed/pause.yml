@@ -1,0 +1,18 @@
+# =============================================================================
+# .seed/pause.yml — the repo-local growth kill switch
+# =============================================================================
+# The single, model-free way to halt EVERY seed loop in this repo for incident
+# response (a cost runaway, a bad prompt, a feedback loop) WITHOUT editing
+# workflows. Every seed workflow's gate job reads this file before anything
+# else runs.
+#
+#   paused: true   -> every seed loop (germinate, grow, evolve, garden) skips
+#                     before any model pass; read-only checks still run.
+#   paused: false  -> normal operation.
+#
+# A human sets paused: true for an incident and records why; resuming is a
+# human edit back to false. Agents NEVER edit this file.
+paused: false
+reason: ""
+set_by: ""
+set_at: ""
