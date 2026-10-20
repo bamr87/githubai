@@ -1,0 +1,139 @@
+# =============================================================================
+# .seed/seed.yml — the seed manifest (schema: seed-manifest/v1)
+# =============================================================================
+# The machine-readable identity, policy, and constitution of this planted repo.
+# Stamped by the AI-Seed planter (tools/seed.py plant) from bamr87/ai-seed.
+#
+# POLICY OVER WORKFLOW: model tiers, cadence, gates, and the auth contract live
+# HERE, not in workflow files. Workflows read this file at runtime; changing a
+# tier or a cadence is a data edit. (Exception: the grow cron is stamped into
+# seed-grow.yml at plant time because GitHub cannot read schedules from data —
+# edit it here, then re-render with `python3 .seed/tools/seed.py plant . --update`
+# so the manifest and the workflow never disagree.)
+#
+# GUARDRAILS ARE AGENT-READ-ONLY: agents read this file to learn their bounds;
+# only human-reviewed pull requests may change it. Secret VALUES never live in
+# this file (or any file) — the auth block only NAMES which secret does what.
+
+schema: seed-manifest/v1
+
+seed:
+  name: __SEED_NAME__
+  repo: __SEED_REPO__
+  default_branch: __SEED_DEFAULT_BRANCH__
+  planted: __SEED_PLANTED__
+  kernel_version: __SEED_KERNEL_VERSION__
+  planted_from: __SEED_PLANTED_FROM__
+
+concept:
+  file: CONCEPT.md
+
+policy:
+  # Model escalation tiers for the grow tick (plan -> build -> verify) and the
+  # one-shot germination pass. Use authoritative model IDs.
+  models:
+    plan: claude-haiku-5-5
+    build: claude-sonnet-5-5
+    verify: claude-opus-5-5
+    germinate: claude-opus-5-5
+  cadence:
+    # UTC cron for the scheduled grow tick (also stamped into seed-grow.yml).
+    grow_cron: "__SEED_GROW_CRON__"
+    # UTC cron for the standalone tend cycle (also stamped into seed-tend.yml).
+    # Tending is cheap on a clean board — a deterministic survey and nothing
+    # else — so it runs more often than growth.
+    tend_cron: "__SEED_TEND_CRON__"
+    # One bounded, reviewable increment per tick. Raising this widens PRs;
+    # prefer more ticks over bigger ones.
+    increments_per_tick: 1
+
+  # THE BOARD PRECONDITION. Growth is contingent on a clear board: every tick
+  # TENDS first (review CI, repair red or conflicted PRs, merge what is
+  # eligible, hand approved issues to the evolve lane) and only GROWS when
+  # nothing actionable is left. A backlog of half-finished work is not a base
+  # to build on.
+  #
+  # Items a human has explicitly parked (ignore_labels) do NOT count against
+  # the board — otherwise one held issue freezes the repo forever.
+  #
+  # TWO caps, doing different jobs. `max_repairs_per_run` bounds one tick's
+  # spend. `max_repair_attempts` bounds a single pull request's LIFETIME: after
+  # that many repair passes the lane stops trying, applies the block label, and
+  # hands it to a human. Without a per-PR budget an unfixable PR is retried
+  # every tick forever and permanently blocks the board — an autonomous fixer
+  # needs a terminal state as much as it needs a retry.
+  board:
+    clear_before_grow: true
+    ignore_labels: [seed:hold, human-review]
+    max_repairs_per_run: 3
+    max_repair_attempts: 3
+
+  # AUTO-MERGE. The seed may merge its OWN work once it is provably green.
+  # Every condition below must hold; each is a hard stop, not a heuristic:
+  #   require_checks   every check run concluded success (none failing/pending)
+  #   require_clean    mergeable, no conflicts with the base
+  #   block_labels     any of these present => a human decides, never the seed
+  #   allow_branches   only lanes the seed itself authored
+  #   allow_bots       dependency bots, held to the same green-CI bar
+  # A PR that fails ANY condition is left open for a human — that is the
+  # designed outcome, not a failure. Precedent: gitorio ADR-015 hardened its
+  # merge policy after an incident auto-merging unvetted dependency PRs.
+  #
+  # NOT configurable, on purpose: a PR that touches .github/workflows/** is
+  # never auto-merged, however green. Those workflows run with this repo's
+  # secrets, so merging one is a privilege change — letting policy opt out of
+  # that check would let the loop widen its own powers.
+  merge:
+    auto: true
+    method: squash
+    require_checks: true
+    require_clean: true
+    block_labels: [human-review, seed:hold, do-not-merge]
+    allow_branches: [seed/*]
+    allow_bots: [dependabot]
+
+# Consent surface: each autonomous loop is IDLE until a human sets its repo
+# variable to "true". The variable is the consent; deleting it is the off
+# switch. The planter never sets these — a human does.
+gates:
+  grow: SEED_GROW_ENABLED
+  evolve: SEED_EVOLVE_ENABLED
+  tend: SEED_TEND_ENABLED
+
+# The token contract (names only, never values):
+#   primary    — Claude Code OAuth token from `claude setup-token` (subscription).
+#   fallback   — metered Anthropic API key; fired only on evidence the OAuth
+#                passes failed or produced nothing.
+#   cross_repo — fine-grained PAT: pushes grow branches + opens PRs so CI fires
+#                on them (github.token pushes fire NO workflow events), and
+#                lets a garden hub dispatch this repo's workflows.
+auth:
+  primary: CLAUDE_CODE_OAUTH_TOKEN
+  fallback: ANTHROPIC_API_KEY
+  cross_repo: SEED_PAT
+
+kernel:
+  # true => kernel/installation parity drift is an ERROR in `seed.py check`
+  # (the framework repo runs strict; planted repos may customize and keep
+  # this false, accepting drift warnings as the record of divergence).
+  strict: false
+
+telemetry:
+  ledger: .seed/telemetry/evolution.jsonl
+
+# The constitution. Restated for agents in CLAUDE.md; enforced where checkable
+# by `seed.py check` and by workflow-owned publish steps. Never weaken.
+guardrails:
+  # Every autonomous write still arrives as a pull request — that is frozen.
+  pr_only: true
+  # Merging is POLICY-GATED rather than forbidden (see policy.merge). The
+  # three keys below are the hard stops and `seed.py check` enforces them:
+  # the seed may never merge something red, never merge something a human
+  # authored, and never merge past a human's block label.
+  merge_requires_green: true
+  merge_human_authored: false
+  merge_blocked_by_label: human-review
+  workflows_agent_writable: false
+  kill_switch: .seed/pause.yml
+  quarantine_untrusted: true
+  perpetual: true
