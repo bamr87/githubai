@@ -50,6 +50,11 @@ concurrency:
 
 jobs:
   maintain:
+    # Kill switch (fleet convention — bamr87/bamr87 docs/HARNESS-OPS.md): a scheduled
+    # agent must be disarmable from the repo's Variables, without a commit. The
+    # variable absent or anything but 'false' keeps the schedule on; a manual
+    # dispatch always runs.
+    if: ${{ github.event_name != 'schedule' || vars.CLAUDE_MAINTENANCE_ENABLED != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     permissions:
