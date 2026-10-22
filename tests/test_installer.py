@@ -25,7 +25,7 @@ def parse_installer_labels(text):
 
 
 def test_installer_labels_match_taxonomy(repo_root, profiles_dir):
-    """CLAUDE.md sync duty: _base.yml taxonomy and install.sh LABELS move together."""
+    """AGENTS.md sync duty: _base.yml taxonomy and install.sh LABELS move together."""
     taxonomy = {
         entry["name"]: entry["color"]
         for entry in load_yaml(profiles_dir / "_base.yml")["labels"]["taxonomy"]

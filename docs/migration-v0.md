@@ -1,5 +1,7 @@
 # Migrating from GitHubAI v0.x
 
+> Where every capability of the v0.x Django application went in the framework.
+
 Through v0.5.3, GitHubAI was a self-hosted Django + React + Celery + Postgres application with an OpenAI-based issue pipeline. The v1 rebuild replaced it with the GitHub-native, Claude Code-powered framework this repo now contains: no hosting, OAuth-first auth, adoption by installer instead of deployment. The last application-stack release is preserved in git history at tag/commit `v0.5.3` (`ad024a8`) — check that out if you need the old stack.
 
 ## Feature map

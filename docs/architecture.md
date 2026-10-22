@@ -1,5 +1,7 @@
 # Architecture
 
+> The design decisions behind GitHubAI and the invariants each one protects.
+
 GitHubAI's architecture is the deliberate absence of one: no servers, no database, no queue — GitHub Actions is the runtime, GitHub itself is the UI and state store, and Claude Code (via `anthropics/claude-code-action@v1`) is the only compute. App mode adds exactly one process to that picture, a webhook router, and the decisions below are largely about keeping it from becoming anything more. This page records what holds and why.
 
 ## The shape
