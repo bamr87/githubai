@@ -37,7 +37,9 @@ app:
   # Optional install step (CI runs `npm install` / `bundle install` /
   # `pip install -r requirements.txt` automatically when the manifest exists;
   # set this to override).
-  install: ""
+  # pyproject.toml only configures dev tools (no package), so the default
+  # `pip install -e .` fallback fails; install the self-test deps instead.
+  install: "pip install --quiet -r requirements-dev.txt"
 
 # Named viewports scenarios can reference by name.
 viewports:
