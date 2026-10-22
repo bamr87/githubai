@@ -1,5 +1,7 @@
 # Getting started
 
+> Adopt GitHubAI in any repo: install, secrets, configuration and the first issue.
+
 Adopting GitHubAI takes one command, two credentials steps, and one config edit. You need: a repo you maintain, the [GitHub CLI](https://cli.github.com/) authenticated, and a Claude subscription (or an Anthropic API key as fallback).
 
 ## 1. Install the framework files

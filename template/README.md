@@ -1,5 +1,7 @@
 # Template files installed into consumer repos
 
+> The files `setup/install.sh` copies into an adopting repo, and what each one is for.
+
 Everything in this directory is what `setup/install.sh` copies into a repository adopting GitHubAI. The workflow files are thin callers: all logic lives in this repo's reusable workflows (`.github/workflows/claude-*.yml`), so consumers update by ref, not by re-copying files.
 
 | File | Installed to | Purpose |

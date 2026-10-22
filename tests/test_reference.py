@@ -21,3 +21,14 @@ def test_generated_reference_covers_every_claude_workflow(repo_root, claude_work
     for path in claude_workflow_files:
         assert f"## `{path.name}`" in reference, f"docs/reference/workflows.md has no section for {path.name}"
 
+
+def test_docs_index_is_fresh(repo_root):
+    """docs/README.md is generated from each document's summary line (tools/docs_index.py)."""
+    result = subprocess.run(
+        [sys.executable, str(repo_root / "tools" / "docs_index.py"), "--check", "--root", str(repo_root)],
+        check=False,
+        capture_output=True,
+        text=True,
+        cwd=repo_root,
+    )
+    assert result.returncode == 0, result.stderr or result.stdout
