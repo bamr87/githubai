@@ -13,4 +13,4 @@
 | [Marketplace](../app/MARKETPLACE.md) | What is built, what a listing still needs, what is undecided |
 | [Migration from v0.x](migration-v0.md) | Where every v0 Django-app feature went |
 
-Repo-type standards live in [profiles/](../profiles/), template files in [template/](../template/), and the product requirements in [PRD.md](../PRD.md).
+Repo-type standards live in [profiles/](../profiles/), template files in [template/](../template/), and the product requirements in [PRD.md](PRD.md).
