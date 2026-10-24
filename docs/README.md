@@ -13,7 +13,6 @@ New to GitHubAI? Read [getting-started.md](getting-started.md), then [configurat
 | --- | --- |
 | [`AGENTS.md`](../AGENTS.md) | GitHubAI, the GitHub-native framework that wires Claude Code into the whole SDLC: reusable workflows, a config action, repo-type profiles, an installer, and a GitHub App relay. |
 | [`CHANGELOG.md`](../CHANGELOG.md) | Release history: the notable changes in each version, newest first. |
-| [`PRD.md`](../PRD.md) | The product requirements: why GitHubAI exists, the promise it makes, its public API, invariants, milestones and scope. |
 | [`app/`](../app/README.md) | GitHubAI as a GitHub App: org-scale event routing, org policy, and the activity dashboard. |
 | [`profiles/`](../profiles/README.md) | The repo-type profiles: what each one sets, how the three config layers merge, and how to add a profile. |
 | [`template/`](../template/README.md) | The files `setup/install.sh` copies into an adopting repo, and what each one is for. |
@@ -26,8 +25,10 @@ New to GitHubAI? Read [getting-started.md](getting-started.md), then [configurat
 | [`docs/configuration.md`](configuration.md) | The full `.github/githubai.yml` schema, the profile merge semantics, and the org-policy layer for app mode. |
 | [`docs/getting-started.md`](getting-started.md) | Adopt GitHubAI in any repo: install, secrets, configuration and the first issue. |
 | [`docs/migration-v0.md`](migration-v0.md) | Where every capability of the v0.x Django application went in the framework. |
+| [`docs/PRD.md`](PRD.md) | The product requirements: why GitHubAI exists, the promise it makes, its public API, invariants, milestones and scope. |
 | [`docs/security.md`](security.md) | The auth model, who can authorize what, how untrusted issue and PR content is contained, and the auto-merge gate. |
 | [`docs/workflows.md`](workflows.md) | What each Claude workflow does, when it fires and what gates it, and how this repo's own CI guards the framework. |
+| [`docs/adr/`](adr/README.md) | This directory records decisions for githubai that are hard to reverse: the stack, data model, security model, public interfaces, and any relaxation of a gate. |
 
 ### `docs/reference/`
 
