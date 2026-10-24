@@ -1,5 +1,7 @@
 # Security model
 
+> The auth model, who can authorize what, how untrusted issue and PR content is contained, and the auto-merge gate.
+
 GitHubAI automates high-trust operations (labeling, implementing, reviewing, merging), so the design is explicit about who authorizes what, which credentials exist where, and how untrusted content is contained.
 
 ## Authentication

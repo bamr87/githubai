@@ -1,5 +1,7 @@
 # What the hosted relay stores
 
+> Exactly what the hosted relay stores, why, and for how long.
+
 This is the factual inventory of data the GitHubAI relay holds, why each item exists, and how long it lives. It is written to be verifiable against the code — [`relay/schema.sql`](relay/schema.sql) is the complete schema, and [`relay/src/store.js`](relay/src/store.js) contains every statement that touches it. A published Marketplace listing needs a privacy policy; this document is the accurate technical basis for one, not a substitute for legal review.
 
 ## Never stored

@@ -1,5 +1,7 @@
 # Marketplace listing
 
+> What is built for a Marketplace listing, what a listing still needs, and what is undecided.
+
 What is built, what a listing still requires, and the decisions that are deliberately still open. The relay code is listing-ready; publishing is a business decision, not an engineering one.
 
 ## Built

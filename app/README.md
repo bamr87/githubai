@@ -1,5 +1,7 @@
 # GitHubAI as a GitHub App
 
+> GitHubAI as a GitHub App: org-scale event routing, org policy, and the activity dashboard.
+
 Two ways to run GitHubAI. **Actions-only mode is the default** and needs nothing from this directory: the installer drops per-event workflow stubs into each repo and GitHub Actions does the rest. **App mode** exists for org-scale rollouts — one installation surface instead of per-repo stubs, org-wide routing policy, and one place to see what the automation did across every repository.
 
 What app mode does *not* change is the trust model. Claude still runs only inside each repository's own Actions run, with that repository's own `CLAUDE_CODE_OAUTH_TOKEN`. The relay's App token is used for exactly one thing: firing `repository_dispatch`.
