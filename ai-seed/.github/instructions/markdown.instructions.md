@@ -434,8 +434,7 @@ $ ls -la total 24 drwxr-xr-x  6 user staff  192 Jul 19 10:30 . drwxr-xr-x  3 use
 # Use diff format for showing changes
 ```diff
 - const oldValue = 'deprecated';
-+ const newValue = 'updated';
-  const unchangedValue = 'same';
++ const newValue = 'updated'; const unchangedValue = 'same';
 ```
 ```
 
@@ -1144,19 +1143,15 @@ site_name: Documentation theme: name: material features:
     - content.code.copy
 
 markdown_extensions:
-  - toc:
-      permalink: true
+  - toc: permalink: true
   - admonition
   - pymdownx.details
-  - pymdownx.superfences:
-      custom_fences:
+  - pymdownx.superfences: custom_fences:
         - name: mermaid
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
-  - pymdownx.tabbed:
-      alternate_style: true
-  - pymdownx.tasklist:
-      custom_checkbox: true
+  - pymdownx.tabbed: alternate_style: true
+  - pymdownx.tasklist: custom_checkbox: true
 
 plugins:
   - search
