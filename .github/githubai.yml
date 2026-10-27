@@ -47,5 +47,6 @@ standards:
   required_files:
     - README.md
     - LICENSE
+    - AGENTS.md
     - CLAUDE.md
     - docs/README.md

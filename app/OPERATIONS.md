@@ -1,5 +1,7 @@
 # Relay operations runbook
 
+> Deploying, configuring, monitoring and troubleshooting the hosted relay.
+
 Everything needed to stand up, run, and troubleshoot the GitHubAI hosted relay. The relay is a single Cloudflare Worker with one D1 database and no build step.
 
 ## Prerequisites

@@ -1,5 +1,7 @@
 # GitHubAI Product Requirements Document
 
+> The product requirements: why GitHubAI exists, the promise it makes, its public API, invariants, milestones and scope.
+
 ## 0. WHY
 
 **North Star**: Every repository ships with an AI staff engineer. GitHubAI makes Claude Code a first-class participant in the whole SDLC — triage, implementation, review, merging, maintenance, releases — installable in any repo in one command.

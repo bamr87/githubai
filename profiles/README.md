@@ -1,5 +1,7 @@
 # Repo-type profiles
 
+> The repo-type profiles: what each one sets, how the three config layers merge, and how to add a profile.
+
 A profile is a YAML file that encodes the standards and automation posture for one kind of repository. The consumer repo picks a profile with `repo.type` in `.github/githubai.yml`, and the [load-config action](../actions/load-config/) resolves the effective configuration in three layers: `_base.yml` first, then the selected profile, then the consumer's `githubai.yml`. Maps merge deeply; lists replace the inherited value outright.
 
 | Profile | For |

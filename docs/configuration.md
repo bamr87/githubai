@@ -1,5 +1,7 @@
 # Configuration reference
 
+> The full `.github/githubai.yml` schema, the profile merge semantics, and the org-policy layer for app mode.
+
 GitHubAI resolves each repo's effective configuration by deep-merging three layers, later layers winning: [`profiles/_base.yml`](../profiles/_base.yml) → [`profiles/<repo.type>.yml`](../profiles/) → the repo's `.github/githubai.yml`. Maps merge recursively; **lists and scalars replace** the inherited value (so overriding `auto_merge.allowed_paths` replaces the whole list). The [load-config action](../actions/load-config/action.yml) performs the merge in every workflow run and injects the result into Claude's prompt as a standards block; inspect it locally with:
 
 ```bash
