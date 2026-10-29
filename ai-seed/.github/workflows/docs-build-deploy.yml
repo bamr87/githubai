@@ -1,0 +1,114 @@
+name: "docs-build-deploy"
+
+on:
+  push:
+    branches: [main]
+    paths: 
+      - 'docs/**'
+      - 'src/**'
+      - 'agents/**'
+      - 'mkdocs.yml'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  issues: write
+  actions: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      pages: ${{ steps.pages.outcome }}
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install mkdocs-material mkdocstrings[python] mkdocs-gen-files mkdocs-literate-nav
+
+      - name: Generate API documentation
+        run: |
+          python scripts/generate_docs.py
+
+      - name: Build documentation
+        run: |
+          mkdocs build --clean
+
+      # Publishing is best-effort; BUILDING is the real signal.
+      #
+      # configure-pages fails hard when GitHub Pages is not enabled for the
+      # repository, which failed this workflow on every push to the default
+      # branch even though the docs built cleanly — and each failure filed a
+      # triage issue, so a repo setting quietly became an unbounded issue
+      # stream. Treat Pages as optional: a broken docs build still fails the
+      # job (steps above), while an unconfigured Pages site downgrades to a
+      # notice and skips publishing.
+      - name: Setup Pages
+        id: pages
+        continue-on-error: true
+        uses: actions/configure-pages@v6
+
+      - name: Note that Pages is not enabled
+        if: steps.pages.outcome != 'success'
+        run: |
+          echo "::notice::Docs built successfully, but GitHub Pages is not enabled for this repository, so nothing was published. Enable it under Settings -> Pages (Source: GitHub Actions) to deploy."
+
+      - name: Upload artifact
+        if: steps.pages.outcome == 'success'
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: site/
+
+      - name: Prepare triage on failure
+        if: failure()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          sudo apt-get update -y && sudo apt-get install -y unzip
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          mkdir -p logs
+          gh api \
+            -H "Accept: application/vnd.github+json" \
+            repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/logs > logs.zip || true
+          unzip -o logs.zip -d logs || true
+          python scripts/triage_failure.py \
+            --workflow-name "${{ github.workflow }}" \
+            --run-url "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            --git-ref "${{ github.ref }}" \
+            --commit-sha "${{ github.sha }}" \
+            --logs-root logs \
+            --tail-lines 200
+
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: build
+    # Skip publishing when Pages is not enabled, rather than failing the run.
+    if: needs.build.outputs.pages == 'success'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

@@ -120,9 +120,12 @@ app/                 GitHub App: manifest, multi-tenant relay, operations docs
 docs/                getting started, configuration, workflows, security, architecture; reference/ is generated
 tests/               self-tests keeping the framework honest
 tools/               docs generators and the vendored markdown prose gate
+ai-seed/             the imported ai-seed project (see below)
 ```
 
 This repo runs its own framework — the workflows above are live here, configured by [.github/githubai.yml](.github/githubai.yml) with the `template` profile. If the machinery doesn't work on itself, it doesn't ship.
+
+[`ai-seed/`](ai-seed/) is [bamr87/ai-seed](https://github.com/bamr87/ai-seed) — a plantable kernel that lets a repository germinate from a written concept and grow one draft PR at a time — imported with its full history. It is reference material, not part of the framework: its workflows sit under `ai-seed/.github/workflows/` and never run from a subdirectory, and its tests are outside this repo's `testpaths`. Run it from that directory (`cd ai-seed && python3 tools/seed.py --help`).
 
 ## Development
 

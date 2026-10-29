@@ -7,6 +7,7 @@ All notable changes to this project are documented in this file. The format is b
 ### Added
 
 - `CHANGELOG.md`, in Keep a Changelog format.
+- `ai-seed/`: [bamr87/ai-seed](https://github.com/bamr87/ai-seed) imported with its full history, as reference material; its thin `ci.yml` and `markdown-oneline.yml` callers were dropped because the root runs both.
 
 ### Changed
 

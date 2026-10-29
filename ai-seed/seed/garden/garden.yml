@@ -1,0 +1,32 @@
+# =============================================================================
+# garden.yml — the roster for a garden hub (schema: seed-garden/v1)
+# =============================================================================
+# A garden is a repo that orchestrates the growth of MANY planted repos. This
+# file is the registry: every orchestration decision reads it, and adding or
+# removing a member is a one-line reviewable diff.
+#
+# Install (from a repo planted with the AI-Seed kernel):
+#   cp this file to .seed/garden.yml, edit the roster, then copy
+#   garden-orchestrate.yml into .github/workflows/. The orchestrator stays
+#   idle until a human sets the GARDEN_ENABLED repo variable to "true" and the
+#   SEED_PAT secret (with actions:write on every member) exists.
+#
+# Selection is STATELESS: the orchestrator asks each member's Actions API for
+# its last seed-grow run and grows the stalest first (never-grown members sort
+# to the front) — no state file, no machine pushes to this repo's default
+# branch. The per-run cap bounds daily spend while every member still grows
+# perpetually, just not all every day.
+
+schema: seed-garden/v1
+
+garden:
+  # Grow at most this many members per orchestrator run (0 = every member).
+  repos_per_run: 2
+
+members:
+  # One entry per planted repo, full owner/name. Members keep their own
+  # consent surface: a dispatch reaches a member whose SEED_GROW_ENABLED
+  # variable is unset and idles there — the garden cannot bypass a member's
+  # gates, only invite them to grow.
+  - repo: owner/example-repo-1
+  - repo: owner/example-repo-2

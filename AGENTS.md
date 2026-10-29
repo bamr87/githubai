@@ -8,6 +8,8 @@
 
 Almost none of GitHubAI is application code: the product is reusable workflows (`.github/workflows/claude-*.yml`), a composite action (`actions/load-config/`), repo-type profiles (`profiles/`), and an installer plus template files (`setup/`, `template/`) that adopting repos consume at a ref. The one real program is the multi-tenant GitHub App relay in `app/relay/`, a zero-dependency Cloudflare Worker that routes org webhooks into the same workflows. This repo dogfoods its own automation through `.github/githubai.yml` (profile `template`). Read [README.md](README.md) for what the product does. A change is done when the commands below pass and every sync duty it touches is done in the same PR.
 
+`ai-seed/` is the imported [bamr87/ai-seed](https://github.com/bamr87/ai-seed) project (full history). It is self-contained reference: nothing at the root imports it, root CI does not test it, and its nested workflows never run. Work inside it from its own directory and read its own `CLAUDE.md`.
+
 ## Stack & commands
 
 ```bash
