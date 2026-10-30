@@ -23,12 +23,14 @@ New to GitHubAI? Read [getting-started.md](getting-started.md), then [configurat
 | --- | --- |
 | [`docs/architecture.md`](architecture.md) | The design decisions behind GitHubAI and the invariants each one protects. |
 | [`docs/configuration.md`](configuration.md) | The full `.github/githubai.yml` schema, the profile merge semantics, and the org-policy layer for app mode. |
+| [`docs/constitution.md`](constitution.md) | The rules every change to this repo must satisfy, whoever makes it — a human or an AI agent. Agents read this before [AGENTS.md](../AGENTS.md) conventions, the [PRD](PRD.md), or the [feature catalog](../features/features.yml). Ratified by… |
 | [`docs/getting-started.md`](getting-started.md) | Adopt GitHubAI in any repo: install, secrets, configuration and the first issue. |
 | [`docs/migration-v0.md`](migration-v0.md) | Where every capability of the v0.x Django application went in the framework. |
 | [`docs/PRD.md`](PRD.md) | The product requirements: why GitHubAI exists, the promise it makes, its public API, invariants, milestones and scope. |
 | [`docs/security.md`](security.md) | The auth model, who can authorize what, how untrusted issue and PR content is contained, and the auto-merge gate. |
 | [`docs/workflows.md`](workflows.md) | What each Claude workflow does, when it fires and what gates it, and how this repo's own CI guards the framework. |
 | [`docs/adr/`](adr/README.md) | This directory records decisions for githubai that are hard to reverse: the stack, data model, security model, public interfaces, and any relaxation of a gate. |
+| [`docs/amendments/`](amendments/README.md) | The append-only log of changes to [the constitution](constitution.md). |
 
 ### `docs/reference/`
 
