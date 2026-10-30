@@ -41,7 +41,7 @@ python3 tools/docs_index.py --write        # regenerate the docs index in docs/R
 
 - **Backlog of record:** GitHub Issues. `claude:implement` authorizes implementation; leave `claude:skip` and `claude:needs-human` items to a human ([label taxonomy](docs/reference/labels.md)).
 - **Definition of Done:** the sections of `.github/pull_request_template.md` (what and why, how verified, risk and compatibility) are filled in, the commands above pass, and the sync duties below are done.
-- **Decisions:** design decisions and the invariants behind them live in [docs/architecture.md](docs/architecture.md); there is no `docs/adr/` yet.
+- **Decisions:** design decisions and the invariants behind them live in [docs/architecture.md](docs/architecture.md); individual decision records live in [docs/adr/](docs/adr/README.md).
 - **Commits:** Conventional Commits (`feat fix docs style refactor test chore perf ci build`); a breaking change to the public API is `feat!:`/`fix!:`.
 - **Branches:** trunk-based, short-lived `feature/`, `fix/`, `docs/`, `refactor/`, `test/` or `chore/` branches off `main` (the implement lane uses `claude/`); never push to `main`.
 - **Changelog:** `CHANGELOG.md` (Keep a Changelog); the release workflow's prepare mode updates it and `VERSION`.
