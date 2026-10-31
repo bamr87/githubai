@@ -2,6 +2,28 @@
 
 All notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0](https://github.com/bamr87/githubai/compare/v0.5.3...v0.6.0) (2026-10-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* rebuild GitHubAI as the Claude Code SDLC framework (OAuth-first) ([#101](https://github.com/bamr87/githubai/issues/101))
+
+### Added
+
+* **app:** hosted multi-tenant GitHub App relay (PRD M3) ([#110](https://github.com/bamr87/githubai/issues/110)) ([3407e57](https://github.com/bamr87/githubai/commit/3407e57619c9078871f6bc8a107b3b73c86eaaf9))
+* import bamr87/ai-seed under ai-seed/ with full history ([#123](https://github.com/bamr87/githubai/issues/123)) ([aa7ad71](https://github.com/bamr87/githubai/commit/aa7ad71e35f43c7112c403a0e2b24542331e15fd))
+* rebuild GitHubAI as the Claude Code SDLC framework (OAuth-first) ([#101](https://github.com/bamr87/githubai/issues/101)) ([2aa67ca](https://github.com/bamr87/githubai/commit/2aa67cadee39b9234bf74fb049b6a1fc16709b8e))
+
+
+### Fixed
+
+* **ci:** raise max_turns to 100 so weekly maintenance can finish ([#115](https://github.com/bamr87/githubai/issues/115)) ([40faa4d](https://github.com/bamr87/githubai/commit/40faa4d7a6eb5388f1cf6063a8f19d033b4dfd6d))
+* concurrency guard on claude.yml and docs drift from [#114](https://github.com/bamr87/githubai/issues/114) ([#116](https://github.com/bamr87/githubai/issues/116)) ([ebf0e54](https://github.com/bamr87/githubai/commit/ebf0e545199e0373d9528c3a7dba7a28271435b1))
+* **release:** gate release-please on its credential; stop the version going backwards ([8039532](https://github.com/bamr87/githubai/commit/803953270b3f188650c136f06a4433096f101e68))
+* **release:** gate release-please on its credential; stop the version going backwards ([aa73ddb](https://github.com/bamr87/githubai/commit/aa73ddbfbc3aaf03c422ff96c89e11dfe9eebacc))
+* **workflows:** allow dependabot/renovate actors in review and auto-merge ([#117](https://github.com/bamr87/githubai/issues/117)) ([3db71f8](https://github.com/bamr87/githubai/commit/3db71f8d978fbae17e45850899b4c46e953632b4))
+
 ## [Unreleased]
 
 ### Added
