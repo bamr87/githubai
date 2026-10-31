@@ -160,9 +160,54 @@ Surveyed from published documentation and papers; versions and licences should b
 | [SWE-bench](https://www.swebench.com/) / Defects4J / [BugsInPy](https://github.com/soarsmu/BugsInPy) | Benchmarks that replay real fixes from history in a sandbox and score against real tests | Exactly the *validation-by-replay* method for recipes | **Adopt method**: checkout parent SHA, apply agent work on a sandbox branch, run the real later tests (fail-to-pass / pass-to-pass) |
 | [GrimoireLab / Perceval](https://chaoss.github.io/grimoirelab/) | Collect forge data (issues, PRs, reviews) at scale | Heavier than needed; identity-centric dashboards | **Not adopted**; `gh api` through each repo's adapter suffices |
 | Conventional Commits / [git-cliff](https://git-cliff.org/) / release-please | Commit type parsing; changelog from history | Both repos already use Conventional Commits; `fix:` types seed bug-fix chains | **Adopt** the convention as a labelling input (already in force) |
+| [TokenEconomizer](https://github.com/microsoft/TokenEconomizer) (Apache-2.0) | Coding-agent plugin: micro-skills, tool pruning, failure-loop guard; claims 18–31% lower cost on SWE-Bench | Agent passes that run again and again in the same repo | **Adopt** as-is, opt-in, pinned, shadow first; see §8.1 |
 | Jev (hub numbering + fragments) | `HUB-NEW`/`FR-NEW` placeholders, `features.d/` and `changelog.d/` fragments numbered at merge | The fleet's own standard for ids in proposals | **Adopt** for every new id in this proposal |
 
 **Net decision.** Build a small, auditable core in each repo's existing language (TypeScript in GWTP, stdlib Python in ai-seed) that reimplements published methods (SZZ, isotonic calibration, bandit replay, SWE-bench-style replay); adopt PyDriller as AI seed's offline mining library; adopt OpenRewrite's recipe *shape*; adopt Jev for numbering. No hosted service, no online RL framework.
+
+### 8.1 TokenEconomizer (microsoft/TokenEconomizer): token-cost control for the agent loops
+
+Added 2026-10-30 at Amr's request. Facts below were read from the repository README and LICENSE at commit `e428fc9` and the GitHub API on that date. Re-check them before implementation, because the project is about 2.5 weeks old.
+
+**What it is.** [microsoft/TokenEconomizer](https://github.com/microsoft/TokenEconomizer) ("Experience-Driven Black-Box Cost Control for Coding Agents"; UC Berkeley + Microsoft Research; paper [arXiv 2610.22732](https://arxiv.org/abs/2610.22732)) is a **plugin, not a library**. It works with Claude Code, Codex, GitHub Copilot CLI and Pi, and opencode support is experimental. It leaves the agent unchanged and learns from earlier sessions in the same repository. It has three switchable mechanisms:
+- **Micro-skills** (off by default): learns repo facts such as "run `python -m pytest`" from repeated failures and from a proposer model call every *k* = 3 sessions. It injects a fact at session start once 3 sessions confirm it and drops the fact when later sessions contradict it. The `microskills=envfacts` mode learns from failures only and makes no model calls.
+- **Tool pruning** (on by default): leaves out tools that went unused (*p* = 10 prompts over at least *m* = 2 sessions, or *s* = 5 sessions). It does this through the agent's own settings, which for Claude Code is `.claude/settings.local.json`, kept out of git via `.git/info/exclude`. The `toolprune=propose` mode only proposes, and `toolprune restore` undoes it.
+- **Loop guard** (on by default): when a turn repeats failures, a judge model (confidence *c* ≥ 0.7) adds at most *r* = 1 redirect note. It **never stops a turn itself**; it only tells the operator.
+- Interfaces: slash commands and the `~/.tokeneconomizer/bin/te` CLI (`status`, `config`, `microskills`, `toolprune`, `doctor`). Settings use `TE_*` env vars, and `TE_DISABLE=1` turns the plugin off. State stays local in `~/.tokeneconomizer`. It needs **no API key of its own** and never handles credentials. Its own model calls go through the host agent, and they are counted in its cost reports, which use cache-aware pricing.
+- Reported result (the authors' own measurement on SWE-Bench, 5 agent–model combinations): **18.4–30.9% lower mean cost**, cheaper in 30/30 repo × combination cells, Pass@1 up in 4/5. On new-repo security benchmarks it saved 6–20%. Savings are largest for **repeated sessions in the same repository**.
+- Maturity: Apache-2.0. Created 2026-10-12 (MDT) and pushed daily, with about 2.1k stars. Agent support is pinned to narrow version windows (for example Claude Code 2.1.300–2.1.310, and "older versions not supported"). Research-grade, with no release tags.
+
+**Needs assessment.** Both designs add model-calling loops: per-commit triage, epoch synthesis, recipe drafting, replay judging, and the `tend` / germinate / grow / steward passes that run Claude Code in Actions. The research review (risk 6, "cost creep") and the open `ai-seed/CONCEPT.md §2` item "Cost governor" both say cost control must exist before any scheduled run. That need has two parts:
+1. **Pacing / budgets**: hard caps per run and per period (`--max-budget-usd`, the manifest budget block, `gate.budget`). TokenEconomizer does **not** do this.
+2. **Waste reduction inside a loop**: re-learning the repo, unused tool definitions, and stuck loops. This is what TokenEconomizer does, and building our own would duplicate a published, measured tool.
+
+**Build-vs-adopt decision: ADOPT as-is, opt-in, pinned, in shadow mode first. Do not build our own token-economy layer. Keep budget enforcement as our own (deterministic) build.**
+
+| Concern | Call |
+| --- | --- |
+| Waste reduction for Claude Code agent passes (tool pruning, loop guard) | **Adopt** TokenEconomizer, pinned to a commit SHA and installed from a clone on the runner. Enabled only by a repo variable (default OFF), the same consent model as the learner / kill switch |
+| Micro-skills | **Adopt in `envfacts` mode only** (no extra model calls) until a measurement shows the proposer pays back |
+| Budget caps and pacing (per run, per week, per repo) | **Build** (already planned): deterministic gate against the telemetry ledger. TokenEconomizer's `status` cost report is an *input* to that ledger, never the enforcer |
+| Cache-aware cost accounting ("count cost as it is billed", including the plugin's own calls) | **Adopt method** in our cost reports. Keep labelling it "API-equivalent (estimate)" |
+| Deterministic rungs (compiled erosion rules, SZZ, calibration arithmetic) | **Not applicable**: these already cost $0 in model tokens. No plugin there |
+
+**Guardrails for the integration.**
+- **Measurement hygiene.** TokenEconomizer changes agent behaviour: it injects facts, removes tools and adds redirects. Every run record must therefore carry `te: {enabled, sha, mechanisms}` in its input manifest. Learned calibrations, replay scores and A/B comparisons must never mix runs with TE on and TE off unless that field is a recorded covariate.
+- **Reproducibility.** Learned state (`~/.tokeneconomizer`) is per machine. On ephemeral CI runners it either starts cold every run, which loses most of the benefit, or is restored from an Actions cache keyed by repo + agent + TE SHA. A cached state is an input: hash it into the manifest, and never commit it.
+- **No new write path.** Tool pruning writes only `.claude/settings.local.json`, which TE excludes from git. A run's diff guard must still fail if any `.claude/`, `.codex/` or `.github/copilot/` settings file shows up in a pushed diff.
+- **Human stays in charge.** The loop guard only redirects and reports. It is not a substitute for our kill switch, repair budgets or `--max-budget-usd`, which remain the hard stops.
+- **Version drift.** The narrow supported-version window means a Claude Code bump on the runner can silently put TE outside support. Run `te doctor` as a pre-step and treat "unsupported" as "TE disabled for this run" (fail open, as TE itself does), and log it.
+- **Secrets.** TE needs no token. It must not be given one, and it adds no secret to any workflow.
+
+**License notes.** Apache-2.0, which is compatible with both repos. We **do not vendor** it. It is installed at run time from a pinned SHA, so no NOTICE obligation arises in our tree. If code is ever copied, for example the cache-pricing logic, keep its license header and add a NOTICE entry. The arXiv numbers are the authors' own claims, so cite them as such until we reproduce them.
+
+**Integration points in AI seed.**
+- **germinate / grow / steward / tend workflows** run Claude Code on the same planted repo every tick. That is TE's best case. Add an optional `policy.cost.token_economizer: {enabled: false, sha: <pinned>, mechanisms: [toolprune, loopguard], microskills: envfacts}` block to the manifest. The planter copies the *setting*, never TE itself. It lands together with the open **Cost governor** item (`CONCEPT.md §2`): the governor enforces the caps, and TE lowers the spend under them.
+- **Recipes vs micro-skills.** Micro-skills are a narrow, automatic form of a recipe's `prerequisites` / `pitfalls`, learned per machine. Treat TE facts confirmed in 3 or more sessions as **candidate pitfalls** that the recipe miner may cite, with provenance `te-microskill` and evidence count. They go through the same ≥ 2-independent-occurrences promotion rule (§2). Recipes stay the auditable, versioned source of truth.
+- **Replay validation (§4): TE OFF by default.** A replay compares an agent rebuild against real history. Injected facts and pruned tools change the agent, so replay scores must hold TE constant, either off or a pinned state hashed into the run manifest. Only then is a recipe-vs-history score comparable across runs and with GWTP's drift scores (counterbalance contract).
+- **Loop-guard events** in a grow/tend pass count toward the per-PR repair budget (`policy.board.max_repair_attempts`) as telemetry only. They never auto-escalate on their own.
+- **Phase R-TE (before any scheduled recipe-driven run):** shadow A/B over at least 20 grow passes on one garden repo. Keep TE on only if mean cost drops by 10% or more with no loss in merged-PR rate or verify pass rate.
+
 
 ## Counterbalance contract (shared section — identical in both proposals)
 
@@ -233,9 +278,11 @@ Following the hub rule that a standard evolves in the monorepo first, the schema
 +- [ ] Seed recipes: mined, replay-validated build instructions for a feature (intent, prerequisites, ordered steps, files, tests, pitfalls, acceptance, provenance) that feed germinate/grow and counterbalance GWTP drift scores (docs/proposals/seed-recipes.md).
 ```
 
+**`ai-seed/CONCEPT.md` §2, Cost governor item** (already open). Extend its text with: "…; optional TokenEconomizer (pinned, default off) reduces per-pass spend under the cap (docs/proposals/seed-recipes.md §8.1)."
+
 **`ai-seed/CONCEPT.md` §3** — append: "Recipes are data, not kernel: the kernel reads them when a repo opts in, and the planter never copies them."
 
-**githubai `docs/PRD.md` §5 M4** — add `FR-NEW: feature progressions are mined into replay-validated seed recipes, and disagreements with drift scoring are filed for a human` (placeholder; numbered at merge).
+**githubai `docs/PRD.md` §5 M4** — add `FR-NEW: feature progressions are mined into replay-validated seed recipes, and disagreements with drift scoring are filed for a human` (placeholder; numbered at merge). Add a second placeholder: `FR-NEW: agent passes may opt into a pinned token-economy plugin (TokenEconomizer) under the cost governor; replay and calibration runs record it in their manifest`.
 
 **githubai `features/features.yml`** — the catalog is still the `TODO-001` stub, so a planned entry `AISEED-NEW` "Seed recipes" (`implemented: false`, `docs: ai-seed/docs/proposals/seed-recipes.md`, `prd: [FR-NEW]`) should land together with the first real catalog entries rather than alone.
 
