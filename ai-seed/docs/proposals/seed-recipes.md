@@ -206,7 +206,7 @@ Added 2026-10-30 at Amr's request. Facts below were read from the repository REA
 - **Recipes vs micro-skills.** Micro-skills are a narrow, automatic form of a recipe's `prerequisites` / `pitfalls`, learned per machine. Treat TE facts confirmed in 3 or more sessions as **candidate pitfalls** that the recipe miner may cite, with provenance `te-microskill` and evidence count. They go through the same ≥ 2-independent-occurrences promotion rule (§2). Recipes stay the auditable, versioned source of truth.
 - **Replay validation (§4): TE OFF by default.** A replay compares an agent rebuild against real history. Injected facts and pruned tools change the agent, so replay scores must hold TE constant, either off or a pinned state hashed into the run manifest. Only then is a recipe-vs-history score comparable across runs and with GWTP's drift scores (counterbalance contract).
 - **Loop-guard events** in a grow/tend pass count toward the per-PR repair budget (`policy.board.max_repair_attempts`) as telemetry only. They never auto-escalate on their own.
-- **Phase R-TE (before any scheduled recipe-driven run):** shadow A/B over at least 20 grow passes on one garden repo. Keep TE on only if mean cost drops by 10% or more with no loss in merged-PR rate or verify pass rate.
+- **Phase R-TE (before any scheduled recipe-driven run):** shadow A/B over at least 20 grow passes on one garden repo. Keep TE on only if mean cost drops by 10% or more with no loss in merged-PR rate or verify pass rate. The 10% threshold is **proposed, not ratified**: it takes effect only when a maintainer ratifies it (ADR or amendment record) before the phase starts; until then TE stays default OFF.
 
 
 ## Counterbalance contract (shared section — identical in both proposals)
