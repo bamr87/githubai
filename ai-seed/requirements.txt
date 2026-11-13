@@ -1,7 +1,7 @@
 # Core dependencies
 fastapi
 uvicorn[standard]
-pydantic>=2.14.2
+pydantic>=2.14.3
 python-multipart
 
 # AI and LLM dependencies
