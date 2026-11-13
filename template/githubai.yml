@@ -18,7 +18,7 @@ repo:
   primary_language: ""
 
 claude:
-  # Model override for automation runs; empty = claude-code-action default.
+  # Model override for automation runs; empty = each workflow's pinned default.
   model: ""
   max_turns: 50
 

@@ -48,15 +48,22 @@ concurrency:
 
 jobs:
   evaluate:
+    # Kill switch (fleet convention — bamr87/bamr87 docs/HARNESS-OPS.md): the lane
+    # can be disarmed from the repo's Variables, without a commit. The variable
+    # absent or anything but 'false' keeps it on; a manual dispatch always runs.
+    #
     # Workflow-level prefilter; the authoritative gate (config allowed_authors
     # and allowed_paths) is enforced against the merged config below.
     if: |
-      github.event_name != 'pull_request' ||
+      (github.event_name == 'workflow_dispatch' || vars.CLAUDE_AUTO_MERGE_ENABLED != 'false') &&
       (
-        github.event.pull_request.head.repo.full_name == github.repository &&
+        github.event_name != 'pull_request' ||
         (
-          (github.event.action == 'labeled' && github.event.label.name == 'claude:auto-merge') ||
-          (github.event.action == 'opened' && contains(fromJSON('["dependabot[bot]","renovate[bot]"]'), github.event.pull_request.user.login))
+          github.event.pull_request.head.repo.full_name == github.repository &&
+          (
+            (github.event.action == 'labeled' && github.event.label.name == 'claude:auto-merge') ||
+            (github.event.action == 'opened' && contains(fromJSON('["dependabot[bot]","renovate[bot]"]'), github.event.pull_request.user.login))
+          )
         )
       )
     runs-on: ubuntu-latest
@@ -102,9 +109,15 @@ jobs:
           anthropic_api_key: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN == '' && secrets.ANTHROPIC_API_KEY || '' }}
           # claude-code-action refuses non-human actors unless listed; this workflow exists to evaluate their PRs.
           allowed_bots: "dependabot[bot],renovate[bot]"
+          # --model: `claude.model` from the repo config, else an exact id from the
+          # fleet's allowlist (bamr87/bamr87 _data/fleet.yml `ai_models.allowed`),
+          # never the action's default of the day. --max-budget-usd: a per-run
+          # ceiling (an API-equivalent estimate under OAuth); 0.15 USD a turn for
+          # 20 turns is 3, so it is the fleet's floor of 10.
           claude_args: |
             --max-turns 20
-            ${{ steps.cfg.outputs.model != '' && format('--model {0}', steps.cfg.outputs.model) || '' }}
+            --max-budget-usd 10
+            --model ${{ steps.cfg.outputs.model || 'claude-sonnet-5-5' }}
             --allowedTools "Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr checks:*),Read,Grep,Glob"
             --json-schema '{"type":"object","properties":{"eligible":{"type":"boolean"},"risk":{"type":"string","enum":["low","medium","high"]},"reason":{"type":"string"},"summary":{"type":"string"}},"required":["eligible","risk","reason","summary"]}'
           prompt: |

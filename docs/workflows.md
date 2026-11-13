@@ -6,9 +6,11 @@ Every automation workflow is dual-use: it runs live in this repo (dogfooding) *a
 
 When calling any of them: `secrets: inherit` from your stub, and grant the stub's job the permissions its jobs use (a reusable workflow can't exceed its caller's grants). The exact contract of each one — triggers, `workflow_call` inputs and secrets, job permissions, timeouts and concurrency — is generated from the workflow files into [reference/workflows.md](reference/workflows.md); this page explains behavior.
 
+Every lane is also bounded and switchable. Each run names an exact model (`claude.model` from the config, or the workflow's pinned default when that is empty: `claude-opus-5-5` in `claude-implement.yml`, `claude-sonnet-5-5` in the others), a turn cap (`claude.max_turns`; 20 in the auto-merge evaluator) and a dollar ceiling (`--max-budget-usd`: 15 in the config-driven lanes, 10 in the auto-merge evaluator, 20 in `claude.yml`), and a run that reaches a cap stops there and fails. Under OAuth the dollar figure is an API-equivalent estimate, so the ceiling bounds throughput, not a bill. Each automation lane also reads a repository variable (`CLAUDE_TRIAGE_ENABLED`, `CLAUDE_IMPLEMENT_ENABLED`, `CLAUDE_REVIEW_ENABLED`, `CLAUDE_AUTO_MERGE_ENABLED`, `CLAUDE_MAINTENANCE_ENABLED`, `CLAUDE_RELEASE_ENABLED`): set it to `false` under Settings → Secrets and variables → Actions → Variables to stop that lane without a commit. Unset means on, a manual `workflow_dispatch` always runs, and a consuming repo's own variable is the one that is read. The maintenance switch stops the schedule only; the others stop every event except a manual dispatch.
+
 ## claude.yml — interactive
 
-- **Triggers**: `@claude` in issue/PR comments or reviews; issue opened/assigned containing `@claude`.
+- **Triggers**: `@claude` in issue/PR comments or reviews; issue opened/assigned containing `@claude`. The author of that comment, review or issue must be an owner, member or collaborator of the repository (`author_association`); a mention from anyone else starts nothing.
 - **Behavior**: whatever was asked — the action's tag mode with repo context from `CLAUDE.md`. Branch/PR writes happen through the Claude GitHub App's token, not the workflow token.
 
 ## claude-triage.yml

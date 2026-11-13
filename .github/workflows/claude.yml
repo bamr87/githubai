@@ -10,6 +10,12 @@ name: Claude
 # `claude setup-token`) is the default; ANTHROPIC_API_KEY is used only when
 # the OAuth token is absent. See docs/security.md.
 #
+# Guardrails (fleet harness standard, bamr87/bamr87 docs/HARNESS-OPS.md): only
+# an owner, member or collaborator can start a run, the model is an exact id,
+# and each run has a dollar ceiling. The gate and both values are the ones the
+# fleet's agent-context kit ships (bamr87/bamr87 templates/agent-context/);
+# this file is not the kit's copy, because it is also a reusable workflow.
+#
 # Reusable: call from any repo as
 #   uses: bamr87/githubai/.github/workflows/claude.yml@main
 #   secrets: inherit
@@ -37,11 +43,22 @@ permissions:
 
 jobs:
   claude:
+    # Only trusted authors can start a run. claude-code-action itself refuses an
+    # actor without write access, but only once the job is running, and it
+    # checks who caused the event, not who wrote the text: a maintainer
+    # assigning a stranger's issue would hand that issue's @claude text to the
+    # agent. So the author_association is read from the object that carries the
+    # @claude text (the comment, the review, or the issue itself), and it must
+    # be an owner, a member or a collaborator.
     if: |
-      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
-      (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude') &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude') &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)) ||
+      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude') &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.review.author_association)) ||
+      (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')) &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association))
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -65,3 +82,10 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           anthropic_api_key: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN == '' && secrets.ANTHROPIC_API_KEY || '' }}
+          # The model is an exact id from the fleet's allowlist (bamr87/bamr87
+          # _data/fleet.yml `ai_models.allowed`), never an alias and never the
+          # action's default of the day. The dollar ceiling is a circuit
+          # breaker, not a budget: a mention is human-triggered, so there is no
+          # turn cap to size it against, but it is unattended spend the moment
+          # the person who wrote it walks away.
+          claude_args: "--model claude-sonnet-5-5 --max-budget-usd 20"

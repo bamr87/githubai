@@ -21,7 +21,7 @@ repo:
   primary_language: ""
 
 claude:
-  model: ""              # --model override for automation runs; "" = action default
+  model: ""              # --model for automation runs; "" = the workflow's pinned default
   max_turns: 50          # --max-turns for automation runs
 
 labels:
@@ -75,11 +75,11 @@ standards:
 | Config | Consumed by |
 |--------|-------------|
 | `repo.*`, `profile.guidance`, `standards.*`, `labels.taxonomy`, `automation` posture | Rendered into the `prompt_context` block injected into every automation prompt |
-| `claude.model`, `claude.max_turns` | `--model` / `--max-turns` CLI args |
+| `claude.model`, `claude.max_turns` | `--model` / `--max-turns` CLI args. An empty `claude.model` falls back to the workflow's pinned default (`claude-opus-5-5` for implement, `claude-sonnet-5-5` for the other lanes), never to the action's default |
 | `automation.<area>.enabled` | Step-level gates in each workflow (a disabled area's workflow runs and exits without invoking Claude) |
 | `auto_merge.max_risk`, `auto_merge.method` | The deterministic merge step in claude-auto-merge.yml, read via `fromJSON` on the merged config |
 
-Two knobs intentionally do **not** live in YAML: the implement trigger label at the *workflow gate* level (pass `trigger_label` to the reusable workflow from your stub if you rename it — the event filter can't read config), and the maintenance schedule (edit the cron in your `claude-maintenance.yml` stub, since schedules bind to the workflow file's repo).
+Two knobs intentionally do **not** live in YAML: the implement trigger label at the *workflow gate* level (pass `trigger_label` to the reusable workflow from your stub if you rename it — the event filter can't read config), and the maintenance schedule (edit the cron in your `claude-maintenance.yml` stub, since schedules bind to the workflow file's repo). The per-run dollar ceiling and the per-lane kill switch are not config keys either: the ceiling is a literal in each workflow, and the switch is a repository variable (`CLAUDE_<LANE>_ENABLED`), so a lane can be stopped without a commit ([workflows.md](workflows.md)).
 
 Two schema keys are **reserved, not yet implemented**: `automation.review.inline_comments` and `automation.review.review_bot_prs`. They are declared with defaults so existing configs stay valid, but nothing reads them yet. Setting either one currently has no effect: Claude always has the inline-comment tool and reviews bot-authored PRs. Use `claude:skip` on a PR to opt it out of review.
 
