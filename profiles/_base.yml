@@ -23,7 +23,8 @@ repo:
 
 claude:
   # Model override passed to Claude Code as --model. Empty string means
-  # "use the claude-code-action default".
+  # "use the workflow's pinned default" (claude-opus-5-5 for implement,
+  # claude-sonnet-5-5 for the other lanes; docs/workflows.md).
   model: ""
   max_turns: 50
 

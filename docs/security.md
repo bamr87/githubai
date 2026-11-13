@@ -18,7 +18,7 @@ GitHubAI automates high-trust operations (labeling, implementing, reviewing, mer
 | Approve + auto-merge | Label by a triage+ user *or* trusted bot authorship, **and** Claude's independent low-risk verdict, **and** your branch protection's required checks |
 | Maintenance issues/PRs | The schedule you installed; output caps in config |
 | Releases | A human pushing a tag (publish) or dispatching the workflow (prepare); automation never creates tags |
-| Interactive `@claude` | Commenters — the action itself restricts execution to users with write access unless you configure otherwise |
+| Interactive `@claude` | The author of the comment, review or issue that carries the mention, who must be an owner, member or collaborator (`author_association`); the action itself then also requires write access |
 
 `claude:skip` is a universal opt-out; `claude:needs-human` is Claude's own escalation path and appears whenever it declines to act.
 
