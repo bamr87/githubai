@@ -35,7 +35,9 @@ on:
         description: Claude Code OAuth token from `claude setup-token` (preferred)
         required: false
       ANTHROPIC_API_KEY:
-        description: Anthropic API key, used only when no OAuth token is set
+        # Claude auth: OAuth only (CLAUDE_CODE_OAUTH_TOKEN). ANTHROPIC_API_KEY disabled for now (2026-11-15); to restore, re-add the secrets.ANTHROPIC_API_KEY reference.
+        # Still declared so callers that pass it explicitly don't fail; it is ignored.
+        description: Ignored for now (OAuth only; ANTHROPIC_API_KEY disabled 2026-11-15)
         required: false
 
 permissions:
@@ -88,7 +90,7 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          anthropic_api_key: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN == '' && secrets.ANTHROPIC_API_KEY || '' }}
+          # Claude auth: OAuth only (CLAUDE_CODE_OAUTH_TOKEN). ANTHROPIC_API_KEY disabled for now (2026-11-15); to restore, re-add the secrets.ANTHROPIC_API_KEY reference.
           claude_args: |
             --max-turns ${{ steps.cfg.outputs.max_turns }}
             ${{ steps.cfg.outputs.model != '' && format('--model {0}', steps.cfg.outputs.model) || '' }}
