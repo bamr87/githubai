@@ -1,6 +1,7 @@
 """Convention tests for the framework workflows.
 
-These encode the promises the README makes: OAuth-first auth everywhere,
+These encode the promises the README makes: OAuth auth everywhere (OAuth only
+for now — the ANTHROPIC_API_KEY fallback is disabled, 2026-11-15),
 least-privilege permissions, reusability via workflow_call, and injection
 hygiene around untrusted issue/PR content.
 """
@@ -10,7 +11,10 @@ import re
 from conftest import load_yaml
 
 OAUTH_EXPR = "${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}"
-FALLBACK_EXPR = "${{ secrets.CLAUDE_CODE_OAUTH_TOKEN == '' && secrets.ANTHROPIC_API_KEY || '' }}"
+# Claude auth: OAuth only (CLAUDE_CODE_OAUTH_TOKEN). ANTHROPIC_API_KEY disabled for now
+# (2026-11-15). To restore the fallback, re-add
+#   FALLBACK_EXPR = "${{ secrets.CLAUDE_CODE_OAUTH_TOKEN == '' && secrets.ANTHROPIC_API_KEY || '' }}"
+# and assert `anthropic_api_key == FALLBACK_EXPR` again below.
 
 # Automation workflows (everything claude-* except the interactive claude.yml)
 AUTOMATION = {
@@ -49,8 +53,8 @@ def test_claude_action_pinned_to_v1(claude_workflow_files):
             )
 
 
-def test_oauth_first_auth_everywhere(claude_workflow_files):
-    """The core product promise: OAuth token default, API key only as fallback."""
+def test_oauth_only_auth_everywhere(claude_workflow_files):
+    """The core product promise, tightened for now: the OAuth token is the only credential."""
     for path in claude_workflow_files:
         steps = list(claude_action_steps(load_yaml(path)))
         assert steps, f"{path.name} has no claude-code-action step"
@@ -59,8 +63,8 @@ def test_oauth_first_auth_everywhere(claude_workflow_files):
             assert with_block.get("claude_code_oauth_token") == OAUTH_EXPR, (
                 f"{path.name}: claude_code_oauth_token must be the OAuth secret"
             )
-            assert with_block.get("anthropic_api_key") == FALLBACK_EXPR, (
-                f"{path.name}: anthropic_api_key must be the empty-OAuth fallback expression"
+            assert "anthropic_api_key" not in with_block, (
+                f"{path.name}: anthropic_api_key must not be passed (OAuth only; API key disabled for now)"
             )
 
 

@@ -29,7 +29,7 @@ Call it as `uses: bamr87/githubai/.github/workflows/claude-auto-merge.yml@main`.
 | Secret | Required | Description |
 | --- | --- | --- |
 | `CLAUDE_CODE_OAUTH_TOKEN` | no | Claude Code OAuth token from `claude setup-token` (preferred) |
-| `ANTHROPIC_API_KEY` | no | Anthropic API key, used only when no OAuth token is set |
+| `ANTHROPIC_API_KEY` | no | Ignored for now (OAuth only; ANTHROPIC_API_KEY disabled 2026-11-15) |
 
 **Jobs:**
 
@@ -64,7 +64,7 @@ Call it as `uses: bamr87/githubai/.github/workflows/claude-implement.yml@main`.
 | Secret | Required | Description |
 | --- | --- | --- |
 | `CLAUDE_CODE_OAUTH_TOKEN` | no | Claude Code OAuth token from `claude setup-token` (preferred) |
-| `ANTHROPIC_API_KEY` | no | Anthropic API key, used only when no OAuth token is set |
+| `ANTHROPIC_API_KEY` | no | Ignored for now (OAuth only; ANTHROPIC_API_KEY disabled 2026-11-15) |
 
 **Jobs:**
 
@@ -98,7 +98,7 @@ Call it as `uses: bamr87/githubai/.github/workflows/claude-maintenance.yml@main`
 | Secret | Required | Description |
 | --- | --- | --- |
 | `CLAUDE_CODE_OAUTH_TOKEN` | no | Claude Code OAuth token from `claude setup-token` (preferred) |
-| `ANTHROPIC_API_KEY` | no | Anthropic API key, used only when no OAuth token is set |
+| `ANTHROPIC_API_KEY` | no | Ignored for now (OAuth only; ANTHROPIC_API_KEY disabled 2026-11-15) |
 
 **Jobs:**
 
@@ -132,7 +132,7 @@ Call it as `uses: bamr87/githubai/.github/workflows/claude-release.yml@main`.
 | Secret | Required | Description |
 | --- | --- | --- |
 | `CLAUDE_CODE_OAUTH_TOKEN` | no | Claude Code OAuth token from `claude setup-token` (preferred) |
-| `ANTHROPIC_API_KEY` | no | Anthropic API key, used only when no OAuth token is set |
+| `ANTHROPIC_API_KEY` | no | Ignored for now (OAuth only; ANTHROPIC_API_KEY disabled 2026-11-15) |
 
 **Jobs:**
 
@@ -166,7 +166,7 @@ Call it as `uses: bamr87/githubai/.github/workflows/claude-review.yml@main`.
 | Secret | Required | Description |
 | --- | --- | --- |
 | `CLAUDE_CODE_OAUTH_TOKEN` | no | Claude Code OAuth token from `claude setup-token` (preferred) |
-| `ANTHROPIC_API_KEY` | no | Anthropic API key, used only when no OAuth token is set |
+| `ANTHROPIC_API_KEY` | no | Ignored for now (OAuth only; ANTHROPIC_API_KEY disabled 2026-11-15) |
 
 **Jobs:**
 
@@ -200,7 +200,7 @@ Call it as `uses: bamr87/githubai/.github/workflows/claude-triage.yml@main`.
 | Secret | Required | Description |
 | --- | --- | --- |
 | `CLAUDE_CODE_OAUTH_TOKEN` | no | Claude Code OAuth token from `claude setup-token` (preferred) |
-| `ANTHROPIC_API_KEY` | no | Anthropic API key, used only when no OAuth token is set |
+| `ANTHROPIC_API_KEY` | no | Ignored for now (OAuth only; ANTHROPIC_API_KEY disabled 2026-11-15) |
 
 **Jobs:**
 
@@ -223,7 +223,7 @@ Call it as `uses: bamr87/githubai/.github/workflows/claude.yml@main`.
 | Secret | Required | Description |
 | --- | --- | --- |
 | `CLAUDE_CODE_OAUTH_TOKEN` | no | Claude Code OAuth token from `claude setup-token` (preferred) |
-| `ANTHROPIC_API_KEY` | no | Anthropic API key, used only when no OAuth token is set |
+| `ANTHROPIC_API_KEY` | no | Ignored for now (OAuth only; ANTHROPIC_API_KEY disabled 2026-11-15) |
 
 **Jobs:**
 
