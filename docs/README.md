@@ -13,6 +13,7 @@ New to GitHubAI? Read [getting-started.md](getting-started.md), then [configurat
 | --- | --- |
 | [`AGENTS.md`](../AGENTS.md) | GitHubAI, the GitHub-native framework that wires Claude Code into the whole SDLC: reusable workflows, a config action, repo-type profiles, an installer, and a GitHub App relay. |
 | [`CHANGELOG.md`](../CHANGELOG.md) | Release history: the notable changes in each version, newest first. |
+| [`SECURITY.md`](../SECURITY.md) | Which GitHubAI versions get security fixes, how to report a vulnerability privately, how soon you hear back, and what the policy covers. |
 | [`app/`](../app/README.md) | GitHubAI as a GitHub App: org-scale event routing, org policy, and the activity dashboard. |
 | [`profiles/`](../profiles/README.md) | The repo-type profiles: what each one sets, how the three config layers merge, and how to add a profile. |
 | [`template/`](../template/README.md) | The files `setup/install.sh` copies into an adopting repo, and what each one is for. |
