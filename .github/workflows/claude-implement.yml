@@ -45,10 +45,6 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: claude-implement-${{ github.event.issue.number || inputs.issue_number || github.run_id }}
-  cancel-in-progress: false
-
 jobs:
   implement:
     if: |
@@ -62,6 +58,13 @@ jobs:
       pull-requests: write
       id-token: write
       actions: read
+    # Job-level, not workflow-level: every label added to the issue starts a
+    # run (including `claude:needs-human`, which Claude adds when it stops to
+    # ask), and a run that `if:` skips must not take the pending slot and
+    # cancel a queued `claude:implement` request on the same issue.
+    concurrency:
+      group: claude-implement-${{ github.event.issue.number || inputs.issue_number || github.run_id }}
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v7
         with:

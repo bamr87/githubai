@@ -41,10 +41,6 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: claude-review-${{ github.event.pull_request.number || inputs.pr_number || github.run_id }}
-  cancel-in-progress: true
-
 jobs:
   review:
     # Same-repo branches only (fork PRs have no secret access). Drafts wait
@@ -67,6 +63,13 @@ jobs:
       issues: read
       id-token: write
       actions: read
+    # Job-level, not workflow-level: every label added to the PR starts a run
+    # (including the `size:*` label this review adds itself), and GitHub takes
+    # a workflow-level slot before it evaluates `if:`. A run that `if:` skips
+    # must not take the slot and cancel the review in flight.
+    concurrency:
+      group: claude-review-${{ github.event.pull_request.number || inputs.pr_number || github.run_id }}
+      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v7
         with:
