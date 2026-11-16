@@ -231,4 +231,4 @@ Call it as `uses: bamr87/githubai/.github/workflows/claude.yml@main`.
 | --- | --- | --- |
 | `claude` | `actions: read`, `contents: read`, `id-token: write`, `issues: read`, `pull-requests: read` | 30 |
 
-**Concurrency:** none at workflow level.
+**Concurrency:** job `claude`, group `claude-${{ github.event.issue.number || github.event.pull_request.number || github.run_id }}`; cancel in progress: no.

@@ -94,6 +94,22 @@ def jobs_table(doc: dict) -> list[str]:
     return rows
 
 
+def concurrency(doc: dict) -> str:
+    """The workflow's concurrency group and each job's own (a job-level group is taken only by a job that runs)."""
+
+    def group(spec) -> str:
+        if isinstance(spec, dict):
+            cancel = "yes" if spec.get("cancel-in-progress") else "no"
+            return f"group `{spec.get('group')}`; cancel in progress: {cancel}"
+        return f"group `{spec}`"
+
+    parts = [group(doc["concurrency"])] if doc.get("concurrency") else []
+    for name, job in doc.get("jobs", {}).items():
+        if job.get("concurrency"):
+            parts.append(f"job `{name}`, {group(job['concurrency'])}")
+    return " · ".join(parts) + "." if parts else "none."
+
+
 def render_workflows() -> str:
     lines = [
         header("`.github/workflows/claude*.yml`"),
@@ -132,14 +148,7 @@ def render_workflows() -> str:
         if call.get("secrets"):
             lines += ["**Secrets:**", ""] + secrets_table(call["secrets"]) + [""]
         lines += ["**Jobs:**", ""] + jobs_table(doc) + [""]
-        concurrency = doc.get("concurrency")
-        if isinstance(concurrency, dict):
-            cancel = "yes" if concurrency.get("cancel-in-progress") else "no"
-            lines.append(f"**Concurrency:** group `{concurrency.get('group')}`; cancel in progress: {cancel}.")
-        elif concurrency:
-            lines.append(f"**Concurrency:** group `{concurrency}`.")
-        else:
-            lines.append("**Concurrency:** none at workflow level.")
+        lines.append(f"**Concurrency:** {concurrency(doc)}")
     return "\n".join(lines).rstrip() + "\n"
 
 
