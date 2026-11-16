@@ -6,11 +6,23 @@
 > Agents read this before [AGENTS.md](../AGENTS.md) conventions, the [PRD](PRD.md), or the
 > [feature catalog](../features/features.yml). Ratified by merged PR; amended only per § 8.
 
-## 1. Mission
+## 1. Missions
+
+GitHubAI's direction is to become the ultimate open home for all things AI-assisted software delivery — data, tools, resources and transparency, gathered in one place that anyone can inspect and reuse.
+
+1. **Provide data, tools, resources and transparency for all stakeholders, maintainers and software practitioners, and the general public.** Repository owners, contributors and anyone adopting an AI staff engineer are first-class audiences. The aim is a shared, inspectable commons: the same workflows, the same authentication model, and the same authorization points for everyone.
+2. **Give every repository an installable Claude Code loop across the whole software-delivery life cycle — issue triage, label-gated implementation, PR review, a guarded auto-merge lane, weekly maintenance and release drafting.** One install command is the path in; the north star is that every repository can ship with an AI staff engineer, while humans retain the authorization points that matter.
+3. **Keep those lanes reusable, reviewable and policy-safe: open workflow source, scoped permissions, and authentication by the maintainer's own Claude Code OAuth token, with no hidden runtime.** The framework should be something a maintainer can read, fork and trust, not a black box running on someone else's servers.
+
+These missions set the course; they do not claim the work is finished. They serve the PRD's north star: Claude Code as a first-class participant in the whole SDLC, installable in any repo in one command.
+
+### Current product promise
+
+The following user-story, previously the whole of §1, remains the near-term promise these missions aim at:
 
 1. As a maintainer, I run one install command and my repo gains issue triage, label-gated implementation, PR review, an auto-merge lane, weekly maintenance, and release drafting — all authenticated by my `CLAUDE_CODE_OAUTH_TOKEN`.
 
-_Source: [PRD.md](PRD.md)._
+_Source: [PRD.md](PRD.md) §1.1._
 
 ## 2. Invariants (non-negotiable)
 
