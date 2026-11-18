@@ -20,6 +20,22 @@
 
 All P0 except story 5 (P1, shipped and tested; a hosted deployment is a business decision, not a missing capability). Deferred: see OOS.
 
+## 1.1 Missions
+
+GitHubAI's direction is to become the ultimate open home for all things AI-assisted software delivery — data, tools, resources and transparency, gathered in one place that anyone can inspect and reuse.
+
+1. **Provide data, tools, resources and transparency for all stakeholders, maintainers and software practitioners, and the general public.** Repository owners, contributors and anyone adopting an AI staff engineer are first-class audiences. The aim is a shared, inspectable commons: the same workflows, the same authentication model, and the same authorization points for everyone.
+2. **Give every repository an installable Claude Code loop across the whole software-delivery life cycle — issue triage, label-gated implementation, PR review, a guarded auto-merge lane, weekly maintenance and release drafting.** One install command is the path in; the north star is that every repository can ship with an AI staff engineer, while humans retain the authorization points that matter.
+3. **Keep those lanes reusable, reviewable and policy-safe: open workflow source, scoped permissions, and authentication by the maintainer's own Claude Code OAuth token, with no hidden runtime.** The framework should be something a maintainer can read, fork and trust, not a black box running on someone else's servers.
+
+These missions set the course; they do not claim the work is finished. They serve the PRD's north star: Claude Code as a first-class participant in the whole SDLC, installable in any repo in one command.
+
+**Requirement**
+
+- MR1: Constitution §1 states one direction statement and exactly three numbered missions, and the README and AGENTS.md taglines match that direction and link to constitution §1.
+
+Feature [GHAI-007](features/features.yml) traces to requirement MR1.
+
 ## 2. UX
 
 The product's UI is GitHub itself. The user-visible surface is exactly: labels (`claude:*` as the control plane), Claude's comments (triage summaries, review verdicts, merge verdicts, health reports), PRs and releases it creates, and one config file. The installer is the only CLI moment, and `@claude` mentions are the escape hatch to interactive mode everywhere.
@@ -73,12 +89,14 @@ Every user-facing capability has a stable id in the feature catalog [`features/f
 | [GHAI-004](../features/features.yml) | Implement and auto-merge lanes | shipped | [`.github/workflows/claude-implement.yml`](../.github/workflows/claude-implement.yml) · [`README.md`](../README.md) | §1 |
 | [GHAI-005](../features/features.yml) | PR review, maintenance and release lanes | shipped | [`.github/workflows/claude-review.yml`](../.github/workflows/claude-review.yml) · [`README.md`](../README.md) | §1 |
 | [GHAI-006](../features/features.yml) | GitHub App relay and org policy | shipped | [`app`](../app) · [`README.md`](../README.md) | §1 |
+| [GHAI-007](../features/features.yml) | Constitution missions | planned | [`docs/constitution.md`](constitution.md) · [`docs/PRD.md`](PRD.md) | MR1 |
 
 **Requirement → feature trace**
 
 | Requirement | Features |
 | --- | --- |
 | §1 | GHAI-001, GHAI-002, GHAI-003, GHAI-004, GHAI-005, GHAI-006 |
+| MR1 | GHAI-007 |
 <!-- features:end -->
 
 ## 5. Milestones

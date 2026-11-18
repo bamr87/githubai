@@ -37,7 +37,7 @@ Call it as `uses: bamr87/githubai/.github/workflows/claude-auto-merge.yml@main`.
 | --- | --- | --- |
 | `evaluate` | `actions: read`, `checks: read`, `contents: write`, `id-token: write`, `issues: read`, `pull-requests: write` | 20 |
 
-**Concurrency:** group `claude-auto-merge-${{ github.event.pull_request.number || inputs.pr_number || github.run_id }}`; cancel in progress: yes.
+**Concurrency:** job `evaluate`, group `claude-auto-merge-${{ github.event.pull_request.number || inputs.pr_number || github.run_id }}`; cancel in progress: yes.
 
 ## `claude-implement.yml` — Claude Implement
 
@@ -72,7 +72,7 @@ Call it as `uses: bamr87/githubai/.github/workflows/claude-implement.yml@main`.
 | --- | --- | --- |
 | `implement` | `actions: read`, `contents: write`, `id-token: write`, `issues: write`, `pull-requests: write` | 90 |
 
-**Concurrency:** group `claude-implement-${{ github.event.issue.number || inputs.issue_number || github.run_id }}`; cancel in progress: no.
+**Concurrency:** job `implement`, group `claude-implement-${{ github.event.issue.number || inputs.issue_number || github.run_id }}`; cancel in progress: no.
 
 ## `claude-maintenance.yml` — Claude Maintenance
 
@@ -174,7 +174,7 @@ Call it as `uses: bamr87/githubai/.github/workflows/claude-review.yml@main`.
 | --- | --- | --- |
 | `review` | `actions: read`, `contents: read`, `id-token: write`, `issues: read`, `pull-requests: write` | 30 |
 
-**Concurrency:** group `claude-review-${{ github.event.pull_request.number || inputs.pr_number || github.run_id }}`; cancel in progress: yes.
+**Concurrency:** job `review`, group `claude-review-${{ github.event.pull_request.number || inputs.pr_number || github.run_id }}`; cancel in progress: yes.
 
 ## `claude-triage.yml` — Claude Triage
 
@@ -231,4 +231,4 @@ Call it as `uses: bamr87/githubai/.github/workflows/claude.yml@main`.
 | --- | --- | --- |
 | `claude` | `actions: read`, `contents: read`, `id-token: write`, `issues: read`, `pull-requests: read` | 30 |
 
-**Concurrency:** none at workflow level.
+**Concurrency:** job `claude`, group `claude-${{ github.event.issue.number || github.event.pull_request.number || github.run_id }}`; cancel in progress: no.

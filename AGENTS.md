@@ -2,7 +2,7 @@
 
 # githubai
 
-> GitHubAI, the GitHub-native framework that wires Claude Code into the whole SDLC: reusable workflows, a config action, repo-type profiles, an installer, and a GitHub App relay.
+> GitHubAI's direction is to become the ultimate open home for all things AI-assisted software delivery: data, tools, resources and transparency, with an installable Claude Code SDLC loop, reviewable workflows and maintainer-held authorization for everyone ([constitution](docs/constitution.md) §1).
 
 ## What this repo is
 
@@ -40,7 +40,7 @@ python3 tools/docs_index.py --write        # regenerate the docs index in docs/R
 ## Conventions
 
 - **Backlog of record:** GitHub Issues. `claude:implement` authorizes implementation; leave `claude:skip` and `claude:needs-human` items to a human ([label taxonomy](docs/reference/labels.md)).
-- **Definition of Done:** the sections of `.github/pull_request_template.md` (what and why, how verified, risk and compatibility) are filled in, the commands above pass, and the sync duties below are done.
+- **Definition of Done:** the fleet checklist between the `fleet-dod` markers in `.github/pull_request_template.md` holds (it is kept byte-identical to the hub's community kit, and repo-specific boxes go below `fleet-dod:end`, never inside), the template's sections (what and why, how verified, risk and compatibility) are filled in, the commands above pass, and the sync duties below are done.
 - **Decisions:** design decisions and the invariants behind them live in [docs/architecture.md](docs/architecture.md); individual decision records live in [docs/adr/](docs/adr/README.md).
 - **Commits:** Conventional Commits (`feat fix docs style refactor test chore perf ci build`); a breaking change to the public API is `feat!:`/`fix!:`.
 - **Branches:** trunk-based, short-lived `feature/`, `fix/`, `docs/`, `refactor/`, `test/` or `chore/` branches off `main` (the implement lane uses `claude/`); never push to `main`.

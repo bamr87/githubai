@@ -19,7 +19,7 @@ outputs:
     description: Resolved repo type (profile name).
     value: ${{ steps.load.outputs.type }}
   model:
-    description: Claude model override; empty string means the action default.
+    description: Claude model override; empty string means none, and the calling workflow uses its pinned default.
     value: ${{ steps.load.outputs.model }}
   max_turns:
     description: Maximum Claude Code turns for automation runs.
