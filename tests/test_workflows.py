@@ -98,6 +98,43 @@ def test_every_workflow_has_concurrency(workflow_files):
         assert not missing, f"{path.name} needs a concurrency group (jobs without one: {missing})"
 
 
+def fires_on_label_events(workflow: dict) -> bool:
+    """Whether adding a label to an issue or PR starts a run of this workflow."""
+    on = workflow.get(True, workflow.get("on")) or {}  # PyYAML reads the bare key `on` as True
+    if isinstance(on, str):
+        on = [on]
+    if isinstance(on, list):
+        on = dict.fromkeys(on)
+    for event in ("issues", "pull_request", "pull_request_target"):
+        if event not in on:
+            continue
+        types = (on[event] or {}).get("types")
+        if isinstance(types, str):
+            types = [types]
+        # Without `types`, `issues` fires on every activity; the pull_request events never default to labeled.
+        if "labeled" in (types or []) or (types is None and event == "issues"):
+            return True
+    return False
+
+
+def test_label_triggered_jobs_hold_their_own_concurrency(workflow_files):
+    """Every label added to an issue or PR, by any actor, starts a run of each workflow
+    triggered on `labeled`, and GitHub takes a workflow-level concurrency slot before it
+    evaluates the job's `if:`. A run that `if:` then skips has already cancelled the run in
+    flight (cancel-in-progress) or displaced the one queued behind it: claude[bot]'s own
+    `size:*` label cancelled the review that added it (bamr87/bamr87#397). A job-level group
+    is taken only by a job that runs, as in claude.yml."""
+    offenders = []
+    for path in workflow_files:
+        data = load_yaml(path)
+        gated = [name for name, job in data["jobs"].items() if "if" in job]
+        if not gated or not fires_on_label_events(data):
+            continue
+        if "concurrency" in data or any("concurrency" not in data["jobs"][name] for name in gated):
+            offenders.append(path.name)
+    assert not offenders, f"move the workflow-level concurrency onto the gated jobs of: {', '.join(offenders)}"
+
+
 def test_no_untrusted_body_interpolation(workflow_files):
     """Issue/PR titles and bodies are attacker-controlled; only numbers/logins may be interpolated."""
     banned = re.compile(

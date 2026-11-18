@@ -3,6 +3,8 @@
 import subprocess
 import sys
 
+from conftest import load_yaml
+
 
 def test_generated_reference_is_fresh(repo_root):
     """Changing a workflow input, permission or label means rerunning tools/gen_reference.py."""
@@ -20,6 +22,18 @@ def test_generated_reference_covers_every_claude_workflow(repo_root, claude_work
     reference = (repo_root / "docs" / "reference" / "workflows.md").read_text(encoding="utf-8")
     for path in claude_workflow_files:
         assert f"## `{path.name}`" in reference, f"docs/reference/workflows.md has no section for {path.name}"
+
+
+def test_generated_reference_names_every_concurrency_group(repo_root, claude_workflow_files):
+    """A group a job holds (claude.yml, the label-triggered lanes) is part of the contract like a workflow-level one."""
+    reference = (repo_root / "docs" / "reference" / "workflows.md").read_text(encoding="utf-8")
+    for path in claude_workflow_files:
+        data = load_yaml(path)
+        specs = [data.get("concurrency")] + [job.get("concurrency") for job in data["jobs"].values()]
+        for spec in specs:
+            group = spec.get("group") if isinstance(spec, dict) else spec
+            if group:
+                assert f"`{group}`" in reference, f"docs/reference/workflows.md omits {path.name}'s group {group}"
 
 
 def test_docs_index_is_fresh(repo_root):
