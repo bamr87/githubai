@@ -94,9 +94,16 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           anthropic_api_key: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN == '' && secrets.ANTHROPIC_API_KEY || '' }}
+          # --model: `claude.model` from the repo config, else an exact id from the
+          # fleet's allowlist (bamr87/bamr87 _data/fleet.yml `ai_models.allowed`),
+          # never the action's default of the day. --max-budget-usd: a per-run
+          # ceiling (an API-equivalent estimate under OAuth), sized at 0.15 USD a
+          # turn for 100 turns; a config that raises `claude.max_turns` past 100
+          # meets this ceiling first.
           claude_args: |
             --max-turns ${{ steps.cfg.outputs.max_turns }}
-            ${{ steps.cfg.outputs.model != '' && format('--model {0}', steps.cfg.outputs.model) || '' }}
+            --max-budget-usd 15
+            --model ${{ steps.cfg.outputs.model || 'claude-sonnet-5-5' }}
             --allowedTools "Bash(gh issue:*),Bash(gh pr list:*),Bash(gh pr view:*),Bash(gh pr create:*),Bash(gh pr comment:*),Bash(gh search:*),Bash(gh api:*),Bash(git:*),Read,Grep,Glob,Edit,Write"
           prompt: |
             You are the maintenance engineer for ${{ github.repository }}. Run this repository's scheduled upkeep.

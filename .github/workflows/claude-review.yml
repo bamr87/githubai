@@ -47,16 +47,23 @@ concurrency:
 
 jobs:
   review:
+    # Kill switch (fleet convention — bamr87/bamr87 docs/HARNESS-OPS.md): the lane
+    # can be disarmed from the repo's Variables, without a commit. The variable
+    # absent or anything but 'false' keeps it on; a manual dispatch always runs.
+    #
     # Same-repo branches only (fork PRs have no secret access). Drafts wait
     # until ready unless a maintainer applies `claude:review` explicitly.
     if: |
-      github.event_name != 'pull_request' ||
+      (github.event_name == 'workflow_dispatch' || vars.CLAUDE_REVIEW_ENABLED != 'false') &&
       (
-        github.event.pull_request.head.repo.full_name == github.repository &&
-        !contains(github.event.pull_request.labels.*.name, 'claude:skip') &&
+        github.event_name != 'pull_request' ||
         (
-          (github.event.action == 'labeled' && github.event.label.name == 'claude:review') ||
-          (github.event.action != 'labeled' && github.event.pull_request.draft == false)
+          github.event.pull_request.head.repo.full_name == github.repository &&
+          !contains(github.event.pull_request.labels.*.name, 'claude:skip') &&
+          (
+            (github.event.action == 'labeled' && github.event.label.name == 'claude:review') ||
+            (github.event.action != 'labeled' && github.event.pull_request.draft == false)
+          )
         )
       )
     runs-on: ubuntu-latest
@@ -101,9 +108,16 @@ jobs:
           # claude-code-action refuses non-human actors unless listed; bot-authored PRs are reviewed like any other (see review_bot_prs in docs/configuration.md).
           allowed_bots: "dependabot[bot],renovate[bot]"
           use_sticky_comment: true
+          # --model: `claude.model` from the repo config, else an exact id from the
+          # fleet's allowlist (bamr87/bamr87 _data/fleet.yml `ai_models.allowed`),
+          # never the action's default of the day. --max-budget-usd: a per-run
+          # ceiling (an API-equivalent estimate under OAuth), sized at 0.15 USD a
+          # turn for 100 turns; a config that raises `claude.max_turns` past 100
+          # meets this ceiling first.
           claude_args: |
             --max-turns ${{ steps.cfg.outputs.max_turns }}
-            ${{ steps.cfg.outputs.model != '' && format('--model {0}', steps.cfg.outputs.model) || '' }}
+            --max-budget-usd 15
+            --model ${{ steps.cfg.outputs.model || 'claude-sonnet-5-5' }}
             --allowedTools "Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr checks:*),Bash(gh pr comment:*),Bash(gh pr edit:*),Bash(gh issue view:*),Bash(gh run view:*),Read,Grep,Glob,mcp__github_inline_comment__create_inline_comment"
           prompt: |
             REPO: ${{ github.repository }}
