@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.1](https://github.com/bamr87/githubai/compare/v0.6.0...v0.6.1) (2026-11-18)
+
+
+### Fixed
+
+* **workflows:** hold the label-triggered lanes' concurrency on the job ([9cbe1ce](https://github.com/bamr87/githubai/commit/9cbe1ce4a7f4ee872ec395f3edb38ba5ab111855))
+* **workflows:** hold the label-triggered lanes' concurrency on the job ([1c61a6f](https://github.com/bamr87/githubai/commit/1c61a6fd70ac8cfa8e1f9108e0911c3beff41141))
+
 ## [0.6.0](https://github.com/bamr87/githubai/compare/v0.5.3...v0.6.0) (2026-10-30)
 
 
