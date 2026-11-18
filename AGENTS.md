@@ -2,7 +2,7 @@
 
 # githubai
 
-> GitHubAI, the GitHub-native framework that wires Claude Code into the whole SDLC: reusable workflows, a config action, repo-type profiles, an installer, and a GitHub App relay.
+> GitHubAI's direction is to become the ultimate open home for all things AI-assisted software delivery: data, tools, resources and transparency, with an installable Claude Code SDLC loop, reviewable workflows and maintainer-held authorization for everyone ([constitution](docs/constitution.md) §1).
 
 ## What this repo is
 
