@@ -30,7 +30,7 @@ New to GitHubAI? Read [getting-started.md](getting-started.md), then [configurat
 | [`docs/PRD.md`](PRD.md) | The product requirements: why GitHubAI exists, the promise it makes, its public API, invariants, milestones and scope. |
 | [`docs/security.md`](security.md) | The auth model, who can authorize what, how untrusted issue and PR content is contained, and the auto-merge gate. |
 | [`docs/workflows.md`](workflows.md) | What each Claude workflow does, when it fires and what gates it, and how this repo's own CI guards the framework. |
-| [`docs/adr/`](adr/README.md) | This directory records decisions for githubai that are hard to reverse: the stack, data model, security model, public interfaces, and any relaxation of a gate. |
+| [`docs/adr/`](adr/README.md) | The index of githubai's architecture decision records: why each hard-to-reverse choice was made, and the tests that hold it. |
 | [`docs/amendments/`](amendments/README.md) | The append-only log of changes to [the constitution](constitution.md). |
 
 ### `docs/reference/`
