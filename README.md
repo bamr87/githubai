@@ -141,6 +141,8 @@ The full command list, conventions, sync duties and invariants for humans and AI
 
 Contributions are welcome via pull request. Use [Conventional Commits](https://www.conventionalcommits.org/) and keep the CI checks green. The fleet-wide workflow is described in the hub's [CONTRIBUTING.md](https://github.com/bamr87/bamr87/blob/main/CONTRIBUTING.md). AI agents start with [AGENTS.md](AGENTS.md); [CLAUDE.md](CLAUDE.md) imports it for Claude Code.
 
+Found a vulnerability? Report it privately as [SECURITY.md](SECURITY.md) describes, never in a public issue.
+
 ## Changelog
 
 Notable changes are recorded in [CHANGELOG.md](CHANGELOG.md); the full record is in the [commit history](https://github.com/bamr87/githubai/commits/main).

@@ -44,4 +44,4 @@ Stubs reference this framework `@main` by default for frictionless starts; pin w
 
 ## Reporting
 
-Security reports: open an issue with the `type:bug` label mentioning security (triage marks these `claude:needs-human` — automation is instructed not to self-triage security reports into implementation), or contact the maintainer directly for anything sensitive.
+Report a vulnerability in GitHubAI privately, as [SECURITY.md](../SECURITY.md) describes, never in a public issue. In a repository that adopts GitHubAI, the triage lane marks an issue that reports a security problem `claude:needs-human` rather than routing it to implementation: automation is instructed not to self-triage security reports into implementation.
