@@ -1,6 +1,6 @@
 # GitHubAI — the Claude Code SDLC framework
 
-> Claude Code SDLC framework: reusable GitHub Actions that triage issues, implement work, review PRs and cut releases.
+> GitHubAI's direction is to become the ultimate open home for all things AI-assisted software delivery: data, tools, resources and transparency, with an installable Claude Code SDLC loop, reviewable workflows and maintainer-held authorization for everyone ([constitution](docs/constitution.md) §1).
 
 [![CI](https://github.com/bamr87/githubai/actions/workflows/ci.yml/badge.svg)](https://github.com/bamr87/githubai/actions/workflows/ci.yml) [![License](https://img.shields.io/github/license/bamr87/githubai)](LICENSE)
 
@@ -140,6 +140,8 @@ The full command list, conventions, sync duties and invariants for humans and AI
 ## Contributing
 
 Contributions are welcome via pull request. Use [Conventional Commits](https://www.conventionalcommits.org/) and keep the CI checks green. The fleet-wide workflow is described in the hub's [CONTRIBUTING.md](https://github.com/bamr87/bamr87/blob/main/CONTRIBUTING.md). AI agents start with [AGENTS.md](AGENTS.md); [CLAUDE.md](CLAUDE.md) imports it for Claude Code.
+
+Found a vulnerability? Report it privately as [SECURITY.md](SECURITY.md) describes, never in a public issue.
 
 ## Changelog
 

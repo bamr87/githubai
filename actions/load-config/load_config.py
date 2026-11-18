@@ -16,7 +16,7 @@ Outputs (GitHub Actions $GITHUB_OUTPUT format, or human-readable with
 
   config          merged config as single-line JSON
   type            resolved repo type
-  model           claude.model override ("" = action default)
+  model           claude.model override ("" = the calling workflow's default)
   max_turns       claude.max_turns
   <area>_enabled  "true"/"false" per automation area
   prompt_context  markdown block describing the repo's standards, injected

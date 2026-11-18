@@ -71,3 +71,12 @@ features:
     surface: api
     link: "app"
     docs: "README.md"
+  - id: GHAI-007
+    title: "Constitution missions"
+    description: "One direction statement and exactly three numbered missions in constitution §1, with matching README and AGENTS.md taglines linked to that section."
+    implemented: true
+    status: planned
+    prd: [MR1]
+    surface: docs
+    link: "docs/constitution.md"
+    docs: "docs/PRD.md"

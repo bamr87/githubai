@@ -1,7 +1,7 @@
 # ADR 0001 — Record architecture decisions
 
 - **Status**: accepted
-- **Date**: YYYY-MM-DD
+- **Date**: 2026-10-24
 - **Deciders**: the maintainers
 - **Related**: bamr87/bamr87 `specs/WORK.md` UPS-WORK-04
 

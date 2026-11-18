@@ -11,8 +11,9 @@ New to GitHubAI? Read [getting-started.md](getting-started.md), then [configurat
 
 | Document | What it covers |
 | --- | --- |
-| [`AGENTS.md`](../AGENTS.md) | GitHubAI, the GitHub-native framework that wires Claude Code into the whole SDLC: reusable workflows, a config action, repo-type profiles, an installer, and a GitHub App relay. |
+| [`AGENTS.md`](../AGENTS.md) | GitHubAI's direction is to become the ultimate open home for all things AI-assisted software delivery: data, tools, resources and transparency, with an installable Claude Code SDLC loop, reviewable workflows and maintainer-held… |
 | [`CHANGELOG.md`](../CHANGELOG.md) | Release history: the notable changes in each version, newest first. |
+| [`SECURITY.md`](../SECURITY.md) | Which GitHubAI versions get security fixes, how to report a vulnerability privately, how soon you hear back, and what the policy covers. |
 | [`app/`](../app/README.md) | GitHubAI as a GitHub App: org-scale event routing, org policy, and the activity dashboard. |
 | [`profiles/`](../profiles/README.md) | The repo-type profiles: what each one sets, how the three config layers merge, and how to add a profile. |
 | [`template/`](../template/README.md) | The files `setup/install.sh` copies into an adopting repo, and what each one is for. |
@@ -29,7 +30,7 @@ New to GitHubAI? Read [getting-started.md](getting-started.md), then [configurat
 | [`docs/PRD.md`](PRD.md) | The product requirements: why GitHubAI exists, the promise it makes, its public API, invariants, milestones and scope. |
 | [`docs/security.md`](security.md) | The auth model, who can authorize what, how untrusted issue and PR content is contained, and the auto-merge gate. |
 | [`docs/workflows.md`](workflows.md) | What each Claude workflow does, when it fires and what gates it, and how this repo's own CI guards the framework. |
-| [`docs/adr/`](adr/README.md) | This directory records decisions for githubai that are hard to reverse: the stack, data model, security model, public interfaces, and any relaxation of a gate. |
+| [`docs/adr/`](adr/README.md) | The index of githubai's architecture decision records: why each hard-to-reverse choice was made, and the tests that hold it. |
 | [`docs/amendments/`](amendments/README.md) | The append-only log of changes to [the constitution](constitution.md). |
 
 ### `docs/reference/`
