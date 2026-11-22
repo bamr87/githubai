@@ -6,7 +6,14 @@ GitHubAI automates high-trust operations (labeling, implementing, reviewing, mer
 
 ## Authentication
 
-**Claude Code OAuth is the default.** Every workflow passes `claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}` and only falls back to `ANTHROPIC_API_KEY` when the OAuth token is empty (`tests/test_workflows.py` enforces the pattern in every file). The OAuth token comes from `claude setup-token`, is scoped to Claude Code usage under your subscription, and should live as a repo or org **Actions secret** — never in files. GitHub-side write operations use either the workflow's `GITHUB_TOKEN` (bounded by each job's `permissions` block) or the [Claude GitHub App](https://github.com/apps/claude)'s installation token for branch/PR pushes; no personal access tokens anywhere.
+**Claude Code OAuth is the only model credential for now.** Every workflow passes `claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}` and no `anthropic_api_key`. The `ANTHROPIC_API_KEY` fallback is disabled since 2026-11-15, and `tests/test_workflows.py` enforces the pattern in every file. The OAuth token comes from `claude setup-token`, is scoped to Claude Code usage under your subscription, and should live as a repo or org **Actions secret** — never in files.
+
+**GitHub-side writes use a short-lived token, never a personal one.** That is one of:
+- the workflow's `GITHUB_TOKEN`, bounded by each job's `permissions` block;
+- the [Claude GitHub App](https://github.com/apps/claude)'s installation token, which `claude-code-action` obtains for branch and PR pushes;
+- your own [agent identity App](../app/identity/README.md)'s, when you configure one.
+
+The agent identity App is the one to prefer when a person must review the agent's work. Its token lasts an hour and is minted inside the run, and everything the lane writes is authored by your own bot, which GitHub never lets approve its own pull request. No personal access tokens anywhere.
 
 ## Authorization boundaries (who can make Claude do what)
 
@@ -28,7 +35,7 @@ Issue and PR bodies are attacker-controlled. Three containment layers: (1) workf
 
 ## The auto-merge lane, specifically
 
-Merging without human review is the sharpest capability, so it's off by default and quadruple-gated when on: config gate (enabled + `allowed_authors`/label + every changed file matching `allowed_paths`) → content gate (genuinely-minor diff standard) → risk verdict (structured JSON; `high` never merges; dependency diffs inspected for install hooks, changed dist URLs, obfuscation) → GitHub's own machinery (`gh pr merge --auto` means required checks still decide when). The merging step is deterministic bash acting on the verdict — Claude itself has no merge tool. **Prerequisites**: enable repo auto-merge setting and branch protection with required status checks; without protection the workflow refuses to merge directly and says so. Note that the approval comes from `github-actions[bot]`, which satisfies "1 approval" rules but not CODEOWNERS review requirements — leave those on for paths that should never auto-merge.
+Merging without human review is the sharpest capability, so it's off by default and quadruple-gated when on: config gate (enabled + `allowed_authors`/label + every changed file matching `allowed_paths`) → content gate (genuinely-minor diff standard) → risk verdict (structured JSON; `high` never merges; dependency diffs inspected for install hooks, changed dist URLs, obfuscation) → GitHub's own machinery (`gh pr merge --auto` means required checks still decide when). The merging step is deterministic bash acting on the verdict — Claude itself has no merge tool. **Prerequisites**: enable repo auto-merge setting and branch protection with required status checks; without protection the workflow refuses to merge directly and says so. Note that the approval comes from `github-actions[bot]`, or from your agent identity App's bot when one is configured. Either satisfies "1 approval" rules but not CODEOWNERS review requirements, so leave those on for paths that should never auto-merge. The identity App cannot approve a pull request it authored, so the agent's own work always waits for a person.
 
 ## App mode, specifically
 

@@ -80,3 +80,12 @@ features:
     surface: docs
     link: "docs/constitution.md"
     docs: "docs/PRD.md"
+  - id: GHAI-008
+    title: "The agent identity App"
+    description: "An optional private GitHub App the maintainer registers in one step (app/identity/register.py, manifest flow on 127.0.0.1): with AGENT_APP_CLIENT_ID and AGENT_APP_PRIVATE_KEY set, every claude*.yml lane mints its one-hour installation token and writes as its bot (claude-code-action github_token, bot_id, bot_name; gh steps), so the agent's commits, pull requests, comments and labels are authored by a bot the maintainer reviews and approves, and CI runs on its pull requests; without them every lane is unchanged. agent-handoff.yml opens a session's claude/ branch as a draft pull request from the bot and requests the pusher's review; app/identity/agent_token.py runs a local command or Claude Code session as the bot without printing the token (ADR 0006)."
+    implemented: true
+    status: shipped
+    prd: ["§1"]
+    surface: infra
+    link: "app/identity"
+    docs: "app/identity/README.md"

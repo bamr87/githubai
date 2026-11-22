@@ -81,7 +81,11 @@ Schema reference: [docs/configuration.md](docs/configuration.md). Labels are the
 
 ## Auth: Claude Code OAuth by default
 
-Every workflow authenticates with `CLAUDE_CODE_OAUTH_TOKEN` (from `claude setup-token` — included in Claude subscriptions) and falls back to `ANTHROPIC_API_KEY` only when the OAuth token is absent. One org-level secret can power every repo. Threat model, permissions, and the auto-merge safety design: [docs/security.md](docs/security.md).
+Every workflow authenticates with `CLAUDE_CODE_OAUTH_TOKEN` (from `claude setup-token` — included in Claude subscriptions); the `ANTHROPIC_API_KEY` fallback is disabled for now. One org-level secret can power every repo. Threat model, permissions, and the auto-merge safety design: [docs/security.md](docs/security.md).
+
+## The agent's own GitHub identity
+
+Optionally, register your own [agent identity App](app/identity/README.md) in one step (`python3 app/identity/register.py`) and store its two secrets. Every lane then writes as your bot: commits, pull requests, comments and labels. A local or web Claude Code session gets the same identity: it pushes a `claude/` branch and `agent-handoff.yml` opens the pull request as the bot. So the agent's work is authored by the agent, `CODEOWNERS` asks you to review it, and your approval is the one that lets it merge, since GitHub never lets the bot approve its own pull request. Without the App, every lane behaves as before.
 
 ## Org-scale: app mode
 

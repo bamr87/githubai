@@ -21,3 +21,4 @@ This directory records decisions for githubai that are hard to reverse: the stac
 | 0003 | [Org policy is subtractive and keeps the last document that parsed](0003-subtractive-org-policy.md) | accepted |
 | 0004 | [A zero-dependency relay with its own YAML subset parser](0004-zero-dependency-relay.md) | accepted |
 | 0005 | [Layered config: base, then profile, then repository](0005-layered-config-merge.md) | accepted |
+| 0006 | [The agent identity App: one GitHub identity the maintainer owns, for everything the agents write](0006-agent-identity-app.md) | proposed |

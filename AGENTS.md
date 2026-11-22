@@ -27,12 +27,13 @@ python3 tools/docs_index.py --write        # regenerate the docs index in docs/R
 
 | Path | What |
 | --- | --- |
-| `.github/workflows/` | The framework: reusable `claude*.yml` workflows, plus this repo's own `ci.yml` and `markdown-oneline.yml` |
+| `.github/workflows/` | The framework: reusable `claude*.yml` workflows and `agent-handoff.yml`, plus this repo's own `ci.yml` and `markdown-oneline.yml` |
 | `actions/load-config/` | Composite action that merges `profiles/_base.yml` → profile → the repo's `githubai.yml` |
+| `actions/agent-identity/` | Composite action that resolves the bot a lane writes as (the agent identity App's, or `claude-code-action`'s defaults) |
 | `profiles/` | Repo-type standards (`_base.yml` holds the defaults and the label taxonomy) |
 | `template/` | What `setup/install.sh` copies into adopting repos (workflow stubs, starter config, starter `CLAUDE.md`) |
 | `setup/install.sh` | The one-command installer |
-| `app/` | GitHub App: manifest, relay (`app/relay/`), operations and data-handling docs |
+| `app/` | GitHub Apps: the relay App (manifest, `app/relay/`, operations and data-handling docs) and the agent identity App (`app/identity/`: manifest, registration and local token scripts) |
 | `docs/` | Adopter docs; `docs/reference/` is generated |
 | `tests/` | Structural self-tests; `tools/` holds the generators and the vendored prose gate |
 | `.claude/commands/` | Local mirrors of the CI prompts |
@@ -59,6 +60,7 @@ python3 tools/docs_index.py --write        # regenerate the docs index in docs/R
 
 - `labels.taxonomy` in `profiles/_base.yml` changes together with `LABELS` in `setup/install.sh` (test-enforced), then rerun `python3 tools/gen_reference.py`.
 - Workflow inputs, secrets, triggers or permissions change together with the `template/workflows/` stubs, then rerun `python3 tools/gen_reference.py` (test-enforced) and update the behavior prose in [docs/workflows.md](docs/workflows.md).
+- A new `claude*.yml` lane gets the agent identity wiring: the two optional `AGENT_APP_*` secrets, the token and identity steps before the framework checkout is removed, `github_token`, `bot_id` and `bot_name` on `claude-code-action`, and the identity token on its `gh` steps (`tests/test_identity.py` enforces it; [app/identity/README.md](app/identity/README.md)).
 - A new profile needs a row in the `profiles/README.md` table (test-enforced), installer detection, and docs.
 - `.claude/commands/` mirror the CI prompts for local use: keep them aligned with workflow prompt changes.
 - A new or retitled document needs its `>` summary line, then `python3 tools/docs_index.py --write`.

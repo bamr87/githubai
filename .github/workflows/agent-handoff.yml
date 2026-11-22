@@ -1,0 +1,139 @@
+name: Agent Handoff
+
+# GitHubAI - session handoff. An interactive Claude Code session (on the web,
+# in a terminal or in an IDE) pushes with the credentials of the person driving
+# it, so a pull request it opened itself would be authored by that person, who
+# then cannot approve it and is never asked to review it. Instead the session
+# only pushes a `claude/` branch, and this workflow opens the draft pull request
+# as the agent identity App's bot (app/identity/) and requests the pusher's
+# review: the change is attributed to the agent and waits for a person's
+# approval like any contributor's.
+#
+# It acts only when all of these hold, and otherwise ends with a notice:
+#   - the agent identity App is configured (AGENT_APP_CLIENT_ID and
+#     AGENT_APP_PRIVATE_KEY);
+#   - a person pushed (a lane that pushes as a bot opens its own pull request);
+#   - the branch has no open pull request (a later push updates it in place).
+# Commit messages are read through the API into files and arguments, never
+# interpolated into this script. Kill switch: vars.AGENT_HANDOFF_ENABLED=false.
+#
+# Reusable: call from any repo as
+#   on: { push: { branches: ["claude/**"] } }
+#   uses: bamr87/githubai/.github/workflows/agent-handoff.yml@main
+#   secrets: inherit
+
+on:
+  push:
+    branches: ["claude/**"]
+  workflow_call:
+    inputs:
+      base:
+        description: Base branch for the pull request; empty means the repository's default branch
+        required: false
+        type: string
+        default: ""
+      draft:
+        description: Open the pull request as a draft
+        required: false
+        type: boolean
+        default: true
+    secrets:
+      AGENT_APP_CLIENT_ID:
+        description: Client id of the agent identity App (app/identity/); without it and AGENT_APP_PRIVATE_KEY the handoff does nothing
+        required: false
+      AGENT_APP_PRIVATE_KEY:
+        description: Private key of the agent identity App (app/identity/)
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  handoff:
+    if: >-
+      vars.AGENT_HANDOFF_ENABLED != 'false' &&
+      github.event_name == 'push' && !github.event.deleted &&
+      !endsWith(github.actor, '[bot]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    concurrency:
+      group: agent-handoff-${{ github.ref }}
+      cancel-in-progress: false
+    env:
+      HAS_AGENT_APP: ${{ secrets.AGENT_APP_CLIENT_ID != '' && secrets.AGENT_APP_PRIVATE_KEY != '' }}
+    steps:
+      - name: No agent identity configured
+        if: env.HAS_AGENT_APP != 'true'
+        run: echo "::notice title=Agent handoff::No agent identity App is configured (AGENT_APP_CLIENT_ID, AGENT_APP_PRIVATE_KEY), so no pull request is opened for this branch. See app/identity/README.md in bamr87/githubai."
+
+      - name: Mint the agent identity token
+        id: agent-token
+        if: env.HAS_AGENT_APP == 'true'
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.AGENT_APP_CLIENT_ID }}
+          private-key: ${{ secrets.AGENT_APP_PRIVATE_KEY }}
+
+      - name: Open the pull request as the agent
+        if: env.HAS_AGENT_APP == 'true'
+        env:
+          GH_TOKEN: ${{ steps.agent-token.outputs.token }}
+          AGENT: ${{ steps.agent-token.outputs.app-slug }}
+          REPO: ${{ github.repository }}
+          HEAD: ${{ github.ref_name }}
+          PUSHER: ${{ github.actor }}
+          BASE_INPUT: ${{ inputs.base }}
+          DRAFT: ${{ inputs.draft != false }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          base="${BASE_INPUT:-$(gh api "repos/$REPO" --jq .default_branch)}"
+          if [ "$HEAD" = "$base" ]; then
+            echo "The pushed branch is the base; nothing to open."
+            exit 0
+          fi
+          open="$(gh pr list --repo "$REPO" --head "$HEAD" --state open --json number --jq length)"
+          if [ "$open" != "0" ]; then
+            echo "A pull request is already open for $HEAD; the push updated it."
+            exit 0
+          fi
+
+          # The branch's own commits, oldest first. Messages are data: they go to
+          # files and to --title as an argument, never through the shell's parser.
+          gh api "repos/$REPO/compare/${base}...${HEAD}" --jq '.commits' > /tmp/commits.json
+          count="$(jq length /tmp/commits.json)"
+          if [ "$count" = "0" ]; then
+            echo "$HEAD has no commits ahead of $base; nothing to open."
+            exit 0
+          fi
+          jq -r '.[0].commit.message | split("\n")[0] | .[0:200]' /tmp/commits.json > /tmp/title.txt
+          {
+            echo "Opened by the agent identity (\`${AGENT}[bot]\`) for @${PUSHER}, who pushed \`${HEAD}\` from an agent session."
+            echo
+            echo "Review and approve this like any contributor's change: the agent cannot approve its own pull request."
+            echo
+            echo "## Commits"
+            echo
+            jq -r '.[] | "- \(.sha[0:7]) \(.commit.message | split("\n")[0])"' /tmp/commits.json
+            sessions="$(jq -r '[.[].commit.message | split("\n")[] | select(test("^(Claude-Session|Claude-Run): https://"))] | unique | .[]' /tmp/commits.json)"
+            if [ -n "$sessions" ]; then
+              echo
+              echo "## Provenance"
+              echo
+              printf '%s\n' "$sessions" | sed 's/^/- /'
+            fi
+            echo
+            echo "<!-- githubai:agent-handoff run=${RUN_URL} -->"
+          } > /tmp/body.md
+
+          draft_flag=()
+          if [ "$DRAFT" = "true" ]; then draft_flag=(--draft); fi
+          url="$(gh pr create --repo "$REPO" --head "$HEAD" --base "$base" \
+            --title "$(cat /tmp/title.txt)" --body-file /tmp/body.md "${draft_flag[@]}")"
+          echo "Opened $url as ${AGENT}[bot]"
+          # Ask the person who drove the session for the review. A login without
+          # access to the repository cannot be requested, and that is not a failure.
+          gh pr edit "$url" --add-reviewer "$PUSHER" \
+            || echo "::notice title=Agent handoff::Could not request a review from @${PUSHER}; the pull request is open."

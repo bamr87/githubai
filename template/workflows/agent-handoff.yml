@@ -1,0 +1,23 @@
+name: Agent Handoff
+
+# Installed by GitHubAI (github.com/bamr87/githubai). Thin caller - logic
+# lives in the reusable workflow. When an agent session pushes a `claude/`
+# branch, the agent identity App opens the draft pull request and asks the
+# person who pushed for a review, so the work is authored by the agent and
+# approved by a person. Does nothing until the agent identity App's secrets
+# (AGENT_APP_CLIENT_ID, AGENT_APP_PRIVATE_KEY) exist. Pin the ref to a tag
+# for stability.
+
+on:
+  push:
+    branches: ["claude/**"]
+
+permissions:
+  contents: read
+
+jobs:
+  handoff:
+    permissions:
+      contents: read
+    uses: bamr87/githubai/.github/workflows/agent-handoff.yml@main
+    secrets: inherit

@@ -6,6 +6,8 @@ Two ways to run GitHubAI. **Actions-only mode is the default** and needs nothing
 
 What app mode does *not* change is the trust model. Claude still runs only inside each repository's own Actions run, with that repository's own `CLAUDE_CODE_OAUTH_TOKEN`. The relay's App token is used for exactly one thing: firing `repository_dispatch`.
 
+This page is about the relay App. A second, separate App lives in [`identity/`](identity/README.md): the **agent identity App**, which you register and own so that everything the agents write is authored by your own bot, and reviewed and approved by you. It works in both modes, has no webhook and no server, and never touches the relay.
+
 ## How app mode works
 
 ```text

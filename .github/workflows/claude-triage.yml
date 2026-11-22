@@ -39,6 +39,12 @@ on:
       ANTHROPIC_API_KEY:
         description: Ignored for now (OAuth only; ANTHROPIC_API_KEY disabled 2026-11-15)
         required: false
+      AGENT_APP_CLIENT_ID:
+        description: Client id of the agent identity App (app/identity/). With AGENT_APP_PRIVATE_KEY the lane writes as that App's bot; without both it writes as before
+        required: false
+      AGENT_APP_PRIVATE_KEY:
+        description: Private key of the agent identity App (app/identity/)
+        required: false
 
 permissions:
   contents: read
@@ -67,6 +73,11 @@ jobs:
       contents: read
       issues: write
       id-token: write
+    env:
+      # The agent identity App (app/identity/): both secrets set means this lane
+      # writes as that App's bot, so its work is authored by an identity you can
+      # review and approve; either one missing keeps the lane exactly as before.
+      HAS_AGENT_APP: ${{ secrets.AGENT_APP_CLIENT_ID != '' && secrets.AGENT_APP_PRIVATE_KEY != '' }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -89,6 +100,21 @@ jobs:
         with:
           config_path: ${{ inputs.config_path || '.github/githubai.yml' }}
 
+      - name: Mint the agent identity token
+        id: agent-token
+        if: env.HAS_AGENT_APP == 'true'
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.AGENT_APP_CLIENT_ID }}
+          private-key: ${{ secrets.AGENT_APP_PRIVATE_KEY }}
+
+      - name: Resolve the agent identity
+        id: identity
+        uses: ./.githubai-framework/actions/agent-identity
+        with:
+          app-token: ${{ steps.agent-token.outputs.token }}
+          app-slug: ${{ steps.agent-token.outputs.app-slug }}
+
       - name: Remove framework checkout
         run: rm -rf .githubai-framework
 
@@ -98,6 +124,11 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           # Claude auth: OAuth only (CLAUDE_CODE_OAUTH_TOKEN). ANTHROPIC_API_KEY disabled for now (2026-11-15); to restore, re-add the secrets.ANTHROPIC_API_KEY reference.
+          # Who the lane writes as: the agent identity App's token and bot when it is
+          # configured, else empty and the action's defaults (its own OIDC App token).
+          github_token: ${{ steps.agent-token.outputs.token }}
+          bot_id: ${{ steps.identity.outputs.bot-id }}
+          bot_name: ${{ steps.identity.outputs.bot-name }}
           # --model: `claude.model` from the repo config, else an exact id from the
           # fleet's allowlist (bamr87/bamr87 _data/fleet.yml `ai_models.allowed`),
           # never the action's default of the day. --max-budget-usd: a per-run
