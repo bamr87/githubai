@@ -1,0 +1,17 @@
+{
+  "name": "REPLACE-WITH-OWNER-claude",
+  "url": "https://github.com/bamr87/githubai/tree/main/app/identity",
+  "description": "The GitHub identity your Claude Code agents act as. Every commit, pull request, comment and label they make is authored by this bot, so you review and approve it like any contributor's. No webhook and no server: tokens are minted inside your own Actions runs and sessions.",
+  "redirect_url": "http://127.0.0.1:8719/callback",
+  "public": false,
+  "default_permissions": {
+    "contents": "write",
+    "pull_requests": "write",
+    "issues": "write",
+    "workflows": "write",
+    "actions": "read",
+    "checks": "read",
+    "metadata": "read"
+  },
+  "default_events": []
+}

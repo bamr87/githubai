@@ -30,7 +30,7 @@ DRY_RUN=0
 WITH_LABELS=0
 WITH_APP=0
 
-WORKFLOWS="claude claude-triage claude-implement claude-review claude-auto-merge claude-maintenance claude-release"
+WORKFLOWS="claude claude-triage claude-implement claude-review claude-auto-merge claude-maintenance claude-release agent-handoff"
 
 # Keep in sync with labels.taxonomy in profiles/_base.yml - tests/test_installer.py
 # enforces the match. Format: name|color|description
@@ -197,6 +197,11 @@ GitHubAI installed. Three manual steps remain:
    run), confirm the detected repo type, and decide whether to enable
    automation.auto_merge (read docs/security.md in the framework repo first;
    it requires branch protection with required checks).
+
+Optional: give the agent its own GitHub identity, so everything it writes is
+authored by a bot you review and approve rather than by you or a shared App.
+From a clone of the framework repo: python3 app/identity/register.py, then
+set AGENT_APP_CLIENT_ID and AGENT_APP_PRIVATE_KEY (app/identity/README.md).
 
 Then open an issue - Claude triages it within a minute or two. Mention
 @claude anywhere for interactive help.

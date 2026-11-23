@@ -90,12 +90,13 @@ Every user-facing capability has a stable id in the feature catalog [`features/f
 | [GHAI-005](../features/features.yml) | PR review, maintenance and release lanes | shipped | [`.github/workflows/claude-review.yml`](../.github/workflows/claude-review.yml) · [`README.md`](../README.md) | §1 |
 | [GHAI-006](../features/features.yml) | GitHub App relay and org policy | shipped | [`app`](../app) · [`README.md`](../README.md) | §1 |
 | [GHAI-007](../features/features.yml) | Constitution missions | planned | [`docs/constitution.md`](constitution.md) · [`docs/PRD.md`](PRD.md) | MR1 |
+| [GHAI-008](../features/features.yml) | The agent identity App | shipped | [`app/identity`](../app/identity) · [`app/identity/README.md`](../app/identity/README.md) | §1 |
 
 **Requirement → feature trace**
 
 | Requirement | Features |
 | --- | --- |
-| §1 | GHAI-001, GHAI-002, GHAI-003, GHAI-004, GHAI-005, GHAI-006 |
+| §1 | GHAI-001, GHAI-002, GHAI-003, GHAI-004, GHAI-005, GHAI-006, GHAI-008 |
 | MR1 | GHAI-007 |
 <!-- features:end -->
 

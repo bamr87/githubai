@@ -30,6 +30,8 @@ Call it as `uses: bamr87/githubai/.github/workflows/claude-auto-merge.yml@main`.
 | --- | --- | --- |
 | `CLAUDE_CODE_OAUTH_TOKEN` | no | Claude Code OAuth token from `claude setup-token` (preferred) |
 | `ANTHROPIC_API_KEY` | no | Ignored for now (OAuth only; ANTHROPIC_API_KEY disabled 2026-11-15) |
+| `AGENT_APP_CLIENT_ID` | no | Client id of the agent identity App (app/identity/). With AGENT_APP_PRIVATE_KEY the lane writes as that App's bot; without both it writes as before |
+| `AGENT_APP_PRIVATE_KEY` | no | Private key of the agent identity App (app/identity/) |
 
 **Jobs:**
 
@@ -65,6 +67,8 @@ Call it as `uses: bamr87/githubai/.github/workflows/claude-implement.yml@main`.
 | --- | --- | --- |
 | `CLAUDE_CODE_OAUTH_TOKEN` | no | Claude Code OAuth token from `claude setup-token` (preferred) |
 | `ANTHROPIC_API_KEY` | no | Ignored for now (OAuth only; ANTHROPIC_API_KEY disabled 2026-11-15) |
+| `AGENT_APP_CLIENT_ID` | no | Client id of the agent identity App (app/identity/). With AGENT_APP_PRIVATE_KEY the lane writes as that App's bot; without both it writes as before |
+| `AGENT_APP_PRIVATE_KEY` | no | Private key of the agent identity App (app/identity/) |
 
 **Jobs:**
 
@@ -99,6 +103,8 @@ Call it as `uses: bamr87/githubai/.github/workflows/claude-maintenance.yml@main`
 | --- | --- | --- |
 | `CLAUDE_CODE_OAUTH_TOKEN` | no | Claude Code OAuth token from `claude setup-token` (preferred) |
 | `ANTHROPIC_API_KEY` | no | Ignored for now (OAuth only; ANTHROPIC_API_KEY disabled 2026-11-15) |
+| `AGENT_APP_CLIENT_ID` | no | Client id of the agent identity App (app/identity/). With AGENT_APP_PRIVATE_KEY the lane writes as that App's bot; without both it writes as before |
+| `AGENT_APP_PRIVATE_KEY` | no | Private key of the agent identity App (app/identity/) |
 
 **Jobs:**
 
@@ -133,6 +139,8 @@ Call it as `uses: bamr87/githubai/.github/workflows/claude-release.yml@main`.
 | --- | --- | --- |
 | `CLAUDE_CODE_OAUTH_TOKEN` | no | Claude Code OAuth token from `claude setup-token` (preferred) |
 | `ANTHROPIC_API_KEY` | no | Ignored for now (OAuth only; ANTHROPIC_API_KEY disabled 2026-11-15) |
+| `AGENT_APP_CLIENT_ID` | no | Client id of the agent identity App (app/identity/). With AGENT_APP_PRIVATE_KEY the lane writes as that App's bot; without both it writes as before |
+| `AGENT_APP_PRIVATE_KEY` | no | Private key of the agent identity App (app/identity/) |
 
 **Jobs:**
 
@@ -167,6 +175,8 @@ Call it as `uses: bamr87/githubai/.github/workflows/claude-review.yml@main`.
 | --- | --- | --- |
 | `CLAUDE_CODE_OAUTH_TOKEN` | no | Claude Code OAuth token from `claude setup-token` (preferred) |
 | `ANTHROPIC_API_KEY` | no | Ignored for now (OAuth only; ANTHROPIC_API_KEY disabled 2026-11-15) |
+| `AGENT_APP_CLIENT_ID` | no | Client id of the agent identity App (app/identity/). With AGENT_APP_PRIVATE_KEY the lane writes as that App's bot; without both it writes as before |
+| `AGENT_APP_PRIVATE_KEY` | no | Private key of the agent identity App (app/identity/) |
 
 **Jobs:**
 
@@ -201,6 +211,8 @@ Call it as `uses: bamr87/githubai/.github/workflows/claude-triage.yml@main`.
 | --- | --- | --- |
 | `CLAUDE_CODE_OAUTH_TOKEN` | no | Claude Code OAuth token from `claude setup-token` (preferred) |
 | `ANTHROPIC_API_KEY` | no | Ignored for now (OAuth only; ANTHROPIC_API_KEY disabled 2026-11-15) |
+| `AGENT_APP_CLIENT_ID` | no | Client id of the agent identity App (app/identity/). With AGENT_APP_PRIVATE_KEY the lane writes as that App's bot; without both it writes as before |
+| `AGENT_APP_PRIVATE_KEY` | no | Private key of the agent identity App (app/identity/) |
 
 **Jobs:**
 
@@ -224,6 +236,8 @@ Call it as `uses: bamr87/githubai/.github/workflows/claude.yml@main`.
 | --- | --- | --- |
 | `CLAUDE_CODE_OAUTH_TOKEN` | no | Claude Code OAuth token from `claude setup-token` (preferred) |
 | `ANTHROPIC_API_KEY` | no | Ignored for now (OAuth only; ANTHROPIC_API_KEY disabled 2026-11-15) |
+| `AGENT_APP_CLIENT_ID` | no | Client id of the agent identity App (app/identity/). With AGENT_APP_PRIVATE_KEY the lane writes as that App's bot; without both it writes as before |
+| `AGENT_APP_PRIVATE_KEY` | no | Private key of the agent identity App (app/identity/) |
 
 **Jobs:**
 

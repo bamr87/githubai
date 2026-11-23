@@ -43,6 +43,20 @@ Every lane is also bounded and switchable. Each run names an exact model (`claud
 - **Triggers**: push of `v*` tag (publish mode); dispatch/call with `bump` (prepare mode).
 - **Behavior**: publish = categorized release notes from the tag range → GitHub release (draft per config). Prepare = pick the semver bump from commits (or honor the input), update `VERSION`/`CHANGELOG.md` on a branch, open a `release: vX.Y.Z` PR. Tags are never created by automation — pushing the tag stays a human act.
 
+## Who the lanes write as
+
+Every `claude*.yml` lane declares two optional secrets, `AGENT_APP_CLIENT_ID` and `AGENT_APP_PRIVATE_KEY`, for the [agent identity App](../app/identity/README.md). When both exist, the lane mints that App's installation token (`actions/create-github-app-token`), resolves its bot with `actions/agent-identity`, and gives both to `claude-code-action` (`github_token`, `bot_id`, `bot_name`) and to its own `gh` steps. Every branch, commit, pull request, comment and label the lane makes is then authored by your own `<name>[bot]`, so you review and approve it like any contributor's, and CI runs on the pull requests it opens. When either secret is missing, the token is empty and `claude-code-action` keeps its own defaults, so the lane behaves exactly as before.
+
+## agent-handoff.yml
+
+- **Triggers**: push to a `claude/**` branch.
+- **Gates**:
+  - the agent identity App's two secrets exist (otherwise a notice, and nothing is opened);
+  - the pusher is a person, not a bot (a lane that pushes as a bot opens its own PR);
+  - no pull request is already open for the branch;
+  - kill switch `AGENT_HANDOFF_ENABLED`.
+- **Behavior**: opens a draft PR from the branch as the App's bot and requests the pusher's review. The title is the first commit's subject, and the body lists the commits and any `Claude-Session:` or `Claude-Run:` links. Commit messages go through files and arguments, never the script. This is how an interactive Claude Code session's work is authored by the agent and approved by the person who drove it: the session only pushes.
+
 ## CI for the framework itself
 
 `ci.yml` (three jobs: `tests` runs the pytest suite, `shell` runs shellcheck on the installer, and `relay` runs the GitHub App relay's `npm test` in `app/relay/`, so CI needs Node as well as Python) and `markdown-oneline.yml` (one-paragraph-per-line prose rule) guard this repo; they are not installed into consumers.

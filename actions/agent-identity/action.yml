@@ -1,0 +1,90 @@
+name: GitHubAI - Agent Identity
+description: >-
+  Resolve who the agent acts as on GitHub. Given an installation token from the
+  agent identity App (app/identity/), outputs the bot's login, user id and
+  noreply email, and the bot_id and bot_name claude-code-action commits with.
+  Without a token it outputs claude-code-action's own defaults, so a lane with
+  no identity App configured behaves exactly as before. Never prints a token.
+
+inputs:
+  app-token:
+    description: Installation token from actions/create-github-app-token for the agent identity App; empty means no App is configured.
+    required: false
+    default: ""
+  app-slug:
+    description: The App's slug (the create-github-app-token output app-slug); required with app-token.
+    required: false
+    default: ""
+  configure-git:
+    description: Also set git user.name and user.email for this job, for commits made outside claude-code-action.
+    required: false
+    default: "false"
+
+outputs:
+  mode:
+    description: app when the identity App is in use, fallback otherwise.
+    value: ${{ steps.who.outputs.mode }}
+  login:
+    description: The login the lane writes as (the App's bot login, or github-actions[bot]).
+    value: ${{ steps.who.outputs.login }}
+  user-id:
+    description: That login's numeric GitHub user id.
+    value: ${{ steps.who.outputs.user_id }}
+  email:
+    description: The noreply address GitHub credits to that login.
+    value: ${{ steps.who.outputs.email }}
+  bot-id:
+    description: The bot_id input for claude-code-action (the App's bot in app mode, the action's default otherwise).
+    value: ${{ steps.who.outputs.bot_id }}
+  bot-name:
+    description: The bot_name input for claude-code-action (the App's bot in app mode, the action's default otherwise).
+    value: ${{ steps.who.outputs.bot_name }}
+
+runs:
+  using: composite
+  steps:
+    - id: who
+      shell: bash
+      env:
+        APP_TOKEN: ${{ inputs.app-token }}
+        APP_SLUG: ${{ inputs.app-slug }}
+        CONFIGURE_GIT: ${{ inputs.configure-git }}
+      run: |
+        set -euo pipefail
+        if [[ -n "$APP_TOKEN" ]]; then
+          if [[ ! "$APP_SLUG" =~ ^[a-z0-9-]+$ ]]; then
+            echo "::error title=Agent identity::app-slug is missing or malformed; pass steps.<token-step>.outputs.app-slug"
+            exit 1
+          fi
+          login="${APP_SLUG}[bot]"
+          user_id="$(GH_TOKEN="$APP_TOKEN" gh api "users/${APP_SLUG}%5Bbot%5D" --jq .id)"
+          if [[ ! "$user_id" =~ ^[0-9]+$ ]]; then
+            echo "::error title=Agent identity::GitHub has no user for ${login}"
+            exit 1
+          fi
+          mode=app
+          bot_id="$user_id"
+          bot_name="$login"
+        else
+          # claude-code-action's own defaults (bot_name claude[bot], bot_id 41898282),
+          # so a lane without the identity App commits exactly as it always has.
+          login="github-actions[bot]"
+          user_id=41898282
+          mode=fallback
+          bot_id=41898282
+          bot_name="claude[bot]"
+        fi
+        email="${user_id}+${login}@users.noreply.github.com"
+        {
+          echo "mode=$mode"
+          echo "login=$login"
+          echo "user_id=$user_id"
+          echo "email=$email"
+          echo "bot_id=$bot_id"
+          echo "bot_name=$bot_name"
+        } >> "$GITHUB_OUTPUT"
+        if [[ "$CONFIGURE_GIT" == "true" ]]; then
+          git config --global user.name "$login"
+          git config --global user.email "$email"
+        fi
+        echo "Agent identity: ${login} (${mode})"
