@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0](https://github.com/bamr87/githubai/compare/v0.6.1...v0.7.0) (2026-11-23)
+
+
+### Added
+
+* **app:** the agent identity App, so every lane and session writes as your own bot (ADR 0006) ([1f881d0](https://github.com/bamr87/githubai/commit/1f881d028cb6a08979b3c596fdca56c83afc3c68))
+* **app:** the agent identity App, so every lane and session writes as your own bot (ADR 0006) ([de5d858](https://github.com/bamr87/githubai/commit/de5d8589498d62866e963c6b397bc726a00dcb32))
+
 ## [0.6.1](https://github.com/bamr87/githubai/compare/v0.6.0...v0.6.1) (2026-11-18)
 
 
